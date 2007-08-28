@@ -3,6 +3,9 @@
 // node, but this uses a 26-slot array of pointers. This is extremely fast (a
 // descend is just a pointer dereference) but also very wasteful of memory. The
 // standard linux dictionary can take over 100MB of RAM to store this way.
+//
+// This Trie class is designed for Boggle board-solving insofar as it collapses
+// any 'qu' to a simple 'q' and rejects a word containing 'q[^u]'.
 
 #ifndef TRIE_H
 #define TRIE_H

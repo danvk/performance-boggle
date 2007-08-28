@@ -41,13 +41,19 @@ bool Trie::LoadFile(const char* filename) {
   }
 
   string line;
-  int words = 0;
   while (file >> line) {
     if (!IsBoggleWord(line)) continue;
     AddWord(line.c_str());
-    words += 1;
   }
-  return words;
+  return true;
+}
+
+bool Trie::LoadVector(const vector<string>& v) {
+  for (vector<string>::const_iterator it = v.begin(); it != v.end(); ++it) {
+    if (!IsBoggleWord(*it)) continue;
+    AddWord(it->c_str());
+  }
+  return true;
 }
 
 bool Trie::ReverseLookup(const Trie* child, string* out) {
@@ -61,10 +67,10 @@ bool Trie::ReverseLookup(const Trie* child, string* out) {
   return false;
 }
 
-string Trie::ReverseLookup(const Trie* child) { 
-  string s; 
+string Trie::ReverseLookup(const Trie* child) {
+  string s;
   ReverseLookup(child, &s);
-  return s; 
+  return s;
 }
 
 bool Trie::IsWord(const char* wd) const {
@@ -82,19 +88,11 @@ bool Trie::IsWord(const char* wd) const {
   return false;
 }
 
-/*
-   bool Trie::StartsAnyWord() const {
-   for (int i=0; i<kNumLetters; i++)
-   if (StartsWord(i)) return true;
-   return false;
-   }
-   */
-
-unsigned int Trie::size() const {
+unsigned int Trie::Size() const {
   unsigned int size = 0;
   if (IsWord()) size++;
   for (int i=0; i<26; i++) {
-    if (StartsWord(i)) size += Descend(i)->size();
+    if (StartsWord(i)) size += Descend(i)->Size();
   }
   return size;
 }

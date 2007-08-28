@@ -33,5 +33,5 @@ int main(int argc, char** argv) {
   assert(!t.IsWord("cultur"));
 
   assert(0 == remove(tmp_file));
-  printf("All tests passed!\n");
+  printf("%s: All tests passed!\n", argv[0]);
 }

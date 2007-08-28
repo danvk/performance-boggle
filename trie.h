@@ -8,6 +8,7 @@
 #define TRIE_H
 
 #include <string>
+#include <vector>
 using namespace std;
 
 const int kNumLetters = 26;
@@ -28,10 +29,11 @@ class Trie {
 
   void AddWord(const char* wd);
   bool LoadFile(const char* filename);
+  bool LoadVector(const vector<string>& v);
 
   bool StartsAnyWord() const { return has_children_; }
   bool IsWord(const char* wd) const;
-  unsigned int size() const;
+  unsigned int Size() const;
 
   bool ReverseLookup(const Trie* child, string* out);
   string ReverseLookup(const Trie* child);

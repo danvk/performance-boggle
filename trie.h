@@ -1,3 +1,9 @@
+// Very simple Trie library for C++
+// Most Trie implementations use a linked list to represent children within a
+// node, but this uses a 26-slot array of pointers. This is extremely fast (a
+// descend is just a pointer dereference) but also very wasteful of memory. The
+// standard linux dictionary can take over 100MB of RAM to store this way.
+
 #ifndef TRIE_H
 #define TRIE_H
 

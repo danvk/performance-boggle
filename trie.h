@@ -10,17 +10,13 @@
 #ifndef TRIE_H
 #define TRIE_H
 
-#include <string>
-#include <vector>
-using namespace std;
-
 const int kNumLetters = 26;
 const int kQ = 'q'-'a';
 
 class Trie {
  public:
   Trie();
-  virtual ~Trie();
+  ~Trie();
 
   bool IsWord() const { return is_word_; }
   bool StartsWord(int i) const { return children_[i]; }
@@ -32,14 +28,10 @@ class Trie {
 
   void AddWord(const char* wd);
   bool LoadFile(const char* filename);
-  bool LoadVector(const vector<string>& v);
 
   bool StartsAnyWord() const { return has_children_; }
   bool IsWord(const char* wd) const;
   unsigned int Size() const;
-
-  bool ReverseLookup(const Trie* child, string* out);
-  string ReverseLookup(const Trie* child);
 
  private:
   Trie* children_[kNumLetters];

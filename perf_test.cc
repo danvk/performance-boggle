@@ -2,6 +2,8 @@
 // and prints out information on the performance. Typical performance on my
 // machine is ~20kbds/sec, so this test takes just over one second to complete.
 
+#include <stdio.h>
+#include <sys/time.h>
 #include "trie.h"
 #include "boggler.h"
 double secs();

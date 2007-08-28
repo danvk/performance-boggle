@@ -1,9 +1,6 @@
 #include "trie.h"
-
-#include <string>
-#include <fstream>
-#include <iostream>
-using namespace std;
+#include <stdio.h>
+#include <string.h>
 
 inline int idx(char x) { return x - 'a'; }
 
@@ -23,54 +20,31 @@ void Trie::AddWord(const char* wd) {
     Descend(c)->AddWord(wd+2);
 }
 
-bool IsBoggleWord(const string& wd) {
-  if (wd.size()<3 || wd.size()>17) return false;
-  for (unsigned i=0; i<wd.size(); ++i) {
+bool IsBoggleWord(const char* wd) {
+  int size = strlen(wd);
+  if (size < 3 || size > 17) return false;
+  for (int i=0; i<size; ++i) {
     int c = idx(wd[i]);
     if (c<0 || c>=kNumLetters) return false;
-    if (c==kQ && (i+1 >= wd.size() || idx(wd[1+i]) != idx('u'))) return false;
+    if (c==kQ && (i+1 >= size || idx(wd[1+i]) != idx('u'))) return false;
   }
   return true;
 }
 
 bool Trie::LoadFile(const char* filename) {
-  ifstream file(filename);
-  if (!file) {
-    cerr << "Couldn't open " << filename << endl;
+  char line[80];
+  FILE* f = fopen(filename, "r");
+  if (!f) {
+    fprintf(stderr, "Couldn't open %s\n", filename);
     return false;
   }
 
-  string line;
-  while (file >> line) {
+  while (!feof(f) && fscanf(f,"%s",line)) {
     if (!IsBoggleWord(line)) continue;
-    AddWord(line.c_str());
+    AddWord(line);
   }
+  fclose(f);
   return true;
-}
-
-bool Trie::LoadVector(const vector<string>& v) {
-  for (vector<string>::const_iterator it = v.begin(); it != v.end(); ++it) {
-    if (!IsBoggleWord(*it)) continue;
-    AddWord(it->c_str());
-  }
-  return true;
-}
-
-bool Trie::ReverseLookup(const Trie* child, string* out) {
-  if (this==child) return true;
-  for (int i=0; i<kNumLetters; i++) {
-    if (StartsWord(i) && Descend(i)->ReverseLookup(child, out)) {
-      *out = string(1,'a'+i) + *out;
-      return true;
-    }
-  }
-  return false;
-}
-
-string Trie::ReverseLookup(const Trie* child) {
-  string s;
-  ReverseLookup(child, &s);
-  return s;
 }
 
 bool Trie::IsWord(const char* wd) const {

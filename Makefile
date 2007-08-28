@@ -1,6 +1,6 @@
 CC = g++
-#CPPFLAGS = -g -Wall -O3 -march=i686
-CPPFLAGS = -g -Wall
+CPPFLAGS = -g -Wall -O3 -march=i686
+#CPPFLAGS = -g -Wall
 
 progs = trie_test boggler_test perf_test
 all: $(progs)

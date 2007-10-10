@@ -1,7 +1,6 @@
 #include "boggler.h"
 #include <ctype.h>
 #include <stdio.h>
-
 //#define PRINT_WORDS
 
 static int kCellUsed = -1;
@@ -21,6 +20,7 @@ int Boggler::Score() {
         score += DoDFS(i, j, 0, dict_->Descend(c));
     }
 
+  // Really should check for overflow here
   num_boards_++;
 
   return score;
@@ -34,9 +34,7 @@ int Boggler::Score(const char* lets) {
 
 // Returns the score from this portion of the search
 int Boggler::DoDFS(int x, int y, int len, Trie* t) {
-  //printf("DoDFS(%d, %d, %d, 0x%08X)\n", x, y, len, t);
   int c = bd_[x][y];
-  bd_[x][y] = kCellUsed;
 
   len += (c==kQ ? 2 : 1);
   int score = 0;
@@ -44,24 +42,52 @@ int Boggler::DoDFS(int x, int y, int len, Trie* t) {
     score += kWordScores[len];
     t->Mark(runs_);
 #ifdef PRINT_WORDS
-    string out;
+    std::string out;
     dict_->ReverseLookup(t, &out);
     printf("%s\n", out.c_str());
 #endif
   }
 
-  int lx = x==0 ? 0 : x-1; int hx = x==3 ? 4 : x+2;
-  int ly = y==0 ? 0 : y-1; int hy = y==3 ? 4 : y+2;
-  for (int cx=lx; cx<hx; ++cx) {
-    for (int cy=ly; cy<hy; ++cy) {
-      int cc = bd_[cx][cy];
-      if (cc == kCellUsed) continue;
-      if (t->StartsWord(cc))
-        score += DoDFS(cx, cy, len, t->Descend(cc));
-    }
-  }
+  // This is a surprisingly small optimization
+  if (!t->StartsAnyWord()) return score;
 
+  // Could also get rid of any two dimensionality, but maybe GCC does that?
+  bd_[x][y] = kCellUsed;
+  int cc;
+
+  // Loop unrolling roughly doubles performance
+  // Changing "cc != kCellUnused" -> "~cc" is a significant win
+  // To help the loop unrolling...
+#define HIT(x,y) cc = bd_[x][y]; \
+                 if (~cc && t->StartsWord(cc)) \
+		   score += DoDFS(x, y, len, t->Descend(cc))
+#define HIT3x(x,y) HIT(x,y); HIT(x+1,y); HIT(x+2,y)
+#define HIT3y(x,y) HIT(x,y); HIT(x,y+1); HIT(x,y+2)
+#define HIT8(x,y) HIT3x(x-1,y-1); HIT(x-1,y); HIT(x+1,y); HIT3x(x-1,y+1)
+
+  switch ((x << 2) + y) {
+    case 0*4 + 0: HIT(0, 1); HIT(1, 0); HIT(1, 1); break;
+    case 0*4 + 1: HIT(0, 0); HIT3y(1, 0); HIT(0, 2); break;
+    case 0*4 + 2: HIT(0, 1); HIT3y(1, 1); HIT(0, 3); break;
+    case 0*4 + 3: HIT(0, 2); HIT(1, 2); HIT(1, 3); break;
+
+    case 1*4 + 0: HIT(0, 0); HIT(2, 0); HIT3x(0, 1); break;
+    case 1*4 + 1: HIT8(1, 1); break;
+    case 1*4 + 2: HIT8(1, 2); break;
+    case 1*4 + 3: HIT3x(0, 2); HIT(0, 3); HIT(2, 3); break;
+
+    case 2*4 + 0: HIT(1, 0); HIT(3, 0); HIT3x(1, 1); break;
+    case 2*4 + 1: HIT8(2, 1); break;
+    case 2*4 + 2: HIT8(2, 2); break;
+    case 2*4 + 3: HIT3x(1, 2); HIT(1, 3); HIT(3, 3); break;
+
+    case 3*4 + 0: HIT(2, 0); HIT(2, 1); HIT(3, 1); break;
+    case 3*4 + 1: HIT3y(2, 0); HIT(3, 0); HIT(3, 2); break;
+    case 3*4 + 2: HIT3y(2, 1); HIT(3, 1); HIT(3, 3); break;
+    case 3*4 + 3: HIT(2, 2); HIT(3, 2); HIT(2, 3); break;
+  }
   bd_[x][y] = c;
+
   return score;
 }
 

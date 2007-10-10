@@ -7,10 +7,10 @@ inline int idx(char x) { return x - 'a'; }
 void Trie::AddWord(const char* wd) {
   if (!wd) return;
   if (!*wd) {
-    is_word_ = true;
+    SetIsWord();
     return;
   }
-  has_children_ = true;
+  SetHasChildren();
   int c = idx(*wd);
   if (!StartsWord(c))
     children_[c] = new Trie;
@@ -71,6 +71,23 @@ unsigned int Trie::Size() const {
   return size;
 }
 
+bool Trie::ReverseLookup(const Trie* child, std::string* out) {
+  if (this==child) return true;
+  for (int i=0; i<kNumLetters; i++) {
+    if (StartsWord(i) && Descend(i)->ReverseLookup(child, out)) {
+      *out = std::string(1,'a'+i) + *out;
+      return true;
+    }
+  }
+  return false;
+}
+
+std::string Trie::ReverseLookup(const Trie* child) {
+  std::string s;
+  ReverseLookup(child, &s);
+  return s;
+}
+
 Trie::~Trie() {
   for (int i=0; i<26; i++) {
     if (children_[i]) delete children_[i];
@@ -79,10 +96,10 @@ Trie::~Trie() {
 
 // Initially, this node is empty
 Trie::Trie() {
-  for (int i=0; i<kNumLetters; i++) {
+  for (int i=0; i<kNumLetters; i++)
     children_[i] = NULL;
-  }
-  is_word_ = false;
-  has_children_ = false;
+  //props_ = 0;
+  //is_word_ = false;
+  //has_children_ = false;
   mark_ = 0;
 }

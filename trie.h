@@ -9,6 +9,7 @@
 
 #ifndef TRIE_H
 #define TRIE_H
+#include <string>
 
 const int kNumLetters = 26;
 const int kQ = 'q'-'a';
@@ -17,26 +18,31 @@ class Trie {
  public:
   Trie();
   ~Trie();
+  enum Masks { WORD=0x80000000, PARENT=0x40000000, MARK=0x3FFFFFFF };
 
-  bool IsWord() const { return is_word_; }
+  bool IsWord() const { return mark_ & WORD; }
   bool StartsWord(int i) const { return children_[i]; }
   Trie* Descend(int i) const { return children_[i]; }
+  bool StartsAnyWord() const { return mark_ & PARENT; }
 
-  void Mark(unsigned mark) { mark_ = mark; }
-  unsigned Mark() const { return mark_; }
-  void MarkHigh() { mark_ |= 0x80000000; }
+  void Mark(unsigned mark) { mark_ &= ~MARK; mark_ |= (mark & MARK); }
+  unsigned Mark() const { return mark_ & MARK; }
+  void MarkHigh() { mark_ |= 0x20000000; }
 
   void AddWord(const char* wd);
   bool LoadFile(const char* filename);
 
-  bool StartsAnyWord() const { return has_children_; }
   bool IsWord(const char* wd) const;
   unsigned int Size() const;
 
+  void SetIsWord()      { mark_ |= WORD; }
+  void SetHasChildren() { mark_ |= PARENT; }
+
+  bool ReverseLookup(const Trie* child, std::string* out);
+  std::string ReverseLookup(const Trie* child);
+
  private:
   Trie* children_[kNumLetters];
-  bool is_word_;
-  bool has_children_;
   unsigned mark_;
 };
 

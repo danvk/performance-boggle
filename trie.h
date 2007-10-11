@@ -27,7 +27,7 @@ class Trie {
 
   void Mark(unsigned mark) { mark_ &= ~MARK; mark_ |= (mark & MARK); }
   unsigned Mark() const { return mark_ & MARK; }
-  void MarkHigh() { mark_ |= 0x20000000; }
+  void MarkHigh() { mark_ |= (MARK - (MARK >> 1)); }
 
   void AddWord(const char* wd);
   bool LoadFile(const char* filename);
@@ -45,5 +45,9 @@ class Trie {
   Trie* children_[kNumLetters];
   unsigned mark_;
 };
+
+// NOTES:
+//   - Adding an "is_word_" field and avoid bit arithmetic is neutral.
+//   - The whole "StartsAnyWord" business is neutral.
 
 #endif

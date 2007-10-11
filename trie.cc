@@ -98,8 +98,5 @@ Trie::~Trie() {
 Trie::Trie() {
   for (int i=0; i<kNumLetters; i++)
     children_[i] = NULL;
-  //props_ = 0;
-  //is_word_ = false;
-  //has_children_ = false;
   mark_ = 0;
 }

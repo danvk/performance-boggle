@@ -12,18 +12,16 @@ Boggler::Boggler(Trie* t): dict_(t), runs_(0), num_boards_(0) {}
 
 int Boggler::Score() {
   runs_ += 1;
-  int score = 0;
-  for (int i=0; i<4; i++)
-    for (int j=0; j<4; j++) {
-      int c = bd_[i][j];
-      if (dict_->StartsWord(c))
-        score += DoDFS(i, j, 0, dict_->Descend(c));
-    }
+  score_ = 0;
+  for (int i=0; i<16; i++) {
+    int c = bd_[i];
+    if (dict_->StartsWord(c))
+      DoDFS(i, 0, dict_->Descend(c));
+  }
 
   // Really should check for overflow here
   num_boards_++;
-
-  return score;
+  return score_;
 }
 
 int Boggler::Score(const char* lets) {
@@ -33,13 +31,12 @@ int Boggler::Score(const char* lets) {
 }
 
 // Returns the score from this portion of the search
-int Boggler::DoDFS(int x, int y, int len, Trie* t) {
-  int c = bd_[x][y];
+void Boggler::DoDFS(int i, int len, Trie* t) {
+  int c = bd_[i];
 
   len += (c==kQ ? 2 : 1);
-  int score = 0;
   if (t->IsWord() && t->Mark() != runs_) {
-    score += kWordScores[len];
+    score_ += kWordScores[len];
     t->Mark(runs_);
 #ifdef PRINT_WORDS
     std::string out;
@@ -48,24 +45,22 @@ int Boggler::DoDFS(int x, int y, int len, Trie* t) {
 #endif
   }
 
-  // This is a surprisingly small optimization
-  if (!t->StartsAnyWord()) return score;
-
   // Could also get rid of any two dimensionality, but maybe GCC does that?
-  bd_[x][y] = kCellUsed;
+  bd_[i] = kCellUsed;
   int cc;
 
-  // Loop unrolling roughly doubles performance
-  // Changing "cc != kCellUnused" -> "~cc" is a significant win
   // To help the loop unrolling...
-#define HIT(x,y) cc = bd_[x][y]; \
-                 if (~cc && t->StartsWord(cc)) \
-		   score += DoDFS(x, y, len, t->Descend(cc))
+#define HIT(x,y) do { cc = bd_[(x)*4+(y)]; \
+		      if (~cc && t->StartsWord(cc)) { \
+		        DoDFS((x)*4+(y), len, t->Descend(cc)); \
+		      } \
+		 } while(0)
 #define HIT3x(x,y) HIT(x,y); HIT(x+1,y); HIT(x+2,y)
 #define HIT3y(x,y) HIT(x,y); HIT(x,y+1); HIT(x,y+2)
 #define HIT8(x,y) HIT3x(x-1,y-1); HIT(x-1,y); HIT(x+1,y); HIT3x(x-1,y+1)
 
-  switch ((x << 2) + y) {
+  //switch ((x << 2) + y) {
+  switch (i) {
     case 0*4 + 0: HIT(0, 1); HIT(1, 0); HIT(1, 1); break;
     case 0*4 + 1: HIT(0, 0); HIT3y(1, 0); HIT(0, 2); break;
     case 0*4 + 2: HIT(0, 1); HIT3y(1, 1); HIT(0, 3); break;
@@ -86,14 +81,14 @@ int Boggler::DoDFS(int x, int y, int len, Trie* t) {
     case 3*4 + 2: HIT3y(2, 1); HIT(3, 1); HIT(3, 3); break;
     case 3*4 + 3: HIT(2, 2); HIT(3, 2); HIT(2, 3); break;
   }
-  bd_[x][y] = c;
-
-  return score;
+  bd_[i] = c;
+  //bd_[x][y] = c;
 }
 
 // Board format: "bcdefghijklmnopq"
 bool Boggler::ParseBoard(const char* lets) {
   for (int i=0; *lets; ++i)
-    bd_[i/4][i%4] = (*lets++)-'a';
+    bd_[i] = (*lets++)-'a';
+    //bd_[i/4][i%4] = (*lets++)-'a';
   return true;
 }

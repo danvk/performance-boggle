@@ -24,18 +24,19 @@ class Boggler {
 
   // Set a cell on the current board. Must have 0 <= x, y < 4 and 0 <= c < 26.
   // These constraints are NOT checked.
-  void SetCell(int x, int y, int c) { bd_[x][y] = c; }
+  void SetCell(int x, int y, int c) { bd_[(x << 2) + y] = c; }
 
   // Returns the total number of boards this Boggler has evaluated.
   int NumBoards() { return num_boards_; }
 
  private:
-  int DoDFS(int x, int y, int len, Trie* t);
+  void DoDFS(int i, int len, Trie* t);
 
   Trie* dict_;
   mutable unsigned int runs_;
-  mutable int bd_[4][4];
+  mutable int bd_[16];
   int num_boards_;
+  int score_;
 };
 
 #endif

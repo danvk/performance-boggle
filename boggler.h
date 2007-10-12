@@ -35,6 +35,7 @@ class Boggler {
   Trie* dict_;
   mutable unsigned int runs_;
   mutable int bd_[16];
+  //mutable char bd_[16];
   int num_boards_;
   int score_;
 };

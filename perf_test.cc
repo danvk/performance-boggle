@@ -19,7 +19,12 @@ int main(int argc, char** argv) {
     fprintf(stderr, "Couldn't load %s, aborting...\n", dict_file);
     return 1;
   }
-  printf("Loaded %d words from dictionary\n", t.Size());
+  printf("Loaded %d words from dictionary (%.2fM)\n",
+	  t.Size(), t.MemoryUsage() / 1048576.0);
+  caddr_t low, high;
+  t.MemorySpan(&low, &high);
+  printf("Memory spanned: %.2fM (0x%08X - 0x%08X)\n",
+	  (high - low) / 1048576.0, (unsigned)low, (unsigned)high);
 
   Boggler b(&t);
   unsigned int prime = (1 << 20) - 3;

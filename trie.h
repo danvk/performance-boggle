@@ -41,6 +41,9 @@ class Trie {
   bool ReverseLookup(const Trie* child, std::string* out);
   std::string ReverseLookup(const Trie* child);
 
+  size_t MemoryUsage() const;
+  void MemorySpan(caddr_t* low, caddr_t* high) const;
+
  private:
   Trie* children_[kNumLetters];
   unsigned mark_;
@@ -49,5 +52,8 @@ class Trie {
 // NOTES:
 //   - Adding an "is_word_" field and avoid bit arithmetic is neutral.
 //   - The whole "StartsAnyWord" business is neutral.
+//
+// TODO:
+//   - Use a smaller array and a bitmask to see which children are set.
 
 #endif

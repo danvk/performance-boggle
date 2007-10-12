@@ -88,6 +88,33 @@ std::string Trie::ReverseLookup(const Trie* child) {
   return s;
 }
 
+size_t Trie::MemoryUsage() const {
+  size_t size = sizeof(*this);
+  for (int i = 0; i < kNumLetters; i++) {
+    if (StartsWord(i)) size += Descend(i)->MemoryUsage();
+  }
+  return size;
+}
+
+void Trie::MemorySpan(caddr_t* low, caddr_t* high) const {
+  if ((unsigned)this & 0x80000000) {
+    // Ignore Tries allocated on the stack
+    *low = (caddr_t)-1;
+    *high = (caddr_t)0;
+  } else {
+    *low = (caddr_t)this;
+    *high = (caddr_t)this; *high += sizeof(*this);
+  }
+  for (int i=0; i<kNumLetters; i++) {
+    if (StartsWord(i)) {
+      caddr_t cl, ch;
+      Descend(i)->MemorySpan(&cl, &ch);
+      if (cl < *low) *low = cl;
+      if (ch > *high) *high = ch;
+    }
+  }
+}
+
 Trie::~Trie() {
   for (int i=0; i<26; i++) {
     if (children_[i]) delete children_[i];

@@ -11,10 +11,12 @@ test: trie_test boggler_test
 perf: perf_test
 	./perf_test
 
-
 trie_test: trie.o trie_test.o
 boggler_test: boggler.o trie.o boggler_test.o
 perf_test: trie.o boggler.o perf_test.o
+
+trie.o: trie.h trie.cc
+boggler.o: boggler.h boggler.cc
 
 clean:
 	rm *.o $(progs)

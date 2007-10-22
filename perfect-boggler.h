@@ -1,0 +1,43 @@
+// An interface for solving Boggle boards given a Trie.
+// This is designed to be extremely efficient.
+
+#ifndef SSBOGGLER_H
+#define SSBOGGLER_H
+
+#include "perfect-trie.h"
+
+class PerfectBoggler {
+ public:
+  // Does not assume ownership of the Trie, though it must remain live for the
+  // lifetime of the Boggler. The trie will be modified by board scoring, and
+  // must not be modified by any other Boggler.
+  PerfectBoggler(PerfectTrie* t);
+
+  // Parses a 16 character boards string like "abcdefghijklmnop"
+  bool ParseBoard(const char* lets);
+
+  // Scores the current board
+  int Score();
+
+  // Shortcut for ParseBoard() + Score()
+  int Score(const char* bd);
+
+  // Set a cell on the current board. Must have 0 <= x, y < 4 and 0 <= c < 26.
+  // These constraints are NOT checked.
+  void SetCell(int x, int y, int c) { bd_[(x << 2) + y] = c; }
+
+  // Returns the total number of boards this Boggler has evaluated.
+  int NumBoards() { return num_boards_; }
+
+ private:
+  void DoDFS(int i, int len, PerfectTrie* t);
+
+  PerfectTrie* dict_;
+  mutable unsigned int runs_;
+  mutable int bd_[16];
+  //mutable char bd_[16];
+  int num_boards_;
+  int score_;
+};
+
+#endif

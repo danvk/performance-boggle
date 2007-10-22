@@ -3,7 +3,8 @@
 #include <unistd.h>
 
 #include "trie.h"
-#include "boggler.h"
+#include "perfect-trie.h"
+#include "perfect-boggler.h"
 
 void CheckInt(int expected, int actual) {
   if (expected == actual) return;
@@ -23,8 +24,10 @@ int main(int argc, char** argv) {
 
   assert(7 == t.Size());
 
+  PerfectTrie* pt = PerfectTrie::CompactTrie(t);
+
   // try out the various interfaces
-  Boggler b(&t);
+  PerfectBoggler b(pt);
   CheckInt(0, b.NumBoards());
   CheckInt(4, b.Score("texxaxxxyyyyzzzz"));
   CheckInt(5, b.Score("texxakxxyyyyzzzz"));

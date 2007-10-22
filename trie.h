@@ -6,6 +6,9 @@
 //
 // This Trie class is designed for Boggle board-solving insofar as it collapses
 // any 'qu' to a simple 'q' and rejects a word containing 'q[^u]'.
+//
+// You should probably use PerfectTrie instead of this, since it has drastically
+// lower memory usage and slightly better performance.
 
 #ifndef TRIE_H
 #define TRIE_H
@@ -54,6 +57,8 @@ class Trie {
 //   - The whole "StartsAnyWord" business is neutral.
 //
 // TODO:
-//   - Use a smaller array and a bitmask to see which children are set.
+//   - Do a secondary pass to compact the trie as much as possible
+//   - Could also map high-frequency letters to low numbers and avoid some
+//   bit-twiddling at the cost of memory usage.
 
 #endif

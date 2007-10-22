@@ -18,26 +18,28 @@ class Trie {
   Trie();
   ~Trie();
 
+  // Fast operations
+  bool IsWord() const { return bits_ & (1 << 26); }
+  bool StartsWord(int i) const { return bits_ & (1 << i); }
+  int NumChildren() const { return CountBits(bits_ & ((1<<26) - 1)); }
+  Trie* Descend(int i) const {
+    unsigned v = bits_ & ((1 << i) - 1);
+    return (Trie*)data_[(IsWord() ? 1 : 0) + CountBits(v)];
+  }
+
+  // NOTE: These should NEVER be called unless this Node is already a word.
+  void Mark(unsigned mark) { data_[0] = mark; }
+  unsigned Mark() { return data_[0]; }
+
+  bool IsWord(const char* wd) const;
+  void SetIsWord(bool w) { bits_ &= ~(1<<26); bits_ |= (w << 26); }
+
+  // Trie-building methods (slow)
   class SimpleTrie;
   static Trie* CompactTrie(const SimpleTrie& t);
   static Trie* CreateFromFile(const char* file);
 
-  bool IsWord() const { return bits_ & (1 << 26); }
-  bool StartsWord(int i) const { return bits_ & (1 << i); }
-  int NumChildren() const { return CountBits(bits_ & ((1<<26) - 1)); }
-
-  // Describe fanciness
-  Trie* Descend(int i) const {
-    unsigned v = bits_ & ((1 << i) - 1);
-    return children_[CountBits(v)];
-  }
-
-  void Mark(unsigned mark) { mark_ = mark; }
-  unsigned Mark() { return mark_; }
-
-  bool IsWord(const char* wd) const;
-  void SetIsWord() { bits_ |= (1 << 26); }
-
+  // Analysis (slow)
   size_t Size() const;
   size_t NumNodes() const;
   size_t MemoryUsage() const;
@@ -45,6 +47,29 @@ class Trie {
 
   void PrintTrie(std::string prefix = "") const;
 
+ private:
+  unsigned bits_;      // used to determine word-ness and children.
+
+  // I am unable to express this layout within C++'s type system.
+  // If this is a word, data_[0] is a marks field and data_[1..] are children.
+  // Otherwise, data_[0..] are all children.
+  // This representation allows the data to be referenced branch-free.
+  unsigned data_[0];
+
+  /*
+  unsigned mark_;      // only relevant if this is a word.
+  Trie* children_[0];
+  */
+
+  // Taken from http://graphics.stanford.edu/~seander/bithacks.html
+  static inline int CountBits(unsigned v) {
+    v = v - ((v >> 1) & 0x55555555);
+    v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
+    v = ((v + (v >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
+    return v;
+  }
+
+ public:
   // Plain vanilla trie used for bootstrapping the Trie.
   class SimpleTrie {
    public:
@@ -65,17 +90,6 @@ class Trie {
   };
 
  private:
-  unsigned bits_;
-  unsigned mark_;
-  Trie* children_[0];
-  // Taken from http://graphics.stanford.edu/~seander/bithacks.html
-  static inline int CountBits(unsigned v) {
-    v = v - ((v >> 1) & 0x55555555);
-    v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
-    v = ((v + (v >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
-    return v;
-  }
-
   // Pre-allocated buffer
   static bool is_allocated;
   static int bytes_allocated;
@@ -91,17 +105,13 @@ class Trie {
 // - 111355 childless nodes
 // -  60848 words w/ children
 // => 213069 non-word nodes
-// - 4623260 bytes = 4.41M
 // So,
-// - 1541088 bytes = 33% is used by bits_
-// - 1541088 bytes = 33% is used by mark_
-// - 1541084 bytes = 33% is used by children_
-// -  852276 bytes = 18.4% is in unused mark_ fields.
-// -  445420 bytes =  9.6% is in unused bits_ fields.
-// - pointer requires at least 21 bits
+// - 1541088 bytes = 41% is used by bits_
+// -  688812 bytes = 18% is used by mark_
+// - 1541084 bytes = 41% is used by children_
 //
-// If I allocated using a BFS strategy, I might reduce the memory gap between
-// parent and child significantly, in which case I might delta-encode the
-// addresses with 16-bit shorts. Right now the max gap is 576115 words.
+// -  445420 bytes =  9.6% is in unused bits_ fields.
+//
+// Eliminated unused mark_ fields => 3,770,984 bytes.
 
 #endif

@@ -33,8 +33,15 @@ int main(int argc, char** argv) {
   assert(!t->IsWord("random"));
   assert(!t->IsWord("cultur"));
 
-  assert(0 == t->Mark());
-  t->Mark(12345);
-  assert(12345 == t->Mark());
+  // Get a full word to test marking
+  Trie* wd = t->Descend('t' - 'a');
+  assert(NULL != wd);
+  wd = wd->Descend('e' - 'a');
+  assert(NULL != wd);
+  wd = wd->Descend('a' - 'a');
+  assert(NULL != wd);
+  assert(0 == wd->Mark());
+  wd->Mark(12345);
+  assert(12345 == wd->Mark());
   printf("%s: All tests passed!\n", argv[0]);
 }

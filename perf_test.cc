@@ -99,7 +99,7 @@ size_t WordsWithChildren(const Trie& pt) {
 void Gaps(const Trie* pt, std::map<int, int>* gaps) {
   for (int i = 0; i < 26; i++) {
     if (!pt->StartsWord(i)) continue;
-    (*gaps)[pt->Descend(i) - pt] += 1;
+    (*gaps)[(char*)pt->Descend(i) - (char*)pt] += 1;
     Gaps(pt->Descend(i), gaps);
   }
 }

@@ -32,20 +32,15 @@ Trie* Trie::CompactTrie(const SimpleTrie& t) {
     // Construct the Trie in the Trie
     const SimpleTrie& t = cur.t;
     Trie* pt = cur.pt;
-    pt->mark_ = 0;
-    pt->bits_ = t.IsWord() ? 1 << 26 : 0;
+    pt->SetIsWord(t.IsWord());
+    if (t.IsWord()) pt->Mark(0);
     int num_written = 0;
+    int off = t.IsWord() ? 1 : 0;
     for (int i=0; i<kNumLetters; i++) {
       if (t.StartsWord(i)) {
 	pt->bits_ |= (1 << i);
-	//if (cur.depth < 6) {
-	pt->children_[num_written] = AllocatePT(*t.Descend(i));
-	todo.push(WorkItem(*t.Descend(i),
-			    pt->children_[num_written],
-			    cur.depth + 1));
-	//} else {
-	//  pt->children_[num_written] = CompactTrie(*t.Descend(i));
-	//}
+	pt->data_[off + num_written] = (unsigned)AllocatePT(*t.Descend(i));
+	todo.push(WorkItem(*t.Descend(i), pt->Descend(i), cur.depth + 1));
 	num_written += 1;
       }
     }
@@ -54,8 +49,9 @@ Trie* Trie::CompactTrie(const SimpleTrie& t) {
 }
 
 Trie::~Trie() {
-  for (int i=0; i<NumChildren(); i++) {
-    delete children_[i];
+  for (int i=0; i<26; i++) {
+    if (StartsWord(i))
+      delete Descend(i);
   }
 }
 
@@ -85,7 +81,9 @@ size_t Trie::Size() const {
 }
 
 size_t Trie::MemoryUsage() const {
-  size_t size = sizeof(*this) + sizeof(Trie*) * NumChildren();
+  size_t size = sizeof(*this);
+  if (IsWord()) size += sizeof(unsigned);
+  size += sizeof(Trie*) * NumChildren();
   for (int i = 0; i < 26; i++) {
     if (StartsWord(i))
       size += Descend(i)->MemoryUsage();
@@ -155,6 +153,7 @@ Trie* Trie::CreateFromFile(const char* filename) {
 }
 
 // Various memory-allocation bits
+// TODO(danvk): Move this into the CompactTrie routine.
 bool Trie::is_allocated = false;
 int Trie::bytes_allocated = 0;
 int Trie::bytes_used = 0;
@@ -179,7 +178,8 @@ void* Trie::GetMemory(size_t amount) {
 
 // This is messy -- use placement new to get a Trie of the desired size.
 Trie* Trie::AllocatePT(const SimpleTrie& t) {
-  int mem_size = sizeof(Trie) + ::NumChildren(t) * sizeof(Trie*);
+  int mem_size = sizeof(Trie) + (t.IsWord() ? sizeof(unsigned) : 0)
+		 + ::NumChildren(t) * sizeof(Trie*);
   void* mem = Trie::GetMemory(mem_size);
   return new(mem) Trie;
 }

@@ -8,13 +8,17 @@
 
 #ifndef PERFECT_TRIE_H__
 #define PERFECT_TRIE_H__
-#include "trie.h"
 #include <string>
+
+const int kNumLetters = 26;
+const int kQ = 'q' - 'a';
 
 class PerfectTrie {
  public:
   PerfectTrie();
   ~PerfectTrie();
+
+  class Trie;
   static PerfectTrie* CompactTrie(const Trie& t);
   static PerfectTrie* CompactTrieBFS(const Trie& t);
   static PerfectTrie* CreateFromFile(const char* file);
@@ -41,6 +45,25 @@ class PerfectTrie {
   void MemorySpan(caddr_t* low, caddr_t* high) const;
 
   void PrintTrie(std::string prefix = "") const;
+
+  // Plain vanilla trie used for bootstrapping the PerfectTrie.
+  class Trie {
+   public:
+    Trie();
+    ~Trie();
+
+    bool StartsWord(int i) const { return children_[i]; }
+    Trie* Descend(int i) const { return children_[i]; }
+
+    bool IsWord() const { return is_word_; }
+    void SetIsWord() { is_word_ = true; }
+
+    void AddWord(const char* wd);
+
+   private:
+    bool is_word_;
+    Trie* children_[26];
+  };
 
  private:
   unsigned bits_;

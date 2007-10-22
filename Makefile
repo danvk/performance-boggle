@@ -11,12 +11,11 @@ test: perfect-trie_test perfect-boggler_test
 perf: perf_test
 	./perf_test
 
-perf_test: trie.o perf_test.o perfect-trie.o perfect-boggler.o
-perfect-trie_test: trie.o perfect-trie.o perfect-trie_test.o
-perfect-boggler_test: trie.o perfect-trie.o perfect-boggler.o perfect-boggler_test.o
+perf_test: perf_test.o perfect-trie.o perfect-boggler.o
+perfect-trie_test: perfect-trie.o perfect-trie_test.o
+perfect-boggler_test: perfect-trie.o perfect-boggler.o perfect-boggler_test.o
 
-trie.o: trie.h trie.cc
-perfect-trie.o: perfect-trie.h perfect-trie.cc trie.h
+perfect-trie.o: perfect-trie.h perfect-trie.cc
 perfect-boggler.o: perfect-trie.h perfect-boggler.h perfect-boggler.cc
 
 clean:

@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "trie.h"
 #include "perfect-trie.h"
 #include "perfect-boggler.h"
 
@@ -13,7 +12,7 @@ void CheckInt(int expected, int actual) {
 }
 
 int main(int argc, char** argv) {
-  Trie t;
+  PerfectTrie::Trie t;
   t.AddWord("ate");
   t.AddWord("tea");
   t.AddWord("eta");

@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "trie.h"
 #include "perfect-trie.h"
 
 int main(int argc, char** argv) {

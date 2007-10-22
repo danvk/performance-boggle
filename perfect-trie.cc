@@ -16,7 +16,7 @@ PerfectTrie* PerfectTrie::CompactTrie(const Trie& t) {
   PerfectTrie* pt = AllocatePT(t);
   int num_children = ::NumChildren(t);
 
-  pt->mark_ = t.Mark();
+  pt->mark_ = 0;
   pt->bits_ = t.IsWord() ? 1 << 26 : 0;
   int num_written = 0;
   for (int i=0; i<kNumLetters; i++) {
@@ -51,7 +51,7 @@ PerfectTrie* PerfectTrie::CompactTrieBFS(const Trie& t) {
     // Construct the Trie in the PerfectTrie
     const Trie& t = cur.t;
     PerfectTrie* pt = cur.pt;
-    pt->mark_ = t.Mark();
+    pt->mark_ = 0;
     pt->bits_ = t.IsWord() ? 1 << 26 : 0;
     int num_written = 0;
     for (int i=0; i<kNumLetters; i++) {
@@ -141,15 +141,39 @@ void PerfectTrie::PrintTrie(std::string prefix) const {
   }
 }
 
-PerfectTrie* PerfectTrie::CreateFromFile(const char* file) {
+bool IsBoggleWord(const char* wd) {
+  int size = strlen(wd);
+  if (size < 3 || size > 17) return false;
+  for (int i=0; i<size; ++i) {
+    int c = wd[i];
+    if (c<'a' || c>'z') return false;
+    if (c=='q' && (i+1 >= size || wd[1+i] != 'u')) return false;
+  }
+  return true;
+}
+
+PerfectTrie* PerfectTrie::CreateFromFile(const char* filename) {
   Trie* t = new Trie;
-  if (!t->LoadFile(file)) return NULL;
+  char line[80];
+  FILE* f = fopen(filename, "r");
+  if (!f) {
+    fprintf(stderr, "Couldn't open %s\n", filename);
+    delete t;
+    return NULL;
+  }
+
+  while (!feof(f) && fscanf(f, "%s", line)) {
+    if (!IsBoggleWord(line)) continue;
+    t->AddWord(line);
+  }
+  fclose(f);
+
   PerfectTrie* pt = PerfectTrie::CompactTrieBFS(*t);
   delete t;
   return pt;
 }
 
-
+// Various memory-allocation bits
 bool PerfectTrie::is_allocated = false;
 int PerfectTrie::bytes_allocated = 0;
 int PerfectTrie::bytes_used = 0;

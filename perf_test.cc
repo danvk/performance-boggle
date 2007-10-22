@@ -129,7 +129,7 @@ void TrieStats(const PerfectTrie& pt) {
   printf("Trie contains %d paired nodes.\n", EvenNodes(pt));
 
   std::map<int, int> gaps; Gaps(&pt, &gaps);
-  std::map<int,int>::const_reverse_iterator i = gaps.rbegin();
+  std::map<int, int>::const_reverse_iterator i = gaps.rbegin();
   for (int j=0; j<20; j+=1, i++)
     printf("%5d: %d\n", i->first, i->second);
 }

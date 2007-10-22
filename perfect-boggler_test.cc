@@ -21,9 +21,6 @@ int main(int argc, char** argv) {
   t.AddWord("teak");
   t.AddWord("fiver");
   t.AddWord("sixers");
-
-  assert(7 == t.Size());
-
   PerfectTrie* pt = PerfectTrie::CompactTrie(t);
 
   // try out the various interfaces

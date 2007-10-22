@@ -1,11 +1,10 @@
-#include "perfect-trie.h"
+#include "trie.h"
 #include <queue>
 #include <utility>
 
-typedef PerfectTrie::Trie Trie;
-PerfectTrie::PerfectTrie() : bits_(0) {}
+Trie::Trie() : bits_(0) {}
 
-int NumChildren(const Trie& t) {
+int NumChildren(const Trie::SimpleTrie& t) {
   int num_children = 0;
   for (int i=0; i<26; i++) {
     if (t.StartsWord(i)) num_children += 1;
@@ -13,45 +12,26 @@ int NumChildren(const Trie& t) {
   return num_children;
 }
 
-PerfectTrie* PerfectTrie::CompactTrie(const Trie& t) {
-  PerfectTrie* pt = AllocatePT(t);
-  int num_children = ::NumChildren(t);
-
-  pt->mark_ = 0;
-  pt->bits_ = t.IsWord() ? 1 << 26 : 0;
-  int num_written = 0;
-  for (int i=0; i<kNumLetters; i++) {
-    if (t.StartsWord(i)) {
-      pt->bits_ |= (1 << i);
-      pt->children_[num_written] = CompactTrie(*t.Descend(i));
-      num_written += 1;
-      assert(num_written <= num_children);
-    }
-  }
-  assert(num_written == num_children);
-  assert(pt->NumChildren() == num_children);
-  return pt;
-}
-
 // Allocate in BFS order to minimize parent/child spacing in memory.
 struct WorkItem {
-  const Trie& t;
-  PerfectTrie* pt;
+  const Trie::SimpleTrie& t;
+  Trie* pt;
   int depth;
-  WorkItem(const Trie& tr, PerfectTrie* ptr, int d) : t(tr), pt(ptr), depth(d) {}
+  WorkItem(const Trie::SimpleTrie& tr,
+	   Trie* ptr, int d) : t(tr), pt(ptr), depth(d) {}
 };
-PerfectTrie* PerfectTrie::CompactTrieBFS(const Trie& t) {
+Trie* Trie::CompactTrie(const SimpleTrie& t) {
   std::queue<WorkItem> todo;
-  PerfectTrie* root = AllocatePT(t);
+  Trie* root = AllocatePT(t);
   todo.push(WorkItem(t, root, 1));
 
   while (!todo.empty()) {
     WorkItem cur = todo.front();
     todo.pop();
 
-    // Construct the Trie in the PerfectTrie
-    const Trie& t = cur.t;
-    PerfectTrie* pt = cur.pt;
+    // Construct the Trie in the Trie
+    const SimpleTrie& t = cur.t;
+    Trie* pt = cur.pt;
     pt->mark_ = 0;
     pt->bits_ = t.IsWord() ? 1 << 26 : 0;
     int num_written = 0;
@@ -73,14 +53,14 @@ PerfectTrie* PerfectTrie::CompactTrieBFS(const Trie& t) {
   return root;
 }
 
-PerfectTrie::~PerfectTrie() {
+Trie::~Trie() {
   for (int i=0; i<NumChildren(); i++) {
     delete children_[i];
   }
 }
 
 // these are mostly copied from trie.cc
-bool PerfectTrie::IsWord(const char* wd) const {
+bool Trie::IsWord(const char* wd) const {
   if (!wd) return false;
   if (!*wd) return IsWord();
 
@@ -95,7 +75,7 @@ bool PerfectTrie::IsWord(const char* wd) const {
   return false;
 }
 
-size_t PerfectTrie::Size() const {
+size_t Trie::Size() const {
   size_t size = 0;
   if (IsWord()) size++;
   for (int i=0; i<26; i++) {
@@ -104,8 +84,8 @@ size_t PerfectTrie::Size() const {
   return size;
 }
 
-size_t PerfectTrie::MemoryUsage() const {
-  size_t size = sizeof(*this) + sizeof(PerfectTrie*) * NumChildren();
+size_t Trie::MemoryUsage() const {
+  size_t size = sizeof(*this) + sizeof(Trie*) * NumChildren();
   for (int i = 0; i < 26; i++) {
     if (StartsWord(i))
       size += Descend(i)->MemoryUsage();
@@ -113,7 +93,7 @@ size_t PerfectTrie::MemoryUsage() const {
   return size;
 }
 
-void PerfectTrie::MemorySpan(caddr_t* low, caddr_t* high) const {
+void Trie::MemorySpan(caddr_t* low, caddr_t* high) const {
   if ((unsigned)this & 0x80000000) {
     // Ignore Tries allocated on the stack
     *low = (caddr_t)-1;
@@ -132,7 +112,7 @@ void PerfectTrie::MemorySpan(caddr_t* low, caddr_t* high) const {
   }
 }
 
-void PerfectTrie::PrintTrie(std::string prefix) const {
+void Trie::PrintTrie(std::string prefix) const {
   if (IsWord()) printf("+"); else printf("-");
   printf("(%08X) ", bits_);
   printf("%s\n", prefix.c_str());
@@ -153,8 +133,8 @@ bool IsBoggleWord(const char* wd) {
   return true;
 }
 
-PerfectTrie* PerfectTrie::CreateFromFile(const char* filename) {
-  Trie* t = new Trie;
+Trie* Trie::CreateFromFile(const char* filename) {
+  SimpleTrie* t = new SimpleTrie;
   char line[80];
   FILE* f = fopen(filename, "r");
   if (!f) {
@@ -169,17 +149,17 @@ PerfectTrie* PerfectTrie::CreateFromFile(const char* filename) {
   }
   fclose(f);
 
-  PerfectTrie* pt = PerfectTrie::CompactTrieBFS(*t);
+  Trie* pt = Trie::CompactTrie(*t);
   delete t;
   return pt;
 }
 
 // Various memory-allocation bits
-bool PerfectTrie::is_allocated = false;
-int PerfectTrie::bytes_allocated = 0;
-int PerfectTrie::bytes_used = 0;
-char* PerfectTrie::memory_pool;
-void* PerfectTrie::GetMemory(size_t amount) {
+bool Trie::is_allocated = false;
+int Trie::bytes_allocated = 0;
+int Trie::bytes_used = 0;
+char* Trie::memory_pool;
+void* Trie::GetMemory(size_t amount) {
   if (!is_allocated) {
     // TODO(danvk): Be smarter about this -- allocate just enough for each Trie.
     memory_pool = new char[5 << 20];
@@ -197,17 +177,17 @@ void* PerfectTrie::GetMemory(size_t amount) {
   }
 }
 
-// This is messy -- use placement new to get a PerfectTrie of the desired size.
-PerfectTrie* PerfectTrie::AllocatePT(const Trie& t) {
-  int mem_size = sizeof(PerfectTrie) + ::NumChildren(t) * sizeof(PerfectTrie*);
-  void* mem = PerfectTrie::GetMemory(mem_size);
-  return new(mem) PerfectTrie;
+// This is messy -- use placement new to get a Trie of the desired size.
+Trie* Trie::AllocatePT(const SimpleTrie& t) {
+  int mem_size = sizeof(Trie) + ::NumChildren(t) * sizeof(Trie*);
+  void* mem = Trie::GetMemory(mem_size);
+  return new(mem) Trie;
 }
 
 // Plain-vanilla Trie code
 inline int idx(char x) { return x - 'a'; }
 
-void Trie::AddWord(const char* wd) {
+void Trie::SimpleTrie::AddWord(const char* wd) {
   if (!wd) return;
   if (!*wd) {
     SetIsWord();
@@ -215,21 +195,21 @@ void Trie::AddWord(const char* wd) {
   }
   int c = idx(*wd);
   if (!StartsWord(c))
-    children_[c] = new Trie;
+    children_[c] = new SimpleTrie;
   if (c!=kQ)
     Descend(c)->AddWord(wd+1);
   else
     Descend(c)->AddWord(wd+2);
 }
 
-Trie::~Trie() {
+Trie::SimpleTrie::~SimpleTrie() {
   for (int i=0; i<26; i++) {
     if (children_[i]) delete children_[i];
   }
 }
 
 // Initially, this node is empty
-Trie::Trie() {
+Trie::SimpleTrie::SimpleTrie() {
   for (int i=0; i<kNumLetters; i++)
     children_[i] = NULL;
   is_word_ = false;

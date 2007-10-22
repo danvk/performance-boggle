@@ -1,4 +1,4 @@
-#include "perfect-boggler.h"
+#include "boggler.h"
 #include <ctype.h>
 #include <stdio.h>
 //#define PRINT_WORDS
@@ -8,9 +8,10 @@ static const int kWordScores[] =
   //0, 1, 2, 3, 4, 5, 6, 7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17
   { 0, 0, 0, 1, 1, 2, 3, 5, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11 };
 
-PerfectBoggler::PerfectBoggler(PerfectTrie* t): dict_(t), runs_(0), num_boards_(0) {}
+Boggler::Boggler(Trie* t) :
+  dict_(t), runs_(0), num_boards_(0) {}
 
-int PerfectBoggler::Score() {
+int Boggler::Score() {
   runs_ += 1;
   score_ = 0;
   for (int i=0; i<16; i++) {
@@ -24,14 +25,14 @@ int PerfectBoggler::Score() {
   return score_;
 }
 
-int PerfectBoggler::Score(const char* lets) {
+int Boggler::Score(const char* lets) {
   if (!ParseBoard(lets))
     return -1;
   return Score();
 }
 
 // Returns the score from this portion of the search
-void PerfectBoggler::DoDFS(int i, int len, PerfectTrie* t) {
+void Boggler::DoDFS(int i, int len, Trie* t) {
   int c = bd_[i];
 
   len += (c==kQ ? 2 : 1);
@@ -82,11 +83,10 @@ void PerfectBoggler::DoDFS(int i, int len, PerfectTrie* t) {
     case 3*4 + 3: HIT(2, 2); HIT(3, 2); HIT(2, 3); break;
   }
   bd_[i] = c;
-  //bd_[x][y] = c;
 }
 
 // Board format: "bcdefghijklmnopq"
-bool PerfectBoggler::ParseBoard(const char* lets) {
+bool Boggler::ParseBoard(const char* lets) {
   for (int i=0; *lets; ++i)
     bd_[i] = (*lets++)-'a';
     //bd_[i/4][i%4] = (*lets++)-'a';

@@ -6,10 +6,10 @@ const int reps = 10;
 #include <stdio.h>
 #include <sys/time.h>
 #include <map>
-#include "perfect-trie.h"
-#include "perfect-boggler.h"
+#include "trie.h"
+#include "boggler.h"
 
-void TrieStats(const PerfectTrie& pt);
+void TrieStats(const Trie& pt);
 double secs();
 
 int main(int argc, char** argv) {
@@ -17,11 +17,11 @@ int main(int argc, char** argv) {
   if (argc == 2) dict_file = argv[1];
   else           dict_file = "words";
 
-  PerfectTrie* pt = PerfectTrie::CreateFromFile(dict_file);
+  Trie* pt = Trie::CreateFromFile(dict_file);
   assert(pt != NULL);
   TrieStats(*pt);
 
-  PerfectBoggler b(pt);
+  Boggler b(pt);
   unsigned int prime = (1 << 20) - 3;
   unsigned int total_score = 0;
   unsigned int hash;
@@ -69,7 +69,7 @@ double secs() {
   return t.tv_sec + t.tv_usec / 1000000.0;
 }
 
-size_t NumNodes(const PerfectTrie& pt) {
+size_t NumNodes(const Trie& pt) {
   size_t r = 1;
   for (int i = 0; i < 26; i++) {
     if (pt.StartsWord(i))
@@ -78,7 +78,7 @@ size_t NumNodes(const PerfectTrie& pt) {
   return r;
 }
 
-size_t Childless(const PerfectTrie& pt) {
+size_t Childless(const Trie& pt) {
   size_t r = pt.NumChildren() == 0 ? 1 : 0;
   for (int i = 0; i < 26; i++) {
     if (pt.StartsWord(i))
@@ -87,7 +87,7 @@ size_t Childless(const PerfectTrie& pt) {
   return r;
 }
 
-size_t WordsWithChildren(const PerfectTrie& pt) {
+size_t WordsWithChildren(const Trie& pt) {
   size_t r = (pt.NumChildren() > 0 && pt.IsWord()) ? 1 : 0;
   for (int i = 0; i < 26; i++) {
     if (pt.StartsWord(i))
@@ -96,7 +96,7 @@ size_t WordsWithChildren(const PerfectTrie& pt) {
   return r;
 }
 
-void Gaps(const PerfectTrie* pt, std::map<int, int>* gaps) {
+void Gaps(const Trie* pt, std::map<int, int>* gaps) {
   for (int i = 0; i < 26; i++) {
     if (!pt->StartsWord(i)) continue;
     (*gaps)[pt->Descend(i) - pt] += 1;
@@ -104,7 +104,7 @@ void Gaps(const PerfectTrie* pt, std::map<int, int>* gaps) {
   }
 }
 
-size_t EvenNodes(const PerfectTrie& pt) {
+size_t EvenNodes(const Trie& pt) {
   int nc = pt.NumChildren();
   size_t r = (nc > 0 && nc % 2 ==0) ? nc : 0;
   for (int i = 0; i < 26; i++) {
@@ -114,8 +114,8 @@ size_t EvenNodes(const PerfectTrie& pt) {
   return r;
 }
 
-void TrieStats(const PerfectTrie& pt) {
-  printf("Loaded %zd words into %zd-node PerfectTrie (%zd bytes)\n",
+void TrieStats(const Trie& pt) {
+  printf("Loaded %zd words into %zd-node Trie (%zd bytes)\n",
 	  pt.Size(), NumNodes(pt), pt.MemoryUsage());
 
   caddr_t low, high;

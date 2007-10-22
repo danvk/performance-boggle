@@ -4,14 +4,14 @@
 #ifndef SSBOGGLER_H
 #define SSBOGGLER_H
 
-#include "perfect-trie.h"
+#include "trie.h"
 
-class PerfectBoggler {
+class Boggler {
  public:
   // Does not assume ownership of the Trie, though it must remain live for the
   // lifetime of the Boggler. The trie will be modified by board scoring, and
   // must not be modified by any other Boggler.
-  PerfectBoggler(PerfectTrie* t);
+  Boggler(Trie* t);
 
   // Parses a 16 character boards string like "abcdefghijklmnop"
   bool ParseBoard(const char* lets);
@@ -30,12 +30,11 @@ class PerfectBoggler {
   int NumBoards() { return num_boards_; }
 
  private:
-  void DoDFS(int i, int len, PerfectTrie* t);
+  void DoDFS(int i, int len, Trie* t);
 
-  PerfectTrie* dict_;
+  Trie* dict_;
   mutable unsigned int runs_;
   mutable int bd_[16];
-  //mutable char bd_[16];
   int num_boards_;
   int score_;
 };

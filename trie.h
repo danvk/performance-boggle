@@ -1,9 +1,9 @@
 // Like the garden-variety Trie, but only allocates memory for pointers to
 // children it actually has. It uses a bit set to keep track of which pointer
-// corresponds to which letter. Because each PerfectTrie node has a variable
+// corresponds to which letter. Because each Trie node has a variable
 // number of children, they cannot be allocated with new. Memory is allocated
 // maually and the node constructed with placement new.
-// To avoid dealing with all this, just create a PerfectTrie from a Trie or
+// To avoid dealing with all this, just create a Trie from a Trie or
 // directly from a dictionary file.
 
 #ifndef PERFECT_TRIE_H__
@@ -13,22 +13,21 @@
 const int kNumLetters = 26;
 const int kQ = 'q' - 'a';
 
-class PerfectTrie {
+class Trie {
  public:
-  PerfectTrie();
-  ~PerfectTrie();
+  Trie();
+  ~Trie();
 
-  class Trie;
-  static PerfectTrie* CompactTrie(const Trie& t);
-  static PerfectTrie* CompactTrieBFS(const Trie& t);
-  static PerfectTrie* CreateFromFile(const char* file);
+  class SimpleTrie;
+  static Trie* CompactTrie(const SimpleTrie& t);
+  static Trie* CreateFromFile(const char* file);
 
   bool IsWord() const { return bits_ & (1 << 26); }
   bool StartsWord(int i) const { return bits_ & (1 << i); }
   int NumChildren() const { return CountBits(bits_ & ((1<<26) - 1)); }
 
   // Describe fanciness
-  PerfectTrie* Descend(int i) const {
+  Trie* Descend(int i) const {
     unsigned v = bits_ & ((1 << i) - 1);
     return children_[CountBits(v)];
   }
@@ -46,14 +45,14 @@ class PerfectTrie {
 
   void PrintTrie(std::string prefix = "") const;
 
-  // Plain vanilla trie used for bootstrapping the PerfectTrie.
-  class Trie {
+  // Plain vanilla trie used for bootstrapping the Trie.
+  class SimpleTrie {
    public:
-    Trie();
-    ~Trie();
+    SimpleTrie();
+    ~SimpleTrie();
 
     bool StartsWord(int i) const { return children_[i]; }
-    Trie* Descend(int i) const { return children_[i]; }
+    SimpleTrie* Descend(int i) const { return children_[i]; }
 
     bool IsWord() const { return is_word_; }
     void SetIsWord() { is_word_ = true; }
@@ -62,13 +61,13 @@ class PerfectTrie {
 
    private:
     bool is_word_;
-    Trie* children_[26];
+    SimpleTrie* children_[26];
   };
 
  private:
   unsigned bits_;
   unsigned mark_;
-  PerfectTrie* children_[0];
+  Trie* children_[0];
   // Taken from http://graphics.stanford.edu/~seander/bithacks.html
   static inline int CountBits(unsigned v) {
     v = v - ((v >> 1) & 0x55555555);
@@ -83,7 +82,7 @@ class PerfectTrie {
   static int bytes_used;
   static char* memory_pool;
   static void* GetMemory(size_t amount);
-  static PerfectTrie* AllocatePT(const Trie& t);
+  static Trie* AllocatePT(const SimpleTrie& t);
 };
 
 // Some statistics:

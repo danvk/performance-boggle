@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "perfect-trie.h"
-#include "perfect-boggler.h"
+#include "trie.h"
+#include "boggler.h"
 
 void CheckInt(int expected, int actual) {
   if (expected == actual) return;
@@ -12,7 +12,7 @@ void CheckInt(int expected, int actual) {
 }
 
 int main(int argc, char** argv) {
-  PerfectTrie::Trie t;
+  Trie::SimpleTrie t;
   t.AddWord("ate");
   t.AddWord("tea");
   t.AddWord("eta");
@@ -20,10 +20,10 @@ int main(int argc, char** argv) {
   t.AddWord("teak");
   t.AddWord("fiver");
   t.AddWord("sixers");
-  PerfectTrie* pt = PerfectTrie::CompactTrie(t);
+  Trie* pt = Trie::CompactTrie(t);
 
   // try out the various interfaces
-  PerfectBoggler b(pt);
+  Boggler b(pt);
   CheckInt(0, b.NumBoards());
   CheckInt(4, b.Score("texxaxxxyyyyzzzz"));
   CheckInt(5, b.Score("texxakxxyyyyzzzz"));

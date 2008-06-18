@@ -101,8 +101,4 @@ class MultiBoggle {
   int bd_[16];
 };
 
-// This is necessary because of the templating. Be careful to avoid multiple
-// definitions.
-// #include "multiboggle.cc"
-
 #endif

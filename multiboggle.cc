@@ -17,56 +17,6 @@ MultiBoggle::MultiBoggle(Trie* t) : dict_(t), runs_(0), used_(0) {
   CalcMaxLenAddrs();
 }
 
-// TODO: Ensure TwoHole paths are pre-allocated.
-// TODO: Make trie_mark a property of the Trie.
-struct TwoHoleFinder {
-  void EmptyCell(int i, int len, int c, int used, Trie* t) {
-    out_->paths[i & 1].push_back(MultiBoggle::Path());
-    MultiBoggle::Path& p = out_->paths[i & 1].back();
-    p.used_mask = used;
-    p.len = len;
-    p.node = t;
-  }
-
-  void FoundWord(int i, int len, int c, int used, Trie* t) {
-    if (t->Mark() != runs_) {
-      out_->score += kWordScores[len];
-      t->Mark(runs_);
-      if (PRINT_WORDS) {
-        std::string out;
-        dict_->ReverseLookup(t, &out);
-        printf("%s\n", out.c_str());
-      }
-    }
-  }
-
-  unsigned int runs_;
-  Trie* dict_;
-  MultiBoggle::TwoHole* out_;
-};
-void MultiBoggle::SolveTwoHole(TwoHole* out) {
-  bd_[0*4 + 0] = kCellEmpty;
-  bd_[3*4 + 3] = kCellEmpty;
-  runs_ += 1;
-  out->score = 0;
-  out->trie_mark = runs_;
-
-  TwoHoleFinder th;
-  th.runs_ = runs_;
-  th.dict_ = dict_;
-  th.out_ = out;
-
-  for (int i=0; i<16; i++) {
-    used_ = 0;  // TODO: why is this necessary?
-    int c = bd_[i];
-    if (c == kCellEmpty)
-      DoDFS(i, 0, dict_, th);
-    else if (dict_->StartsWord(c))
-      DoDFS(i, 0, dict_->Descend(c), th);
-  }
-}
-
-
 // callback: idx, len, cell, used_mask, trie node
 template<class T>
 void MultiBoggle::DoDFS(int i, int len, Trie* t, T& callback) {
@@ -131,6 +81,94 @@ void MultiBoggle::DoDFS(int i, int len, Trie* t, T& callback) {
   used_ ^= (1 << i);
 }
 
+// TwoHole: Partially solve a board with a hole in both the TL and BR corners.
+// TODO: Ensure TwoHole paths are pre-allocated.
+// TODO: Make trie_mark a property of the Trie.
+struct TwoHoleFinder {
+  void EmptyCell(int i, int len, int c, int used, Trie* t) {
+    out_->paths[i & 1].push_back(MultiBoggle::Path());
+    MultiBoggle::Path& p = out_->paths[i & 1].back();
+    p.used_mask = used;
+    p.len = len;
+    p.node = t;
+  }
+
+  void FoundWord(int i, int len, int c, int used, Trie* t) {
+    if (t->Mark() != runs_) {
+      out_->score += kWordScores[len];
+      t->Mark(runs_);
+      if (PRINT_WORDS) {
+        std::string out;
+        dict_->ReverseLookup(t, &out);
+        printf("%s\n", out.c_str());
+      }
+    }
+  }
+
+  unsigned int runs_;
+  Trie* dict_;
+  MultiBoggle::TwoHole* out_;
+};
+
+void MultiBoggle::SolveTwoHole(TwoHole* out) {
+  bd_[0*4 + 0] = kCellEmpty;
+  bd_[3*4 + 3] = kCellEmpty;
+  runs_ += 1;
+  out->score = 0;
+  out->trie_mark = runs_;
+
+  TwoHoleFinder th;
+  th.runs_ = runs_;
+  th.dict_ = dict_;
+  th.out_ = out;
+
+  for (int i=0; i<16; i++) {
+    used_ = 0;  // TODO: why is this necessary?
+    int c = bd_[i];
+    if (c == kCellEmpty)
+      DoDFS(i, 0, dict_, th);
+    else if (dict_->StartsWord(c))
+      DoDFS(i, 0, dict_->Descend(c), th);
+  }
+}
+
+void MultiBoggle::PrintTwoHole(const TwoHole& two) {
+  cout << "Mark: " << two.trie_mark << endl;
+  cout << "Score: " << two.score << endl;
+  struct WordFinder {
+    WordFinder() { word[0] = '\0'; }
+    void Find(Trie* t, unsigned mark, int len=0) {
+      if (t->IsWord() && t->Mark() == mark)
+        words.push_back(word);
+      for (int i=0; i<26; i++) {
+        if (t->StartsWord(i)) {
+          word[len] = i + 'a';
+          word[len + 1] = '\0';
+          Find(t->Descend(i), mark, len+1);
+        }
+        word[len] = '\0';
+      }
+    }
+    char word[17];
+    vector<string> words;
+  } finder;
+  finder.Find(dict_, two.trie_mark);
+  for (size_t i = 0; i < finder.words.size(); i++) {
+    cout << "  " << finder.words[i] << endl;
+  }
+
+  for (int i = 0; i < 2; i++) {
+    cout << "Paths into " << (i==0 ? "TL" : "BR")
+         << ": " << two.paths[i].size() << endl;
+    for (vector<Path>::const_iterator it = two.paths[i].begin();
+         it != two.paths[i].end(); ++it) {
+      cout << " " << it->ToString(dict_) << endl;
+    }
+  }
+}
+
+
+// OneHole: Take a partial TwoHole solution and fill in one of the corners.
 struct OneHoleFinder {
   OneHoleFinder(const MultiBoggle::TwoHole& th,
                 MultiBoggle::OneHole& oh) : th_(th), one_(oh) {}
@@ -190,47 +228,6 @@ void MultiBoggle::FillHole(const TwoHole& two, int idx, int c, OneHole* out) {
   }
 }
 
-bool MultiBoggle::ParseBoard(const char* lets) {
-  for (int i=0; *lets; ++i)
-    bd_[i] = (*lets++)-'a';
-  return true;
-}
-
-void MultiBoggle::PrintTwoHole(const TwoHole& two) {
-  cout << "Mark: " << two.trie_mark << endl;
-  cout << "Score: " << two.score << endl;
-  struct WordFinder {
-    WordFinder() { word[0] = '\0'; }
-    void Find(Trie* t, unsigned mark, int len=0) {
-      if (t->IsWord() && t->Mark() == mark)
-        words.push_back(word);
-      for (int i=0; i<26; i++) {
-        if (t->StartsWord(i)) {
-          word[len] = i + 'a';
-          word[len + 1] = '\0';
-          Find(t->Descend(i), mark, len+1);
-        }
-        word[len] = '\0';
-      }
-    }
-    char word[17];
-    vector<string> words;
-  } finder;
-  finder.Find(dict_, two.trie_mark);
-  for (size_t i = 0; i < finder.words.size(); i++) {
-    cout << "  " << finder.words[i] << endl;
-  }
-
-  for (int i = 0; i < 2; i++) {
-    cout << "Paths into " << (i==0 ? "TL" : "BR")
-         << ": " << two.paths[i].size() << endl;
-    for (vector<Path>::const_iterator it = two.paths[i].begin();
-         it != two.paths[i].end(); ++it) {
-      cout << " " << it->ToString(dict_) << endl;
-    }
-  }
-}
-
 void MultiBoggle::PrintOneHole(const TwoHole& two, const OneHole& one, int x) {
   cout << "Base score: " << two.score << endl;
   cout << " + extra: " << one.extra_score << endl;
@@ -249,6 +246,9 @@ void MultiBoggle::PrintOneHole(const TwoHole& two, const OneHole& one, int x) {
   }
 }
 
+
+// Merge: Take OneHole partial solutions for opposite corners and calculate a
+// score for the full board VERY QUICKLY.
 struct NoHoleFinder {
   NoHoleFinder(int& s, int mark) : score(s), trie_mark(mark) {}
   void EmptyCell(int i, int len, int c, int used, Trie* t) {
@@ -324,13 +324,13 @@ int MultiBoggle::MergeBoards(TwoHole& bd,
   return score;
 }
 
-string MultiBoggle::Path::ToString(Trie* dict) const {
-  char buf[20];
-  string ret;
-  dict->ReverseLookup(node, &ret);
-  
-  sprintf(buf, " (%04x) %d", used_mask, len);
-  return ret + buf;
+
+// Some generic utilities
+
+bool MultiBoggle::ParseBoard(const char* lets) {
+  for (int i=0; *lets; ++i)
+    bd_[i] = (*lets++)-'a';
+  return true;
 }
 
 // TODO: Verify that the Trie had a BFS structure
@@ -376,4 +376,13 @@ std::string MultiBoggle::ToString() const {
 }
 
 MultiBoggle::~MultiBoggle() {
+}
+
+string MultiBoggle::Path::ToString(Trie* dict) const {
+  char buf[20];
+  string ret;
+  dict->ReverseLookup(node, &ret);
+  
+  sprintf(buf, " (%04x) %d", used_mask, len);
+  return ret + buf;
 }

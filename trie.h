@@ -9,6 +9,7 @@
 #ifndef PERFECT_TRIE_H__
 #define PERFECT_TRIE_H__
 #include <string>
+#include <sys/types.h>
 
 const int kNumLetters = 26;
 const int kQ = 'q' - 'a';
@@ -30,6 +31,7 @@ class Trie {
   // NOTE: These should NEVER be called unless this Node is already a word.
   void Mark(unsigned mark) { data_[0] = mark; }
   unsigned Mark() { return data_[0]; }
+  void MarkHigh() { data_[0] |= 0x80000000; }
 
   bool IsWord(const char* wd) const;
   void SetIsWord(bool w) { bits_ &= ~(1<<26); bits_ |= (w << 26); }
@@ -44,6 +46,13 @@ class Trie {
   size_t NumNodes() const;
   size_t MemoryUsage() const;
   void MemorySpan(caddr_t* low, caddr_t* high) const;
+  bool ReverseLookup(const Trie* child, std::string* out) const;
+  std::string ReverseLookup(const Trie* child) const {
+    std::string out;
+    ReverseLookup(child, &out);
+    return out;
+  }
+  void SetAllMarks(unsigned mark);
 
   void PrintTrie(std::string prefix = "") const;
 

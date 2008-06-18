@@ -21,6 +21,8 @@ struct WorkItem {
 	   Trie* ptr, int d) : t(tr), pt(ptr), depth(d) {}
 };
 Trie* Trie::CompactTrie(const SimpleTrie& t) {
+  // TODO(danvk): HACK! HACK!
+  bytes_used = 0;
   std::queue<WorkItem> todo;
   Trie* root = AllocatePT(t);
   todo.push(WorkItem(t, root, 1));
@@ -49,10 +51,12 @@ Trie* Trie::CompactTrie(const SimpleTrie& t) {
 }
 
 Trie::~Trie() {
-  for (int i=0; i<26; i++) {
-    if (StartsWord(i))
-      delete Descend(i);
-  }
+  // TODO(danvk): do this the right way
+  //bytes_used = 0;
+  //for (int i=0; i<26; i++) {
+  //  if (StartsWord(i))
+  //    delete Descend(i);
+  //}
 }
 
 // these are mostly copied from trie.cc
@@ -120,7 +124,25 @@ void Trie::PrintTrie(std::string prefix) const {
   }
 }
 
-bool IsBoggleWord(const char* wd) {
+bool Trie::ReverseLookup(const Trie* child, std::string* out) const {
+  if (this==child) return true;
+  for (int i=0; i<kNumLetters; i++) {
+    if (StartsWord(i) && Descend(i)->ReverseLookup(child, out)) {
+      *out = std::string(1,'a'+i) + *out;
+      return true;
+    }
+  }
+  return false;
+}
+
+void Trie::SetAllMarks(unsigned mark) {
+  if (IsWord()) Mark(mark);
+  for (int i=0; i<kNumLetters; i++) {
+    if (StartsWord(i)) Descend(i)->SetAllMarks(mark);
+  }
+}
+
+static bool IsBoggleWord(const char* wd) {
   int size = strlen(wd);
   if (size < 3 || size > 17) return false;
   for (int i=0; i<size; ++i) {

@@ -5,9 +5,9 @@
 #include "trie.h"
 
 int main(int argc, char** argv) {
-  char tmp[] = "/tmp/trie-words.XXXXX";
-  char* tmp_file = mktemp(tmp);
-  assert(tmp_file > 0);
+  char tmp_file[] = "/tmp/trie-words.XXXXXX";
+  int tmp_ret = mkstemp(tmp_file);
+  assert(tmp_ret > 0);
 
   FILE* f = fopen(tmp_file, "w");
   assert(f);

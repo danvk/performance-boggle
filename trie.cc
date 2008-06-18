@@ -1,6 +1,7 @@
 #include "trie.h"
 #include <queue>
 #include <utility>
+#include <map>
 
 Trie::Trie() : bits_(0) {}
 
@@ -12,6 +13,20 @@ int NumChildren(const Trie::SimpleTrie& t) {
   return num_children;
 }
 
+// Memory model: The memory used by an entire Trie is owned by the root node of
+// that Trie. Since it would be expensive for each Trie node to remember
+// whether it's the root, we maintain a list of all root nodes and the memory
+// allocated for them.
+std::map<Trie*, char*> root_tries;
+
+// This is messy -- use placement new to get a Trie of the desired size.
+Trie* AllocatePT(const Trie::SimpleTrie& t, void* where, int* bytes_used) {
+  int mem_size = sizeof(Trie) + (t.IsWord() ? sizeof(unsigned) : 0)
+		 + ::NumChildren(t) * sizeof(Trie*);
+  *bytes_used += mem_size;
+  return new(where) Trie;
+}
+
 // Allocate in BFS order to minimize parent/child spacing in memory.
 struct WorkItem {
   const Trie::SimpleTrie& t;
@@ -21,10 +36,14 @@ struct WorkItem {
 	   Trie* ptr, int d) : t(tr), pt(ptr), depth(d) {}
 };
 Trie* Trie::CompactTrie(const SimpleTrie& t) {
-  // TODO(danvk): HACK! HACK!
-  bytes_used = 0;
+  char* root_mem = new char[256];  // TODO: check if this leaks.
+  char* raw_bytes = new char[5 << 20];  // should always be enough
+  int bytes_used = 0;
+
   std::queue<WorkItem> todo;
-  Trie* root = AllocatePT(t);
+  Trie* root = AllocatePT(t, root_mem, &bytes_used);
+  bytes_used = 0;
+  root_tries.insert(std::make_pair(root, raw_bytes));
   todo.push(WorkItem(t, root, 1));
 
   while (!todo.empty()) {
@@ -41,7 +60,8 @@ Trie* Trie::CompactTrie(const SimpleTrie& t) {
     for (int i=0; i<kNumLetters; i++) {
       if (t.StartsWord(i)) {
 	pt->bits_ |= (1 << i);
-	pt->data_[off + num_written] = (unsigned)AllocatePT(*t.Descend(i));
+	pt->data_[off + num_written] =
+          (unsigned)AllocatePT(*t.Descend(i), raw_bytes + bytes_used, &bytes_used);
 	todo.push(WorkItem(*t.Descend(i), pt->Descend(i), cur.depth + 1));
 	num_written += 1;
       }
@@ -50,16 +70,16 @@ Trie* Trie::CompactTrie(const SimpleTrie& t) {
   return root;
 }
 
+// Free memory associated with this Trie, if it owns any memory.
 Trie::~Trie() {
-  // TODO(danvk): do this the right way
-  //bytes_used = 0;
-  //for (int i=0; i<26; i++) {
-  //  if (StartsWord(i))
-  //    delete Descend(i);
-  //}
+  std::map<Trie*, char*>::iterator it = root_tries.find(this);
+  if (it != root_tries.end()) {
+    delete[] it->second;
+    root_tries.erase(it);
+  }
 }
 
-// these are mostly copied from trie.cc
+// Utility routines that operate on the root Trie node.
 bool Trie::IsWord(const char* wd) const {
   if (!wd) return false;
   if (!*wd) return IsWord();
@@ -174,37 +194,6 @@ Trie* Trie::CreateFromFile(const char* filename) {
   return pt;
 }
 
-// Various memory-allocation bits
-// TODO(danvk): Move this into the CompactTrie routine.
-bool Trie::is_allocated = false;
-int Trie::bytes_allocated = 0;
-int Trie::bytes_used = 0;
-char* Trie::memory_pool;
-void* Trie::GetMemory(size_t amount) {
-  if (!is_allocated) {
-    // TODO(danvk): Be smarter about this -- allocate just enough for each Trie.
-    memory_pool = new char[5 << 20];
-    bytes_allocated = 5 << 20;
-    is_allocated = true;
-  }
-
-  if (bytes_used + amount < bytes_allocated) {
-    char* start = memory_pool + bytes_used;
-    bytes_used += amount;
-    return start;
-  } else {
-    fprintf(stderr, "Couldn't allocate memory!\n");
-    exit(1);
-  }
-}
-
-// This is messy -- use placement new to get a Trie of the desired size.
-Trie* Trie::AllocatePT(const SimpleTrie& t) {
-  int mem_size = sizeof(Trie) + (t.IsWord() ? sizeof(unsigned) : 0)
-		 + ::NumChildren(t) * sizeof(Trie*);
-  void* mem = Trie::GetMemory(mem_size);
-  return new(mem) Trie;
-}
 
 // Plain-vanilla Trie code
 inline int idx(char x) { return x - 'a'; }

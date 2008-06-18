@@ -19,29 +19,32 @@ int main(int argc, char** argv) {
   fprintf(f, "teapot\n");
   fclose(f);
 
-  Trie* t = Trie::CreateFromFile(tmp_file);
-  assert(NULL != t);
+  for (int i = 0; i < 5; i++) {
+    Trie* t = Trie::CreateFromFile(tmp_file);
+    assert(NULL != t);
+
+    assert(5 == t->Size());
+    assert( t->IsWord("agriculture"));
+    assert( t->IsWord("culture"));
+    assert( t->IsWord("boggle"));
+    assert( t->IsWord("tea"));
+    assert( t->IsWord("teapot"));
+    assert(!t->IsWord("teap"));
+    assert(!t->IsWord("random"));
+    assert(!t->IsWord("cultur"));
+
+    // Get a full word to test marking
+    Trie* wd = t->Descend('t' - 'a');
+    assert(NULL != wd);
+    wd = wd->Descend('e' - 'a');
+    assert(NULL != wd);
+    wd = wd->Descend('a' - 'a');
+    assert(NULL != wd);
+    assert(0 == wd->Mark());
+    wd->Mark(12345);
+    assert(12345 == wd->Mark());
+    delete t;
+  }
   assert(0 == remove(tmp_file));
-
-  assert(5 == t->Size());
-  assert( t->IsWord("agriculture"));
-  assert( t->IsWord("culture"));
-  assert( t->IsWord("boggle"));
-  assert( t->IsWord("tea"));
-  assert( t->IsWord("teapot"));
-  assert(!t->IsWord("teap"));
-  assert(!t->IsWord("random"));
-  assert(!t->IsWord("cultur"));
-
-  // Get a full word to test marking
-  Trie* wd = t->Descend('t' - 'a');
-  assert(NULL != wd);
-  wd = wd->Descend('e' - 'a');
-  assert(NULL != wd);
-  wd = wd->Descend('a' - 'a');
-  assert(NULL != wd);
-  assert(0 == wd->Mark());
-  wd->Mark(12345);
-  assert(12345 == wd->Mark());
   printf("%s: All tests passed!\n", argv[0]);
 }

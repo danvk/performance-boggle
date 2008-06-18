@@ -97,15 +97,6 @@ class Trie {
     bool is_word_;
     SimpleTrie* children_[26];
   };
-
- private:
-  // Pre-allocated buffer
-  static bool is_allocated;
-  static int bytes_allocated;
-  static int bytes_used;
-  static char* memory_pool;
-  static void* GetMemory(size_t amount);
-  static Trie* AllocatePT(const SimpleTrie& t);
 };
 
 // Some statistics:

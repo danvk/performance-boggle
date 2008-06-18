@@ -42,7 +42,7 @@ class MultiBoggle {
   // A boggle board with two holes cut out of it.
   struct TwoHole {
     int score;  // score of all words going through no tiles.
-    int trie_mark;  // mark in trie that indicates a found word.
+    unsigned trie_mark;  // mark in trie that indicates a found word.
     std::vector<Path> paths[2];  // 0 = paths ending in TL corner
                                  // 1 = paths ending in BR corner
   };
@@ -84,7 +84,6 @@ class MultiBoggle {
   }
   std::string ToString() const;
 
-  unsigned int runs_;
  private:
   template<class T>
   void DoDFS(int i, int len, Trie* t, T& callback);
@@ -96,6 +95,8 @@ class MultiBoggle {
 
   Trie* dict_;
   Trie* max_len_addr[17];  // greatest Trie address for each word length
+  unsigned int runs_;
+
   unsigned int used_;
   int bd_[16];
 };

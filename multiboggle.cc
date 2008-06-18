@@ -7,8 +7,7 @@ using namespace std;
 
 #define PRINT_WORDS 0
 
-static int kCellUsed = -1;
-static int kCellEmpty = -2;
+static int kCellEmpty = -1;
 static const int kWordScores[] =
   //0, 1, 2, 3, 4, 5, 6, 7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17
   { 0, 0, 0, 1, 1, 2, 3, 5, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11 };
@@ -218,7 +217,7 @@ void MultiBoggle::PrintTwoHole(const TwoHole& two) {
     vector<string> words;
   } finder;
   finder.Find(dict_, two.trie_mark);
-  for (int i = 0; i < finder.words.size(); i++) {
+  for (size_t i = 0; i < finder.words.size(); i++) {
     cout << "  " << finder.words[i] << endl;
   }
 
@@ -265,7 +264,7 @@ struct NoHoleFinder {
 
   vector<Trie*> words;
   int& score;
-  int trie_mark;
+  unsigned trie_mark;
 };
 
 int MultiBoggle::MergeBoards(TwoHole& bd,

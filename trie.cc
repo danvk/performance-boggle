@@ -192,8 +192,7 @@ Trie* Trie::CreateFromFile(const char* filename, bool strip_qs) {
   return pt;
 }
 
-Trie* Trie::CollapseBuckets(const Trie& t,
-                            const std::vector<std::string>& buckets) {
+Trie* Trie::CollapseBuckets(const std::vector<std::string>& buckets) const {
   struct Collapser {
     void Collapse(const Trie& t, std::string sofar="") {
       if (t.IsWord()) {
@@ -215,7 +214,7 @@ Trie* Trie::CollapseBuckets(const Trie& t,
       collapse.bucket_map[buckets[i][j] - 'a'] = 'a' + i;
     }
   }
-  collapse.Collapse(t);
+  collapse.Collapse(*this);
 
   Trie* pt = Trie::CompactTrie(*collapse.out);
   delete collapse.out;

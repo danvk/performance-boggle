@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
     std::vector<std::string> buckets;
     for (char c='a'; c <= 'z'; c += 2)
       buckets.push_back(std::string(1, c) + std::string(1, c+1));
-    Trie* ct = Trie::CollapseBuckets(*t, buckets);
+    Trie* ct = t->CollapseBuckets(buckets);
     assert( ct->IsWord("jca"));  // tea/sea
     assert(!ct->IsWord("sea"));
 

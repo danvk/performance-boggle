@@ -47,8 +47,7 @@ class Trie {
   class SimpleTrie;
   static Trie* CompactTrie(const SimpleTrie& t);
   static Trie* CreateFromFile(const char* file, bool strip_qs=true);
-  static Trie* CollapseBuckets(const Trie& t,
-                               const std::vector<std::string>& buckets);
+  Trie* CollapseBuckets(const std::vector<std::string>& buckets) const;
 
   // Analysis (slow)
   size_t Size() const;

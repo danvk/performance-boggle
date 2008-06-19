@@ -21,8 +21,8 @@ std::map<Trie*, char*> root_tries;
 
 // This is messy -- use placement new to get a Trie of the desired size.
 Trie* AllocatePT(const Trie::SimpleTrie& t, void* where, int* bytes_used) {
-  int mem_size = sizeof(Trie) + (t.IsWord() ? sizeof(unsigned) : 0)
-		 + ::NumChildren(t) * sizeof(Trie*);
+  int mem_size = sizeof(Trie) +
+                 ((t.IsWord() ? 1 : 0) + ::NumChildren(t)) * sizeof(Trie*);
   *bytes_used += mem_size;
   return new(where) Trie;
 }
@@ -36,8 +36,9 @@ struct WorkItem {
 	   Trie* ptr, int d) : t(tr), pt(ptr), depth(d) {}
 };
 Trie* Trie::CompactTrie(const SimpleTrie& t) {
-  char* root_mem = new char[256];  // TODO: check if this leaks.
-  char* raw_bytes = new char[5 << 20];  // should always be enough
+  int alloced = 10 << 20;
+  char* root_mem = (char*)malloc(256);  // TODO: alloc the right amount.
+  char* raw_bytes = new char[alloced];  // TODO: figure out how much we need.
   int bytes_used = 0;
 
   std::queue<WorkItem> todo;
@@ -61,9 +62,13 @@ Trie* Trie::CompactTrie(const SimpleTrie& t) {
       if (t.StartsWord(i)) {
 	pt->bits_ |= (1 << i);
 	pt->data_[off + num_written] =
-          (unsigned)AllocatePT(*t.Descend(i), raw_bytes + bytes_used, &bytes_used);
+          (uintptr_t)AllocatePT(*t.Descend(i), raw_bytes + bytes_used, &bytes_used);
 	todo.push(WorkItem(*t.Descend(i), pt->Descend(i), cur.depth + 1));
 	num_written += 1;
+        if (bytes_used > alloced) {
+          fprintf(stderr, "Used too much memory!");
+          return NULL;
+        }
       }
     }
   }
@@ -71,6 +76,10 @@ Trie* Trie::CompactTrie(const SimpleTrie& t) {
 }
 
 // Free memory associated with this Trie, if it owns any memory.
+void Trie::Delete() {
+  this->~Trie();  // free the memory owned by this Trie.
+  free(this);     // free the memory used by this node.
+}
 Trie::~Trie() {
   std::map<Trie*, char*>::iterator it = root_tries.find(this);
   if (it != root_tries.end()) {
@@ -113,25 +122,6 @@ size_t Trie::MemoryUsage() const {
       size += Descend(i)->MemoryUsage();
   }
   return size;
-}
-
-void Trie::MemorySpan(caddr_t* low, caddr_t* high) const {
-  if ((unsigned)this & 0x80000000) {
-    // Ignore Tries allocated on the stack
-    *low = (caddr_t)-1;
-    *high = (caddr_t)0;
-  } else {
-    *low = (caddr_t)this;
-    *high = (caddr_t)this; *high += sizeof(*this);
-  }
-  for (int i=0; i<kNumLetters; i++) {
-    if (StartsWord(i)) {
-      caddr_t cl, ch;
-      Descend(i)->MemorySpan(&cl, &ch);
-      if (cl < *low) *low = cl;
-      if (ch > *high) *high = ch;
-    }
-  }
 }
 
 void Trie::PrintTrie(std::string prefix) const {

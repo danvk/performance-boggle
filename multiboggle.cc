@@ -3,7 +3,6 @@
 
 #include "multiboggle.h"
 #include <iostream>
-using namespace std;
 
 #define PRINT_WORDS 0
 
@@ -133,8 +132,8 @@ void MultiBoggle::SolveTwoHole(TwoHole* out) {
 }
 
 void MultiBoggle::PrintTwoHole(const TwoHole& two) {
-  cout << "Mark: " << two.trie_mark << endl;
-  cout << "Score: " << two.score << endl;
+  std::cout << "Mark: " << two.trie_mark << std::endl;
+  std::cout << "Score: " << two.score << std::endl;
   struct WordFinder {
     WordFinder() { word[0] = '\0'; }
     void Find(Trie* t, unsigned mark, int len=0) {
@@ -150,19 +149,19 @@ void MultiBoggle::PrintTwoHole(const TwoHole& two) {
       }
     }
     char word[17];
-    vector<string> words;
+    std::vector<std::string> words;
   } finder;
   finder.Find(dict_, two.trie_mark);
   for (size_t i = 0; i < finder.words.size(); i++) {
-    cout << "  " << finder.words[i] << endl;
+    std::cout << "  " << finder.words[i] << std::endl;
   }
 
   for (int i = 0; i < 2; i++) {
-    cout << "Paths into " << (i==0 ? "TL" : "BR")
-         << ": " << two.paths[i].size() << endl;
-    for (vector<Path>::const_iterator it = two.paths[i].begin();
+    std::cout << "Paths into " << (i==0 ? "TL" : "BR")
+              << ": " << two.paths[i].size() << std::endl;
+    for (std::vector<Path>::const_iterator it = two.paths[i].begin();
          it != two.paths[i].end(); ++it) {
-      cout << " " << it->ToString(dict_) << endl;
+      std::cout << " " << it->ToString(dict_) << std::endl;
     }
   }
 }
@@ -190,7 +189,7 @@ struct OneHoleFinder {
   }
 
   ~OneHoleFinder() {
-    for (vector<Trie*>::const_iterator it = one_.extra_words.begin();
+    for (std::vector<Trie*>::const_iterator it = one_.extra_words.begin();
          it != one_.extra_words.end(); ++it) {
       (*it)->Mark((*it)->Mark() & 0x7fffffff);
     }
@@ -218,7 +217,7 @@ void MultiBoggle::FillHole(const TwoHole& two, int idx, int c, OneHole* out) {
   oh.dict_ = dict_;
 
   // Continue each possible path
-  for (vector<Path>::const_iterator it = two.paths[idx & 1].begin();
+  for (std::vector<Path>::const_iterator it = two.paths[idx & 1].begin();
        it != two.paths[idx & 1].end(); ++it) {
     const Path& p = *it;
     if (p.node->StartsWord(c)) {
@@ -229,20 +228,20 @@ void MultiBoggle::FillHole(const TwoHole& two, int idx, int c, OneHole* out) {
 }
 
 void MultiBoggle::PrintOneHole(const TwoHole& two, const OneHole& one, int x) {
-  cout << "Base score: " << two.score << endl;
-  cout << " + extra: " << one.extra_score << endl;
-  cout << " = " << two.score + one.extra_score << endl;
-  cout << "Extra words: " << one.extra_words.size() << endl;
-  for (vector<Trie*>::const_iterator it = one.extra_words.begin();
+  std::cout << "Base score: " << two.score << std::endl;
+  std::cout << " + extra: " << one.extra_score << std::endl;
+  std::cout << " = " << two.score + one.extra_score << std::endl;
+  std::cout << "Extra words: " << one.extra_words.size() << std::endl;
+  for (std::vector<Trie*>::const_iterator it = one.extra_words.begin();
        it != one.extra_words.end(); ++it) {
     std::string out;
     dict_->ReverseLookup(*it, &out);
     printf("  %s\n", out.c_str());
   }
-  cout << "Remaining paths: " << one.paths.size() << endl;
-  for (vector<Path>::const_iterator it = one.paths.begin();
+  std::cout << "Remaining paths: " << one.paths.size() << std::endl;
+  for (std::vector<Path>::const_iterator it = one.paths.begin();
        it != one.paths.end(); ++it) {
-    cout << "  " << it->ToString(dict_) << endl;
+    std::cout << "  " << it->ToString(dict_) << std::endl;
   }
 }
 
@@ -252,7 +251,7 @@ void MultiBoggle::PrintOneHole(const TwoHole& two, const OneHole& one, int x) {
 struct NoHoleFinder {
   NoHoleFinder(int& s, int mark) : score(s), trie_mark(mark) {}
   void EmptyCell(int i, int len, int c, int used, Trie* t) {
-    cerr << "Found an empty cell with no hole finder!" << endl;
+    std::cerr << "Found an empty cell with no hole finder!" << std::endl;
   }
 
   void FoundWord(int i, int len, int c, int used, Trie* t) {
@@ -262,7 +261,7 @@ struct NoHoleFinder {
     words.push_back(t);
   }
 
-  vector<Trie*> words;
+  std::vector<Trie*> words;
   int& score;
   unsigned trie_mark;
 };
@@ -276,10 +275,10 @@ int MultiBoggle::MergeBoards(TwoHole& bd,
 
   // Step through the word lists in parallel to avoid double-counting dupes.
   // TODO: This could probably be improved...
-  vector<Trie*>::iterator word1 = bd1.extra_words.begin(),
-                          end1 = bd1.extra_words.end();
-  vector<Trie*>::iterator word2 = bd2.extra_words.begin(),
-                          end2 = bd2.extra_words.end();
+  std::vector<Trie*>::iterator word1 = bd1.extra_words.begin(),
+                               end1 = bd1.extra_words.end();
+  std::vector<Trie*>::iterator word2 = bd2.extra_words.begin(),
+                               end2 = bd2.extra_words.end();
   for (; word1 != end1; ++word1)
     (*word1)->MarkHigh();
 
@@ -295,7 +294,7 @@ int MultiBoggle::MergeBoards(TwoHole& bd,
   NoHoleFinder finder(score, bd.trie_mark);
 
   // Continue each possible path
-  for (vector<Path>::const_iterator it = bd1.paths.begin();
+  for (std::vector<Path>::const_iterator it = bd1.paths.begin();
        it != bd1.paths.end(); ++it) {
     const Path& p = *it;
     if (p.node->StartsWord(c2)) {
@@ -303,7 +302,7 @@ int MultiBoggle::MergeBoards(TwoHole& bd,
       DoDFS(15, p.len, p.node->Descend(c2), finder);
     }
   }
-  for (vector<Path>::const_iterator it = bd2.paths.begin();
+  for (std::vector<Path>::const_iterator it = bd2.paths.begin();
        it != bd2.paths.end(); ++it) {
     const Path& p = *it;
     if (p.node->StartsWord(c1)) {
@@ -364,23 +363,23 @@ int MultiBoggle::ReconstructLength(const Trie* node) const {
       if (node <= max_len_addr[len])
         return len;
   }
-  cerr << "Couldn't figure out length of " << node << endl;
+  std::cerr << "Couldn't figure out length of " << node << std::endl;
   return 0;
 }
 
 std::string MultiBoggle::ToString() const {
-  string out;
+  std::string out;
   for (int i=0; i<16; i++)
-    out += string(1, 'a' + bd_[i]);
+    out += std::string(1, 'a' + bd_[i]);
   return out;
 }
 
 MultiBoggle::~MultiBoggle() {
 }
 
-string MultiBoggle::Path::ToString(Trie* dict) const {
+std::string MultiBoggle::Path::ToString(Trie* dict) const {
   char buf[20];
-  string ret;
+  std::string ret;
   dict->ReverseLookup(node, &ret);
   
   sprintf(buf, " (%04x) %d", used_mask, len);

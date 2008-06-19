@@ -6,8 +6,7 @@
 
 int main(int argc, char** argv) {
   char tmp_file[] = "/tmp/trie-words.XXXXXX";
-  int tmp_ret = mkstemp(tmp_file);
-  assert(tmp_ret > 0);
+  mkstemp(tmp_file);
 
   FILE* f = fopen(tmp_file, "w");
   assert(f);
@@ -43,7 +42,7 @@ int main(int argc, char** argv) {
     assert(0 == wd->Mark());
     wd->Mark(12345);
     assert(12345 == wd->Mark());
-    delete t;
+    t->Delete();
   }
   assert(0 == remove(tmp_file));
   printf("%s: All tests passed!\n", argv[0]);

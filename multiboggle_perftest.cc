@@ -12,7 +12,8 @@
 #include "boggler.h"
 #include "multiboggle.h"
 #include <sys/time.h>
-using namespace std;
+using std::cout;
+using std::endl;
 
 static const int CheckScores = 1;
 static const int OldScoring = 1;
@@ -34,10 +35,10 @@ void SummarizeError(MultiBoggle& mb,
   cout << "Two hole board:" << endl;
   mb.PrintTwoHole(two);
 
-  cout << "One hole board TL (" << string(1, 'a' + a) << "):" << endl;
+  cout << "One hole board TL (" << std::string(1, 'a' + a) << "):" << endl;
   mb.PrintOneHole(two, tl, 0);
 
-  cout << "One hole board BR (" << string(1, 'a' + b) << "):" << endl;
+  cout << "One hole board BR (" << std::string(1, 'a' + b) << "):" << endl;
   mb.PrintOneHole(two, br, 3);
 }
 

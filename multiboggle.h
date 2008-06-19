@@ -26,6 +26,7 @@
 #ifndef MULTIBOGGLE
 #define MULTIBOGGLE
 
+#include <assert.h>
 #include <vector>
 #include "trie.h"
 

@@ -118,11 +118,6 @@ void TrieStats(const Trie& pt) {
   printf("Loaded %zd words into %zd-node Trie (%zd bytes)\n",
 	  pt.Size(), NumNodes(pt), pt.MemoryUsage());
 
-  caddr_t low, high;
-  pt.MemorySpan(&low, &high);
-  printf("Memory spanned: %.2fM (0x%08X - 0x%08X)\n",
-	  (high - low) / 1048576.0, (unsigned)low, (unsigned)high);
-
   printf("Trie contains %zd childless nodes, %zd words w/ children\n", 
 	 Childless(pt), WordsWithChildren(pt));
 

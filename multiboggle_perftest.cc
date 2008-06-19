@@ -16,8 +16,8 @@ using std::cout;
 using std::endl;
 using std::vector;
 
-static const int CheckScores = 1;
-static const int OldScoring = 1;
+static int CheckScores = 0;
+static int OldScoring = 0;
 double secs();
 
 // Print out details on a mismatch
@@ -98,10 +98,26 @@ int TestMultiBoggler(Trie* t, const char* base_board,
 }
 
 int main(int argc, char** argv) {
-  //const char* board = "abcdefghijklmnop";
   const char* board = "catdlinemaropets";
+  const char* dict = "words";
   int num_boards = 25 * 25 * 25 * 25;
-  Trie* t = Trie::CreateFromFile("words");
+
+  // Do some rudimentary CL processing
+  for (int i = 1; i < argc; i++) {
+    if (!strcmp(argv[i], "--compare")) {
+      CheckScores = 1;
+      OldScoring = 1;
+    } else if (!strcmp(argv[i], "--nocompare")) {
+      CheckScores = 0;
+      OldScoring = 0;
+    } else if (!strcmp(argv[i], "--dictionary")) {
+      dict = argv[++i];
+    } else if (!strcmp(argv[i], "--baseboard")) {
+      board = argv[++i];
+    }
+  }
+
+  Trie* t = Trie::CreateFromFile(dict);
 
   // Go through a bunch of boards normally first.
   vector<int> scores;

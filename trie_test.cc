@@ -1,6 +1,8 @@
 #include <assert.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <string>
+#include <vector>
 
 #include "trie.h"
 
@@ -15,6 +17,7 @@ int main(int argc, char** argv) {
   fprintf(f, "culture\n");
   fprintf(f, "boggle\n");
   fprintf(f, "tea\n");
+  fprintf(f, "sea\n");
   fprintf(f, "teapot\n");
   fclose(f);
 
@@ -22,7 +25,7 @@ int main(int argc, char** argv) {
     Trie* t = Trie::CreateFromFile(tmp_file);
     assert(NULL != t);
 
-    assert(5 == t->Size());
+    assert(6 == t->Size());
     assert( t->IsWord("agriculture"));
     assert( t->IsWord("culture"));
     assert( t->IsWord("boggle"));
@@ -42,7 +45,18 @@ int main(int argc, char** argv) {
     assert(0 == wd->Mark());
     wd->Mark(12345);
     assert(12345 == wd->Mark());
+
+    // abcdefghijklmnopqrstuvwxyz
+    // aabbccddeeffgghhiijjkkllmm
+    std::vector<std::string> buckets;
+    for (char c='a'; c <= 'z'; c += 2)
+      buckets.push_back(std::string(1, c) + std::string(1, c+1));
+    Trie* ct = Trie::CollapseBuckets(*t, buckets);
+    assert( ct->IsWord("jca"));  // tea/sea
+    assert(!ct->IsWord("sea"));
+
     t->Delete();
+    ct->Delete();
   }
   assert(0 == remove(tmp_file));
   printf("%s: All tests passed!\n", argv[0]);

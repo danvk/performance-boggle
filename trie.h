@@ -9,6 +9,7 @@
 #ifndef PERFECT_TRIE_H__
 #define PERFECT_TRIE_H__
 #include <string>
+#include <vector>
 #include <sys/types.h>
 #include <stdint.h>
 
@@ -41,10 +42,13 @@ class Trie {
   bool IsWord(const char* wd) const;
   void SetIsWord(bool w) { bits_ &= ~(1<<26); bits_ |= (w << 26); }
 
+
   // Trie-building methods (slow)
   class SimpleTrie;
   static Trie* CompactTrie(const SimpleTrie& t);
-  static Trie* CreateFromFile(const char* file);
+  static Trie* CreateFromFile(const char* file, bool strip_qs=true);
+  static Trie* CollapseBuckets(const Trie& t,
+                               const std::vector<std::string>& buckets);
 
   // Analysis (slow)
   size_t Size() const;

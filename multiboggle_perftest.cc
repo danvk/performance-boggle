@@ -14,6 +14,7 @@
 #include <sys/time.h>
 using std::cout;
 using std::endl;
+using std::vector;
 
 static const int CheckScores = 1;
 static const int OldScoring = 1;

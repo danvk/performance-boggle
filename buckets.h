@@ -18,6 +18,7 @@ class Buckets {
                     Bucketing* out);
 
   static bool Bucketize(char* word, const Bucketing& buckets);
+  static bool Bucketize(std::string* word, const Bucketing& buckets);
 
   static Trie* FromTrie(const Trie& source, const Bucketing& buckets);
 

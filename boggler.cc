@@ -11,13 +11,15 @@ static const int kWordScores[] =
 Boggler::Boggler(Trie* t) :
   dict_(t), runs_(0), num_boards_(0) {}
 
-int Boggler::Score() {
+int Boggler::Score(unsigned int cutoff) {
   runs_ += 1;
   score_ = 0;
   for (int i=0; i<16; i++) {
     int c = bd_[i];
     if (dict_->StartsWord(c))
       DoDFS(i, 0, dict_->Descend(c));
+    if (score_ > cutoff)
+      break;
   }
 
   // Really should check for overflow here
@@ -127,15 +129,6 @@ Trie* Boggler::DictionaryFromFile(const char* filename) {
 
   while (!feof(f) && fscanf(f, "%s", line)) {
     if (!BogglifyWord(line)) continue;
-
-    // Strip qu -> q
-    int src, dst;
-    for (src=0, dst=0; line[src]; src++, dst++) {
-      line[dst] = line[src];
-      if (line[src] == 'q') src += 1;
-    }
-    line[dst] = line[src];
-
     t->AddWord(line);
   }
   fclose(f);

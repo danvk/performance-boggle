@@ -97,8 +97,6 @@ bool Trie::IsWord(const char* wd) const {
   if (c<0 || c>=kNumLetters) return false;
 
   if (StartsWord(c)) {
-    if (c==kQ && wd[1] == 'u')
-      return Descend(c)->IsWord(wd+2);
     return Descend(c)->IsWord(wd+1);
   }
   return false;

@@ -17,8 +17,14 @@ int main(int argc, char** argv) {
   if (argc == 2) dict_file = argv[1];
   else           dict_file = "words";
 
-  Trie* pt = Trie::CreateFromFile(dict_file);
+  char tmp[20] = "equalizes";
+  assert(Boggler::BogglifyWord(tmp));
+  assert(0 == strcmp(tmp, "eqalizes"));
+
+  Trie* pt = Boggler::DictionaryFromFile(dict_file);
   assert(pt != NULL);
+  assert( pt->IsWord("eqalizer"));
+  assert(!pt->IsWord("equalizer"));
   TrieStats(*pt);
 
   Boggler b(pt);

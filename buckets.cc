@@ -26,6 +26,10 @@ bool Buckets::Bucketize(char* word, const Bucketing& buckets) {
   return true;
 }
 
+bool Buckets::Bucketize(std::string* word, const Bucketing& buckets) {
+  return Bucketize(&*word->begin(), buckets);
+}
+
 Trie* Buckets::FromTrie(const Trie& source, const Bucketing& buckets) {
   struct Collapser {
     Collapser(const Bucketing& b) : buckets(b) {}

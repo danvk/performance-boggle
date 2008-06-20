@@ -4,6 +4,7 @@
 #ifndef SSBOGGLER_H
 #define SSBOGGLER_H
 
+#include <limits.h>
 #include "trie.h"
 
 class Boggler {
@@ -16,8 +17,9 @@ class Boggler {
   // Parses a 16 character boards string like "abcdefghijklmnop"
   bool ParseBoard(const char* lets);
 
-  // Scores the current board
-  int Score();
+  // Scores the current board. Stop scoring early (and return a lower bound on
+  // the real score) if the score ever exceeds cutoff.
+  int Score(unsigned int cutoff=UINT_MAX);
 
   // Shortcut for ParseBoard() + Score()
   int Score(const char* bd);

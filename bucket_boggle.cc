@@ -26,18 +26,25 @@ double BucketScore(const Trie* dict,
 
   Boggler b(t);
   int cutoff = 3625;
-  double reps_below = 0, reps_above = 0;
-  int num_buckets = Buckets::NumBuckets(buckets);
+  int reps_below = 0, reps_above = 0;
+  //int num_buckets = Buckets::NumBuckets(buckets);
   for (int i = 0; i < num_boards; i++) {
     uint64_t reps = 1;
     for (int x = 0; x < 4; x++) {
       for (int y = 0; y < 4; y++) {
-        int c = random() % num_buckets;
-        b.SetCell(x, y, c);
+        while (1) {
+          int c = random() % 26;
+          Buckets::Bucketing::const_iterator it = buckets.find('a' + c);
+          if (it != buckets.end()) {
+            b.SetCell(x, y, it->second - 'a');
+            break;
+          }
+        }
       }
     }
-    reps = Buckets::NumRepresentatives(b, buckets);
-    int score = b.Score();
+    //reps = Buckets::NumRepresentatives(b, buckets);
+    reps = 1;
+    int score = b.Score(cutoff);
     //std::cout << score << std::endl;
     if (score > cutoff) {
       reps_above += reps;
@@ -45,7 +52,7 @@ double BucketScore(const Trie* dict,
       reps_below += reps;
     }
   }
-  printf("%f / %f\n", reps_above, reps_below);
+  printf("%d / %d\n", reps_above, reps_below);
 
   t->Delete();
   return 1.0 * reps_below / (reps_below + reps_above);

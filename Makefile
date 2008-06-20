@@ -3,7 +3,7 @@ CPPFLAGS = -g -Wall -O3 -march=i686
 #CPPFLAGS = -g -Wall
 
 tests = perf_test trie_test multiboggle_test multiboggle_perftest
-progs = $(tests)
+progs = $(tests) bucket_boggle bucket_descent
 all: $(progs)
 
 test: trie_test boggler_test multiboggle_test buckets_test

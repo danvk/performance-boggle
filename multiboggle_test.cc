@@ -59,7 +59,7 @@ int CompareBoards(Trie* dict, const char* base) {
 }
 
 int main(int argc, char** argv) {
-  Trie* t = Trie::CreateFromFile("words");
+  Trie* t = Boggler::DictionaryFromFile("words");
   cout << "Loaded " << t->Size() << " words" << endl;
 
   CompareBoards(t, "abcdefghijklmnop");

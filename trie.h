@@ -46,8 +46,7 @@ class Trie {
   // Trie-building methods (slow)
   class SimpleTrie;
   static Trie* CompactTrie(const SimpleTrie& t);
-  static Trie* CreateFromFile(const char* file, bool strip_qs=true);
-  Trie* CollapseBuckets(const std::vector<std::string>& buckets) const;
+  static Trie* CreateFromFile(const char* file);
 
   // Analysis (slow)
   size_t Size() const;

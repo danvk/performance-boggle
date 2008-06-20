@@ -25,9 +25,17 @@ class Boggler {
   // Set a cell on the current board. Must have 0 <= x, y < 4 and 0 <= c < 26.
   // These constraints are NOT checked.
   void SetCell(int x, int y, int c) { bd_[(x << 2) + y] = c; }
+  int Cell(int x, int y) const { return bd_[(x << 2) + y]; }
 
   // Returns the total number of boards this Boggler has evaluated.
   int NumBoards() { return num_boards_; }
+
+  // Is this a valid boggle word? e.g. only has 'q' followed by 'u'.
+  static bool IsBoggleWord(const char* word);
+  
+  // Load a dictionary file, removing all non-Boggle words and converting "qu"
+  // to 'q'.
+  static Trie* DictionaryFromFile(const char* dict_filename);
 
  private:
   void DoDFS(int i, int len, Trie* t);

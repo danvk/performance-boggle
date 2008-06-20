@@ -152,18 +152,7 @@ void Trie::SetAllMarks(unsigned mark) {
   }
 }
 
-static bool IsBoggleWord(const char* wd) {
-  int size = strlen(wd);
-  if (size < 3 || size > 17) return false;
-  for (int i=0; i<size; ++i) {
-    int c = wd[i];
-    if (c<'a' || c>'z') return false;
-    if (c=='q' && (i+1 >= size || wd[1+i] != 'u')) return false;
-  }
-  return true;
-}
-
-Trie* Trie::CreateFromFile(const char* filename, bool strip_qs) {
+Trie* Trie::CreateFromFile(const char* filename) {
   SimpleTrie* t = new SimpleTrie;
   char line[80];
   FILE* f = fopen(filename, "r");
@@ -174,50 +163,12 @@ Trie* Trie::CreateFromFile(const char* filename, bool strip_qs) {
   }
 
   while (!feof(f) && fscanf(f, "%s", line)) {
-    if (!IsBoggleWord(line)) continue;
-    if (strip_qs) {
-      int src, dst;
-      for (src=0, dst=0; line[src]; src++, dst++) {
-        line[dst] = line[src];
-        if (line[src] == 'q') src += 1;
-      }
-      line[dst] = line[src];
-    }
     t->AddWord(line);
   }
   fclose(f);
 
   Trie* pt = Trie::CompactTrie(*t);
   delete t;
-  return pt;
-}
-
-Trie* Trie::CollapseBuckets(const std::vector<std::string>& buckets) const {
-  struct Collapser {
-    void Collapse(const Trie& t, std::string sofar="") {
-      if (t.IsWord()) {
-        out->AddWord(sofar.c_str());
-      }
-      for (int i = 0; i < 26; i++) {
-        if (t.StartsWord(i) && bucket_map.find(i) != bucket_map.end()) {
-          Collapse(*t.Descend(i), sofar + std::string(1, bucket_map[i]));
-        }
-      }
-    }
-    std::map<int, int> bucket_map;
-    Trie::SimpleTrie* out;
-  } collapse;
-
-  collapse.out = new Trie::SimpleTrie;
-  for (size_t i = 0; i < buckets.size(); i++) {
-    for (size_t j = 0; j < buckets[i].size(); j++) {
-      collapse.bucket_map[buckets[i][j] - 'a'] = 'a' + i;
-    }
-  }
-  collapse.Collapse(*this);
-
-  Trie* pt = Trie::CompactTrie(*collapse.out);
-  delete collapse.out;
   return pt;
 }
 

@@ -117,7 +117,7 @@ int main(int argc, char** argv) {
     }
   }
 
-  Trie* t = Trie::CreateFromFile(dict);
+  Trie* t = Boggler::DictionaryFromFile(dict);
 
   // Go through a bunch of boards normally first.
   vector<int> scores;

@@ -104,6 +104,17 @@ bool Boggler::IsBoggleWord(const char* wd) {
   return true;
 }
 
+bool Boggler::BogglifyWord(char* word) {
+  if (!IsBoggleWord(word)) return false;
+  int src, dst;
+  for (src=0, dst=0; word[src]; src++, dst++) {
+    word[dst] = word[src];
+    if (word[src] == 'q') src += 1;
+  }
+  word[dst] = word[src];
+  return true;
+}
+
 Trie* Boggler::DictionaryFromFile(const char* filename) {
   Trie::SimpleTrie* t = new Trie::SimpleTrie;
   char line[80];
@@ -115,7 +126,7 @@ Trie* Boggler::DictionaryFromFile(const char* filename) {
   }
 
   while (!feof(f) && fscanf(f, "%s", line)) {
-    if (!IsBoggleWord(line)) continue;
+    if (!BogglifyWord(line)) continue;
 
     // Strip qu -> q
     int src, dst;

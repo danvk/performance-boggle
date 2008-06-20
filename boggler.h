@@ -32,6 +32,9 @@ class Boggler {
 
   // Is this a valid boggle word? e.g. only has 'q' followed by 'u'.
   static bool IsBoggleWord(const char* word);
+
+  // Returns true if it's a valid boggle word and converts "qu" -> 'q'
+  static bool BogglifyWord(char* word);
   
   // Load a dictionary file, removing all non-Boggle words and converting "qu"
   // to 'q'.

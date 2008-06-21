@@ -22,26 +22,25 @@ typedef Buckets::Bucketing Bucketing;
 double BucketScore(const vector<std::string>& word_list,
                    const Bucketing& buckets,
                    const vector<std::string>& boards) {
-  Trie* t = Buckets::FromWordList(word_list, buckets);
-  std::cout << "Size: " << t->Size() << std::endl;
+  SimpleTrie* t = Buckets::FromWordList<SimpleTrie>(word_list, buckets);
+  std::cout << "Size: " << TrieUtils<SimpleTrie>::Size(t) << std::endl;
 
-  Boggler b(t);
+  GenericBoggler<SimpleTrie> b(t);
   int cutoff = 3625;
   double reps_below = 0, reps_above = 0;
-  int num_buckets = Buckets::NumBuckets(buckets);
-  for (int i = 0; i < boards.size(); i++) {
-    uint64_t reps = 1;
-    b.ParseBoard(boards[i].c_str());
-    reps = Buckets::NumRepresentatives(b, buckets);
+  for (size_t i = 0; i < boards.size(); i++) {
+    std::string bd = boards[i];
+    Buckets::Bucketize(&bd, buckets);
+    b.ParseBoard(bd.c_str());
     int score = b.Score();
     if (score > cutoff) {
-      reps_above += reps;
+      reps_above += 1;
     } else {
-      reps_below += reps;
+      reps_below += 1;
     }
   }
 
-  t->Delete();
+  delete t;
   return 1.0 * reps_below / (reps_below + reps_above);
 }
 

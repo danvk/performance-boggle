@@ -5,7 +5,7 @@
 
 Trie::Trie() : bits_(0) {}
 
-int NumChildren(const Trie::SimpleTrie& t) {
+int NumChildren(const SimpleTrie& t) {
   int num_children = 0;
   for (int i=0; i<26; i++) {
     if (t.StartsWord(i)) num_children += 1;
@@ -20,7 +20,7 @@ int NumChildren(const Trie::SimpleTrie& t) {
 std::map<Trie*, char*> root_tries;
 
 // This is messy -- use placement new to get a Trie of the desired size.
-Trie* AllocatePT(const Trie::SimpleTrie& t, void* where, int* bytes_used) {
+Trie* AllocatePT(const SimpleTrie& t, void* where, int* bytes_used) {
   int mem_size = sizeof(Trie) +
                  ((t.IsWord() ? 1 : 0) + ::NumChildren(t)) * sizeof(Trie*);
   *bytes_used += mem_size;
@@ -29,10 +29,10 @@ Trie* AllocatePT(const Trie::SimpleTrie& t, void* where, int* bytes_used) {
 
 // Allocate in BFS order to minimize parent/child spacing in memory.
 struct WorkItem {
-  const Trie::SimpleTrie& t;
+  const SimpleTrie& t;
   Trie* pt;
   int depth;
-  WorkItem(const Trie::SimpleTrie& tr,
+  WorkItem(const SimpleTrie& tr,
 	   Trie* ptr, int d) : t(tr), pt(ptr), depth(d) {}
 };
 Trie* Trie::CompactTrie(const SimpleTrie& t) {
@@ -102,15 +102,6 @@ bool Trie::IsWord(const char* wd) const {
   return false;
 }
 
-size_t Trie::Size() const {
-  size_t size = 0;
-  if (IsWord()) size++;
-  for (int i=0; i<26; i++) {
-    if (StartsWord(i)) size += Descend(i)->Size();
-  }
-  return size;
-}
-
 size_t Trie::MemoryUsage() const {
   size_t size = sizeof(*this);
   if (IsWord()) size += sizeof(unsigned);
@@ -122,33 +113,15 @@ size_t Trie::MemoryUsage() const {
   return size;
 }
 
-void Trie::PrintTrie(std::string prefix) const {
-  if (IsWord()) printf("+"); else printf("-");
-  printf("(%08X) ", bits_);
-  printf("%s\n", prefix.c_str());
-  for (int i=0; i<26; i++) {
-    if (StartsWord(i))
-      Descend(i)->PrintTrie(prefix + std::string(1, 'a' + i));
-  }
-}
-
-bool Trie::ReverseLookup(const Trie* child, std::string* out) const {
-  if (this==child) return true;
-  for (int i=0; i<kNumLetters; i++) {
-    if (StartsWord(i) && Descend(i)->ReverseLookup(child, out)) {
-      *out = std::string(1,'a'+i) + *out;
-      return true;
-    }
-  }
-  return false;
-}
-
-void Trie::SetAllMarks(unsigned mark) {
-  if (IsWord()) Mark(mark);
-  for (int i=0; i<kNumLetters; i++) {
-    if (StartsWord(i)) Descend(i)->SetAllMarks(mark);
-  }
-}
+//void Trie::PrintTrie(std::string prefix) const {
+//  if (IsWord()) printf("+"); else printf("-");
+//  printf("(%08X) ", bits_);
+//  printf("%s\n", prefix.c_str());
+//  for (int i=0; i<26; i++) {
+//    if (StartsWord(i))
+//      Descend(i)->PrintTrie(prefix + std::string(1, 'a' + i));
+//  }
+//}
 
 Trie* Trie::CreateFromFile(const char* filename) {
   SimpleTrie* t = new SimpleTrie;
@@ -174,7 +147,7 @@ Trie* Trie::CreateFromFile(const char* filename) {
 // Plain-vanilla Trie code
 inline int idx(char x) { return x - 'a'; }
 
-void Trie::SimpleTrie::AddWord(const char* wd) {
+void SimpleTrie::AddWord(const char* wd) {
   if (!wd) return;
   if (!*wd) {
     SetIsWord();
@@ -186,14 +159,14 @@ void Trie::SimpleTrie::AddWord(const char* wd) {
   Descend(c)->AddWord(wd+1);
 }
 
-Trie::SimpleTrie::~SimpleTrie() {
+SimpleTrie::~SimpleTrie() {
   for (int i=0; i<26; i++) {
     if (children_[i]) delete children_[i];
   }
 }
 
 // Initially, this node is empty
-Trie::SimpleTrie::SimpleTrie() {
+SimpleTrie::SimpleTrie() {
   for (int i=0; i<kNumLetters; i++)
     children_[i] = NULL;
   is_word_ = false;

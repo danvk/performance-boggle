@@ -15,6 +15,9 @@
 
 const int kNumLetters = 26;
 const int kQ = 'q' - 'a';
+const int Marks = 1;
+
+class SimpleTrie;
 
 class Trie {
  public:
@@ -29,9 +32,10 @@ class Trie {
   bool IsWord() const { return bits_ & (1 << 26); }
   bool StartsWord(int i) const { return bits_ & (1 << i); }
   int NumChildren() const { return CountBits(bits_ & ((1<<26) - 1)); }
+
   Trie* Descend(int i) const {
     uint32_t v = bits_ & ((1 << i) - 1);
-    return (Trie*)data_[(IsWord() ? 1 : 0) + CountBits(v)];
+    return (Trie*)data_[(IsWord() ? Marks : 0) + CountBits(v)];
   }
 
   // NOTE: These should NEVER be called unless this Node is already a word.
@@ -42,25 +46,12 @@ class Trie {
   bool IsWord(const char* wd) const;
   void SetIsWord(bool w) { bits_ &= ~(1<<26); bits_ |= (w << 26); }
 
-
   // Trie-building methods (slow)
-  class SimpleTrie;
   static Trie* CompactTrie(const SimpleTrie& t);
   static Trie* CreateFromFile(const char* file);
 
   // Analysis (slow)
-  size_t Size() const;
-  size_t NumNodes() const;
   size_t MemoryUsage() const;
-  bool ReverseLookup(const Trie* child, std::string* out) const;
-  std::string ReverseLookup(const Trie* child) const {
-    std::string out;
-    ReverseLookup(child, &out);
-    return out;
-  }
-  void SetAllMarks(unsigned mark);
-
-  void PrintTrie(std::string prefix = "") const;
 
  private:
   uint32_t bits_;      // used to determine word-ness and children.
@@ -80,26 +71,30 @@ class Trie {
   }
 
   ~Trie();
+};
 
+// Plain vanilla trie used for bootstrapping the Trie.
+//template<int Marks>
+class SimpleTrie {
  public:
-  // Plain vanilla trie used for bootstrapping the Trie.
-  class SimpleTrie {
-   public:
-    SimpleTrie();
-    ~SimpleTrie();
+  SimpleTrie();
+  ~SimpleTrie();
 
-    bool StartsWord(int i) const { return children_[i]; }
-    SimpleTrie* Descend(int i) const { return children_[i]; }
+  bool StartsWord(int i) const { return children_[i]; }
+  SimpleTrie* Descend(int i) const { return children_[i]; }
 
-    bool IsWord() const { return is_word_; }
-    void SetIsWord() { is_word_ = true; }
+  bool IsWord() const { return is_word_; }
+  void SetIsWord() { is_word_ = true; }
 
-    void AddWord(const char* wd);
+  void Mark(uintptr_t m) { mark_ = m; }
+  uintptr_t Mark() { return mark_; }
 
-   private:
-    bool is_word_;
-    SimpleTrie* children_[26];
-  };
+  void AddWord(const char* wd);
+
+ private:
+  bool is_word_;
+  uintptr_t mark_;
+  SimpleTrie* children_[26];
 };
 
 // Some statistics:
@@ -116,5 +111,65 @@ class Trie {
 // -  445420 bytes =  9.6% is in unused bits_ fields.
 //
 // Eliminated unused mark_ fields => 3,770,984 bytes.
+
+// Provides some slower methods that rely on faster primitives
+template<class TrieT>
+class TrieUtils {
+ public:
+  static size_t Size(const TrieT* t);
+  static size_t NumNodes(const TrieT* t);
+  static bool ReverseLookup(const TrieT* base, const TrieT* child, std::string* out);
+  static std::string ReverseLookup(const TrieT* base, const TrieT* child) {
+    std::string out;
+    ReverseLookup(base, child, &out);
+    return out;
+  }
+  static void SetAllMarks(TrieT* t, unsigned mark);
+  static void PrintTrie(std::string prefix = "");
+};
+
+// TrieUtils
+template<class TrieT>
+size_t TrieUtils<TrieT>::Size(const TrieT* t) {
+  size_t size = 0;
+  if (t->IsWord()) size++;
+  for (int i=0; i<26; i++) {
+    if (t->StartsWord(i)) size += Size(t->Descend(i));
+  }
+  return size;
+}
+
+template<class TrieT>
+size_t TrieUtils<TrieT>::NumNodes(const TrieT* t) {
+  int count = 1;
+  for (int i = 0; i < kNumLetters; i++)
+    if (t->StartsWord(i))
+      count += NumNodes(t->Descend(i));
+  return count;
+}
+
+template<class TrieT>
+bool TrieUtils<TrieT>::ReverseLookup(const TrieT* base, const TrieT* child,
+                                     std::string* out) {
+  if (base==child) return true;
+  for (int i=0; i<kNumLetters; i++) {
+    if (base->StartsWord(i) && ReverseLookup(base->Descend(i), child, out)) {
+      *out = std::string(1,'a'+i) + *out;
+      return true;
+    }
+  }
+  return false;
+}
+
+template<class TrieT>
+void TrieUtils<TrieT>::SetAllMarks(TrieT* t, unsigned mark) {
+  if (t->IsWord()) t->Mark(mark);
+  for (int i=0; i<kNumLetters; i++) {
+    if (t->StartsWord(i)) SetAllMarks(t->Descend(i), mark);
+  }
+}
+
+//template<class TrieT>
+//void TrieUtils<TrieT>::PrintTrie(std::string prefix = "") const;
 
 #endif

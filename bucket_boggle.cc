@@ -19,17 +19,12 @@ using std::map;
 using std::vector;
 
 // e.g. [a-z] => [a-f] for six buckets
-double BucketScore(const Trie* dict,
+double BucketScore(SimpleTrie* t,
                    const Buckets::Bucketing& buckets, int num_boards) {
-  Trie* t = Buckets::FromTrie(*dict, buckets);
-  std::cout << "Size: " << t->Size() << std::endl;
-
-  Boggler b(t);
+  GenericBoggler<SimpleTrie> b(t);
   int cutoff = 3625;
   int reps_below = 0, reps_above = 0;
-  //int num_buckets = Buckets::NumBuckets(buckets);
   for (int i = 0; i < num_boards; i++) {
-    uint64_t reps = 1;
     for (int x = 0; x < 4; x++) {
       for (int y = 0; y < 4; y++) {
         while (1) {
@@ -42,26 +37,39 @@ double BucketScore(const Trie* dict,
         }
       }
     }
-    //reps = Buckets::NumRepresentatives(b, buckets);
-    reps = 1;
     int score = b.Score(cutoff);
-    //std::cout << score << std::endl;
     if (score > cutoff) {
-      reps_above += reps;
+      reps_above += 1;
     } else {
-      reps_below += reps;
+      reps_below += 1;
     }
+    printf("%s: %d\n", b.ToString().c_str(), score);
   }
   printf("%d / %d\n", reps_above, reps_below);
 
-  t->Delete();
   return 1.0 * reps_below / (reps_below + reps_above);
 }
 
 int main(int argc, char** argv) {
   srandomdev();
-  Trie* dict = Boggler::DictionaryFromFile(argv[1]);
-  std::cout << "Loaded " << dict->Size() << " words." << std::endl;
+
+  const char* filename = argv[1];
+  char line[80];
+  SimpleTrie t;
+  FILE* f = fopen(filename, "r");
+  if (!f) {
+    fprintf(stderr, "Couldn't open %s\n", filename);
+    exit(1);
+  }
+
+  while (!feof(f) && fscanf(f, "%s", line)) {
+    if (!Boggler::BogglifyWord(line)) continue;
+    t.AddWord(line);
+  }
+  fclose(f);
+
+  std::cout << "Loaded " << TrieUtils<SimpleTrie>::Size(&t)
+            << " words." << std::endl;
   int num_boards = atoi(argv[2]);
 
   Buckets::Bucketing perm;
@@ -70,5 +78,5 @@ int main(int argc, char** argv) {
     while (*x) perm[*x++] = 'a' + i - 3;
   }
   std::cout << Buckets::ToString(perm) << ": "
-            << BucketScore(dict, perm, num_boards) << std::endl;
+            << BucketScore(&t, perm, num_boards) << std::endl;
 }

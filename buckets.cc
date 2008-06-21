@@ -30,47 +30,6 @@ bool Buckets::Bucketize(std::string* word, const Bucketing& buckets) {
   return Bucketize(&*word->begin(), buckets);
 }
 
-Trie* Buckets::FromTrie(const Trie& source, const Bucketing& buckets) {
-  struct Collapser {
-    Collapser(const Bucketing& b) : buckets(b) {}
-    void Collapse(const Trie& t, std::string sofar="") {
-      if (t.IsWord()) {
-        out->AddWord(sofar.c_str());
-      }
-      for (int i = 0; i < 26; i++) {
-        Bucketing::const_iterator it = buckets.find('a' + i);
-        if (t.StartsWord(i) && it != buckets.end()) {
-          Collapse(*t.Descend(i), sofar + std::string(1, it->second));
-        }
-      }
-    }
-    const Bucketing& buckets;
-    Trie::SimpleTrie* out;
-  } collapse(buckets);
-  collapse.out = new Trie::SimpleTrie;
-  collapse.Collapse(source);
-
-  Trie* pt = Trie::CompactTrie(*collapse.out);
-  delete collapse.out;
-  return pt;
-}
-
-Trie* Buckets::FromWordList(const std::vector<std::string>& source,
-                            const Bucketing& buckets) {
-  Trie::SimpleTrie* st = new Trie::SimpleTrie;
-  char buf[80];
-  for (std::vector<std::string>::const_iterator it = source.begin();
-       it != source.end(); ++it) {
-    strcpy(buf, it->c_str());
-    if (!Boggler::BogglifyWord(buf)) continue;
-    if (!Bucketize(buf, buckets)) continue;
-    st->AddWord(buf);
-  }
-
-  Trie* pt = Trie::CompactTrie(*st);
-  delete st;
-  return pt;
-}
 
 double Buckets::NumRepresentatives(const Boggler& board,
                                      const Bucketing& buckets) {

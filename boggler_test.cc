@@ -12,7 +12,7 @@ void CheckInt(int expected, int actual) {
 }
 
 int main(int argc, char** argv) {
-  Trie::SimpleTrie t;
+  SimpleTrie t;
   t.AddWord("ate");
   t.AddWord("tea");
   t.AddWord("eta");

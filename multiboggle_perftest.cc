@@ -150,7 +150,7 @@ int main(int argc, char** argv) {
     basic_elapsed = end - start;
     cout << "Basic scored " << basic_score << " pts in " << basic_elapsed
          << " s (" << bd.NumBoards() / basic_elapsed << " bds/s)" << endl;
-    t->SetAllMarks(0);
+    TrieUtils<Trie>::SetAllMarks(t, 0);
   }
 
   // Then go through the same boards with the MultiBoggler

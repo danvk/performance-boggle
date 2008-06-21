@@ -8,9 +8,9 @@
 using namespace std;
 
 int CompareBoards(Trie* dict, const char* base) {
-  dict->SetAllMarks(0);
+  TrieUtils<Trie>::SetAllMarks(dict, 0);
   vector<int> ref;
-  Boggler bd(dict);
+  GenericBoggler<Trie> bd(dict);
   bd.ParseBoard(base);
   for (int a=0; a<26; a++) {
     bd.SetCell(0, 0, a);
@@ -20,7 +20,7 @@ int CompareBoards(Trie* dict, const char* base) {
       ref.push_back(bd.Score());
     }
   }
-  dict->SetAllMarks(0);
+  TrieUtils<Trie>::SetAllMarks(dict, 0);
 
   MultiBoggle mb(dict);
   mb.ParseBoard(base);
@@ -60,7 +60,7 @@ int CompareBoards(Trie* dict, const char* base) {
 
 int main(int argc, char** argv) {
   Trie* t = Boggler::DictionaryFromFile("words");
-  cout << "Loaded " << t->Size() << " words" << endl;
+  cout << "Loaded/compacted " << TrieUtils<Trie>::Size(t) << " words" << endl;
 
   CompareBoards(t, "abcdefghijklmnop");
   CompareBoards(t, "catdlinemaropets");

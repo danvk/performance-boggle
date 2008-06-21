@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
     Trie* t = Trie::CreateFromFile(tmp_file);
     assert(NULL != t);
 
-    assert(6 == t->Size());
+    assert(6 == TrieUtils<Trie>::Size(t));
     assert( t->IsWord("agriculture"));
     assert( t->IsWord("culture"));
     assert( t->IsWord("boggle"));

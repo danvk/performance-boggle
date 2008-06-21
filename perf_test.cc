@@ -21,7 +21,8 @@ int main(int argc, char** argv) {
   assert(Boggler::BogglifyWord(tmp));
   assert(0 == strcmp(tmp, "eqalizes"));
 
-  Trie* pt = Boggler::DictionaryFromFile(dict_file);
+  SimpleTrie* st = GenericBoggler<SimpleTrie>::DictionaryFromFile(dict_file);
+  Trie* pt = Trie::CompactTrie(*st);
   assert(pt != NULL);
   assert( pt->IsWord("eqalizer"));
   assert(!pt->IsWord("equalizer"));
@@ -122,12 +123,13 @@ size_t EvenNodes(const Trie& pt) {
 
 void TrieStats(const Trie& pt) {
   printf("Loaded %zd words into %zd-node Trie (%zd bytes)\n",
-	  pt.Size(), NumNodes(pt), pt.MemoryUsage());
+	  TrieUtils<Trie>::Size(&pt),
+          TrieUtils<Trie>::NumNodes(&pt), pt.MemoryUsage());
 
   printf("Trie contains %zd childless nodes, %zd words w/ children\n", 
 	 Childless(pt), WordsWithChildren(pt));
 
-  printf("Trie contains %d paired nodes.\n", EvenNodes(pt));
+  printf("Trie contains %lu paired nodes.\n", EvenNodes(pt));
 
   std::map<int, int> gaps; Gaps(&pt, &gaps);
   std::map<int, int>::const_reverse_iterator i = gaps.rbegin();

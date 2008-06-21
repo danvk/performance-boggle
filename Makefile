@@ -2,7 +2,7 @@ CC = g++
 CPPFLAGS = -g -Wall -O3 -march=i686
 #CPPFLAGS = -g -Wall
 
-tests = perf_test trie_test multiboggle_test multiboggle_perftest
+tests = perf_test trie_test boggler_test buckets_test multiboggle_test multiboggle_perftest
 progs = $(tests) bucket_boggle bucket_descent
 all: $(progs)
 
@@ -30,4 +30,4 @@ multiboggle.o: multiboggle.h multiboggle.cc trie.h
 buckets.o: buckets.h buckets.cc boggler.h trie.h
 
 clean:
-	rm -r *.o $(progs) *.dSYM
+	rm -f -r *.o $(progs) $(tests) *.dSYM

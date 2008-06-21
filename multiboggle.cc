@@ -2,6 +2,7 @@
 // Author: danvk@google.com (Dan Vanderkam)
 
 #include "multiboggle.h"
+#include "boggler.h"
 #include <iostream>
 
 #define PRINT_WORDS 0
@@ -98,7 +99,7 @@ struct TwoHoleFinder {
       t->Mark(runs_);
       if (PRINT_WORDS) {
         std::string out;
-        dict_->ReverseLookup(t, &out);
+        TrieUtils<Trie>::ReverseLookup(dict_, t, &out);
         printf("%s\n", out.c_str());
       }
     }
@@ -235,7 +236,7 @@ void MultiBoggle::PrintOneHole(const TwoHole& two, const OneHole& one, int x) {
   for (std::vector<Trie*>::const_iterator it = one.extra_words.begin();
        it != one.extra_words.end(); ++it) {
     std::string out;
-    dict_->ReverseLookup(*it, &out);
+    TrieUtils<Trie>::ReverseLookup(dict_, *it, &out);
     printf("  %s\n", out.c_str());
   }
   std::cout << "Remaining paths: " << one.paths.size() << std::endl;
@@ -380,7 +381,7 @@ MultiBoggle::~MultiBoggle() {
 std::string MultiBoggle::Path::ToString(Trie* dict) const {
   char buf[20];
   std::string ret;
-  dict->ReverseLookup(node, &ret);
+  TrieUtils<Trie>::ReverseLookup(dict, node, &ret);
   
   sprintf(buf, " (%04x) %d", used_mask, len);
   return ret + buf;

@@ -34,6 +34,7 @@ class Buckets {
   static std::string ToString(const Bucketing& buckets);
 };
 
+
 template<class TrieT>
 TrieT* Buckets::FromTrie(const TrieT& source, const Bucketing& buckets) {
   struct Collapser {

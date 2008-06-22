@@ -48,17 +48,29 @@ class GenericBoggler : public BogglerBase {
   // to 'q'.
   static TrieT* DictionaryFromFile(const char* dict_filename);
 
+  // Callback is called whenever a word is found.
+  // (TrieT* node, int x, int y, int len, int path) -> void
+  template<class Callback>
+  void DoSearch(Callback& c);
+
  private:
-  void DoDFS(int i, int len, TrieT* t);
+  template<class Callback>
+  void DoDFS(int i, int len, TrieT* t, Callback& cb);
+
+  struct SimpleScorer {
+    void operator()(TrieT* t, int x, int y, int len, int used);
+    uintptr_t runs_;
+    unsigned int score_;
+  };
 
   TrieT* dict_;
   mutable unsigned int runs_;
+  mutable unsigned int used_;
   mutable int bd_[16];
   int num_boards_;
   unsigned int score_;
 
   static const int kCellUsed = -1;
-  static int* kWordScores;
 };
 
 // Convenience specialization of GenericBoggler
@@ -74,20 +86,29 @@ class Boggler : public GenericBoggler<Trie> {
 // These functions depend on the TrieT template parameter, so they must be
 // defined in the header file.
 template<class TrieT>
+void GenericBoggler<TrieT>::SimpleScorer::operator()(TrieT* t, int x, int y,
+                                                     int len, int used) {
+  static const int kWordScore[] =
+      //0, 1, 2, 3, 4, 5, 6, 7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17
+      { 0, 0, 0, 1, 1, 2, 3, 5, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11 };
+
+  if (t->Mark() != runs_) {
+    t->Mark(runs_);
+    score_ += kWordScore[len];
+  }
+}
+
+template<class TrieT>
 int GenericBoggler<TrieT>::Score(unsigned int cutoff) {
   runs_ += 1;
-  score_ = 0;
-  for (int i=0; i<16; i++) {
-    int c = bd_[i];
-    if (dict_->StartsWord(c))
-      DoDFS(i, 0, dict_->Descend(c));
-    if (score_ > cutoff)
-      break;
-  }
+  SimpleScorer ss;
+  ss.runs_ = runs_;
+  ss.score_ = 0;
+  DoSearch(ss);
 
   // Really should check for overflow here
   num_boards_++;
-  return score_;
+  return ss.score_;
 }
 
 // Board format: "bcdefghijklmnopq"
@@ -115,27 +136,27 @@ int GenericBoggler<TrieT>::Score(char const* lets) {
 
 // Returns the score from this portion of the search
 template<class TrieT>
-void GenericBoggler<TrieT>::DoDFS(int i, int len, TrieT* t) {
-  static const int kWordScores[] =
-    //0, 1, 2, 3, 4, 5, 6, 7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17
-    { 0, 0, 0, 1, 1, 2, 3, 5, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11 };
+template<class Callback>
+void GenericBoggler<TrieT>::DoDFS(int i, int len, TrieT* t, Callback& cb) {
   int c = bd_[i];
 
+  used_ ^= (1 << i);
   len += (c==kQ ? 2 : 1);
-  if (t->IsWord() && t->Mark() != runs_) {
-    score_ += kWordScores[len];
-    t->Mark(runs_);
+  if (t->IsWord()) {
+    cb(t, i%4, i/4, len, used_);  // use a used mask
   }
 
   // Could also get rid of any two dimensionality, but maybe GCC does that?
-  bd_[i] = kCellUsed;
-  int cc;
+  int cc, idx;
 
   // To help the loop unrolling...
-#define HIT(x,y) do { cc = bd_[(x)*4+(y)]; \
-		      if (~cc && t->StartsWord(cc)) { \
-		        DoDFS((x)*4+(y), len, t->Descend(cc)); \
-		      } \
+#define HIT(x,y) do { idx = (x) * 4 + y; \
+                      if ((used_ & (1 << idx)) == 0) { \
+                        cc = bd_[(x)*4+(y)]; \
+                        if (t->StartsWord(cc)) { \
+                          DoDFS((x)*4+(y), len, t->Descend(cc), cb); \
+                        } \
+                      } \
 		 } while(0)
 #define HIT3x(x,y) HIT(x,y); HIT(x+1,y); HIT(x+2,y)
 #define HIT3y(x,y) HIT(x,y); HIT(x,y+1); HIT(x,y+2)
@@ -162,12 +183,25 @@ void GenericBoggler<TrieT>::DoDFS(int i, int len, TrieT* t) {
     case 3*4 + 2: HIT3y(2, 1); HIT(3, 1); HIT(3, 3); break;
     case 3*4 + 3: HIT(2, 2); HIT(3, 2); HIT(2, 3); break;
   }
-  bd_[i] = c;
+  used_ ^= (1 << i);
 
 #undef HIT
 #undef HIT3x
 #undef HIT3y
 #undef HIT8
+}
+
+// Callback is called whenever a word is found.
+// (TrieT* node, int x, int y, int len, int path) -> void
+template<class TrieT>
+template<class Callback>
+void GenericBoggler<TrieT>::DoSearch(Callback& cb) {
+  used_ = 0;
+  for (int i=0; i<16; i++) {
+    int c = bd_[i];
+    if (dict_->StartsWord(c))
+      DoDFS(i, 0, dict_->Descend(c), cb);
+  }
 }
 
 template<class TrieT>

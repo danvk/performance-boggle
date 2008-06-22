@@ -89,7 +89,8 @@ class SimpleTrie {
   void Mark(uintptr_t m) { mark_ = m; }
   uintptr_t Mark() { return mark_; }
 
-  void AddWord(const char* wd);
+  // Returns a pointer to the new Trie node at the end of the word.
+  SimpleTrie* AddWord(const char* wd);
 
  private:
   bool is_word_;
@@ -126,6 +127,7 @@ class TrieUtils {
   }
   static void SetAllMarks(TrieT* t, unsigned mark);
   static void PrintTrie(std::string prefix = "");
+  static TrieT* FindWord(TrieT* t, const char* wd);
 };
 
 // TrieUtils
@@ -167,6 +169,15 @@ void TrieUtils<TrieT>::SetAllMarks(TrieT* t, unsigned mark) {
   for (int i=0; i<kNumLetters; i++) {
     if (t->StartsWord(i)) SetAllMarks(t->Descend(i), mark);
   }
+}
+
+template<class TrieT>
+TrieT* TrieUtils<TrieT>::FindWord(TrieT* t, const char* wd) {
+  if (!wd) return NULL;
+  if (!*wd) return t;
+  int c = *wd - 'a';
+  if (!t->StartsWord(c)) return NULL;
+  return FindWord(t->Descend(c), wd+1);
 }
 
 //template<class TrieT>

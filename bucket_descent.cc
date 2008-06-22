@@ -23,24 +23,27 @@ double BucketScore(const vector<std::string>& word_list,
                    const Bucketing& buckets,
                    const vector<std::string>& boards) {
   SimpleTrie* t = Buckets::FromWordList<SimpleTrie>(word_list, buckets);
-  std::cout << "Size: " << TrieUtils<SimpleTrie>::Size(t) << std::endl;
+  //std::cout << "Size: " << TrieUtils<SimpleTrie>::Size(t) << std::endl;
 
   GenericBoggler<SimpleTrie> b(t);
   int cutoff = 3625;
-  double reps_below = 0, reps_above = 0;
+  int reps_below = 0, reps_above = 0;
   for (size_t i = 0; i < boards.size(); i++) {
     std::string bd = boards[i];
     Buckets::Bucketize(&bd, buckets);
     b.ParseBoard(bd.c_str());
-    int score = b.Score();
+    int score = Buckets::UpperBound(b, cutoff);
     if (score > cutoff) {
       reps_above += 1;
     } else {
       reps_below += 1;
     }
+    if (i < 0)
+      printf("%s: %d\n", b.ToString().c_str(), score);
   }
 
   delete t;
+  //printf("%d / %d\n", reps_above, reps_below);
   return 1.0 * reps_below / (reps_below + reps_above);
 }
 
@@ -65,20 +68,23 @@ int main(int argc, char** argv) {
   int num_iters = atoi(argv[4]);
 
   // Generate a list of random boards in a deterministic way
-  srandom(0);
+  srandom(1);
   vector<std::string> boards;
   for (int i = 0; i < num_boards; i++) {
     boards.push_back(std::string(16, ' '));
     std::string& wd = *boards.rbegin();
     for (int x = 0; x < 4; x++) {
       for (int y = 0; y < 4; y++) {
-        int c = random() % num_buckets;
+        int c;
+        do {
+          c = random() % 26;
+        } while (c == 'q' - 'a');
         wd[4*x + y] = 'a' + c;
       }
     }
   }
 
-  srandomdev();
+  srandom(time(NULL));
   // Start with a random set of buckets.
   while (1) {
     Bucketing best;
@@ -100,12 +106,12 @@ int main(int argc, char** argv) {
       }
 
       double score = BucketScore(dictionary, cp, boards);
+      std::cout << i << ":  " << Buckets::ToString(cp) << ": " << score << std::endl;
       if (score > best_score) {
         best_score = score;
         best = cp;
-        std::cout << "  " << Buckets::ToString(cp) << ": " << score << std::endl;
+        //std::cout << "  " << Buckets::ToString(cp) << ": " << score << std::endl;
       }
-      if (i % 10 == 0) std::cout << i << "..." << std::endl;
     }
     std::cout << "Final: " << Buckets::ToString(best) << ": " << best_score << std::endl;
   }

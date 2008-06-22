@@ -37,13 +37,14 @@ double BucketScore(SimpleTrie* t,
         }
       }
     }
-    int score = b.Score(cutoff);
+    int score = Buckets::UpperBound(b, cutoff);
     if (score > cutoff) {
       reps_above += 1;
     } else {
       reps_below += 1;
     }
-    printf("%s: %d\n", b.ToString().c_str(), score);
+    if (i < 0)
+      printf("%s: %d\n", b.ToString().c_str(), score);
   }
   printf("%d / %d\n", reps_above, reps_below);
 
@@ -51,12 +52,10 @@ double BucketScore(SimpleTrie* t,
 }
 
 int main(int argc, char** argv) {
-  srandomdev();
-
   const char* filename = argv[1];
   char line[80];
-  SimpleTrie t;
   FILE* f = fopen(filename, "r");
+  std::vector<std::string> words;
   if (!f) {
     fprintf(stderr, "Couldn't open %s\n", filename);
     exit(1);
@@ -64,19 +63,23 @@ int main(int argc, char** argv) {
 
   while (!feof(f) && fscanf(f, "%s", line)) {
     if (!Boggler::BogglifyWord(line)) continue;
-    t.AddWord(line);
+    words.push_back(line);
   }
   fclose(f);
 
-  std::cout << "Loaded " << TrieUtils<SimpleTrie>::Size(&t)
-            << " words." << std::endl;
   int num_boards = atoi(argv[2]);
-
   Buckets::Bucketing perm;
   for (int i = 3; i < argc; i++) {
     char* x = argv[i];
     while (*x) perm[*x++] = 'a' + i - 3;
   }
+
+  SimpleTrie* t = Buckets::FromWordList<SimpleTrie>(words, perm);
+
+  std::cout << "Loaded " << TrieUtils<SimpleTrie>::Size(t)
+            << " words." << std::endl;
+
+  srandom(time(NULL));
   std::cout << Buckets::ToString(perm) << ": "
-            << BucketScore(&t, perm, num_boards) << std::endl;
+            << BucketScore(t, perm, num_boards) << std::endl;
 }

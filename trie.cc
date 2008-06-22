@@ -147,16 +147,16 @@ Trie* Trie::CreateFromFile(const char* filename) {
 // Plain-vanilla Trie code
 inline int idx(char x) { return x - 'a'; }
 
-void SimpleTrie::AddWord(const char* wd) {
-  if (!wd) return;
+SimpleTrie* SimpleTrie::AddWord(const char* wd) {
+  if (!wd) return NULL;
   if (!*wd) {
     SetIsWord();
-    return;
+    return this;
   }
   int c = idx(*wd);
   if (!StartsWord(c))
     children_[c] = new SimpleTrie;
-  Descend(c)->AddWord(wd+1);
+  return Descend(c)->AddWord(wd+1);
 }
 
 SimpleTrie::~SimpleTrie() {
@@ -170,4 +170,5 @@ SimpleTrie::SimpleTrie() {
   for (int i=0; i<kNumLetters; i++)
     children_[i] = NULL;
   is_word_ = false;
+  mark_ = 0;
 }

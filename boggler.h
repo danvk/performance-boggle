@@ -15,6 +15,8 @@ class BogglerBase {
 
   // Returns true if it's a valid boggle word and converts "qu" -> 'q'
   static bool BogglifyWord(char* word);
+
+  static const int kWordScores[];
 };
 
 template<class TrieT>
@@ -49,7 +51,8 @@ class GenericBoggler : public BogglerBase {
   static TrieT* DictionaryFromFile(const char* dict_filename);
 
   // Callback is called whenever a word is found.
-  // (TrieT* node, int x, int y, int len, int path) -> void
+  // (TrieT* node, int x, int y, int len, int path) -> bool
+  // Callback should return false to bail out of the search.
   template<class Callback>
   void DoSearch(Callback& c);
 
@@ -58,7 +61,7 @@ class GenericBoggler : public BogglerBase {
   void DoDFS(int i, int len, TrieT* t, Callback& cb);
 
   struct SimpleScorer {
-    void operator()(TrieT* t, int x, int y, int len, int used);
+    bool operator()(TrieT* t, int x, int y, int len, int used);
     uintptr_t runs_;
     unsigned int score_;
   };
@@ -66,6 +69,7 @@ class GenericBoggler : public BogglerBase {
   TrieT* dict_;
   mutable unsigned int runs_;
   mutable unsigned int used_;
+  mutable bool continue_;
   mutable int bd_[16];
   int num_boards_;
   unsigned int score_;
@@ -86,16 +90,13 @@ class Boggler : public GenericBoggler<Trie> {
 // These functions depend on the TrieT template parameter, so they must be
 // defined in the header file.
 template<class TrieT>
-void GenericBoggler<TrieT>::SimpleScorer::operator()(TrieT* t, int x, int y,
+bool GenericBoggler<TrieT>::SimpleScorer::operator()(TrieT* t, int x, int y,
                                                      int len, int used) {
-  static const int kWordScore[] =
-      //0, 1, 2, 3, 4, 5, 6, 7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17
-      { 0, 0, 0, 1, 1, 2, 3, 5, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11 };
-
   if (t->Mark() != runs_) {
     t->Mark(runs_);
-    score_ += kWordScore[len];
+    score_ += kWordScores[len];
   }
+  return true;
 }
 
 template<class TrieT>
@@ -143,7 +144,10 @@ void GenericBoggler<TrieT>::DoDFS(int i, int len, TrieT* t, Callback& cb) {
   used_ ^= (1 << i);
   len += (c==kQ ? 2 : 1);
   if (t->IsWord()) {
-    cb(t, i%4, i/4, len, used_);  // use a used mask
+    if (!cb(t, i%4, i/4, len, used_)) {
+      continue_ = false;
+    }
+    if (!continue_) return;
   }
 
   // Could also get rid of any two dimensionality, but maybe GCC does that?
@@ -155,6 +159,7 @@ void GenericBoggler<TrieT>::DoDFS(int i, int len, TrieT* t, Callback& cb) {
                         cc = bd_[(x)*4+(y)]; \
                         if (t->StartsWord(cc)) { \
                           DoDFS((x)*4+(y), len, t->Descend(cc), cb); \
+                          if (!continue_) break; \
                         } \
                       } \
 		 } while(0)
@@ -197,7 +202,9 @@ template<class TrieT>
 template<class Callback>
 void GenericBoggler<TrieT>::DoSearch(Callback& cb) {
   used_ = 0;
-  for (int i=0; i<16; i++) {
+  continue_ = true;
+  int i;
+  for (i=0; i<16 && continue_; i++) {
     int c = bd_[i];
     if (dict_->StartsWord(c))
       DoDFS(i, 0, dict_->Descend(c), cb);

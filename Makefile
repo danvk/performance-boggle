@@ -23,6 +23,8 @@ multiboggle_perftest: trie.o boggler.o multiboggle.o multiboggle_perftest.cc
 buckets_test: trie.o buckets.o boggler.o buckets_test.o
 bucket_boggle: bucket_boggle.o trie.o buckets.o boggler.o
 bucket_descent: bucket_descent.o trie.o buckets.o boggler.o
+bucket_trie: bucket_trie.o trie.o boggler.o
+ibucket_boggle: ibucket_boggle.o trie.o boggler.o
 
 trie.o: trie.h trie.cc
 boggler.o: trie.h boggler.h boggler.cc

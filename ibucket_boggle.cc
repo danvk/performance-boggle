@@ -4,6 +4,7 @@
 // Play bucketed boggle w/o a bucketed trie. This could potentially be really
 // slow, but will give better bounds and allow more flexible bucketing.
 
+#include <math.h>
 #include <sys/time.h>
 #include "trie.h"
 #include "boggler.h"
@@ -35,16 +36,38 @@ int buckets[][26] = {
                      {'x', -1},
                      {'y', -1},
                      {'z', -1},
+
+         /* 26 */    { 'a', 'e', 'o', -1},
+         /* 27 */    { 'i', 'u', -1},
+         /* 28 */    { 'c', 's', -1},
+         /* 29 */    { 'h', 'y', -1},
+         /* 30 */    { 'd', 'l', 'n', 'r', 't', 'b', -1},
+         /* 31 */    { 'f', 'g', 'k', 'm', 'p', -1},
+         /* 32 */    { 'j', 'v', 'w', 'x', 'z', -1},
+
+         /* 33 */    { 'a', 'e', 'i', 'o', 'u', -2, 26, 27, -1},
+         /* 34 */    { 'c', 'h', 's', 'y', -2, 28, 29, -1 },
+         /* 35 */    { 'd', 'l', 'n', 'r', 't', 'b', 'f', 'g', 'j', 'k',
+                       'm', 'p', 'v', 'w', 'x', 'z', -2, 30, 31, 32, -1 },
+
+                     //{'a', 'e', 'i', 'o', 'u', -1},
+                     //{'s', 'y', -1},
+                     //{'b', 'd', 'f', 'g', 'j', 'k', 'm',
+                     // 'p', 'v', 'w', 'x', 'z', -1},
+                     //{'c', 'h', 'l', 'n', 'r', 't', -1}
+
                      //{ 'a', 'b', 'c', 'd', 'e', -1 },
                      //{ 'f', 'g', 'h', 'i', 'j', -1 },
                      //{ 'k', 'l', 'm', 'n', 'o', -1 },
                      //{ 'p', 'r', 's', 't', 'u', -1 },
                      //{ 'v', 'w', 'x', 'y', 'z', -1 },
-                     { 'a', 'e', 'i', 'o', -1},
-                     { 's', 'u', -1},
-                     { 'f', 'j', 'k', 'm', 'v', 'w', 'x', 'z', -1},
-                     { 'd', 'l', 'n', 'r', 't', -1},
-                     { 'b', 'c', 'g', 'h', 'p', 'y', -1}
+
+                     //{ 'a', 'e', 'i', 'o', -1},
+                     //{ 's', 'u', -1},
+                     //{ 'f', 'j', 'k', 'm', 'v', 'w', 'x', 'z', -1},
+                     //{ 'd', 'l', 'n', 'r', 't', -1},
+                     //{ 'b', 'c', 'g', 'h', 'p', 'y', -1}
+
                      //{ 0, 1, 2, 3, 4, -1},  // abcde = 26
                      //{ 5, 6, 7, 8, 9, -1},  // fghij = 27
                      //{10,11,12,13,14, -1},  // klmno = 28
@@ -73,32 +96,36 @@ int bd_[16] =
               //  8, 9, 10, 11,
               //  12, 13, 14, 15};
 
+unsigned int cutoff = UINT_MAX;
 int board_evals = 0;
-int DoDFS(int i, int len, SimpleTrie* t);
-int Score(SimpleTrie* t) {
+bool count_letters = true;
+unsigned int DoDFS(int i, int len, SimpleTrie* t);
+unsigned int Score(SimpleTrie* t) {
   board_evals += 1;
-  int score = 0;
+  unsigned int score = 0;
   used_ = 0;
   dict_ = t;
   int i;
   for (i=0; i<16; i++) {
     int bc = bd_[i];
-    int max_score = 0;
+    unsigned int max_score = 0;
     for (int j=0; buckets[bc][j] >= 0; j++) {
       int c = buckets[bc][j];
       if (t->StartsWord(c)) {
-        int tscore = DoDFS(i, 0, t->Descend(c));
+        unsigned int tscore = DoDFS(i, 0, t->Descend(c));
         if (tscore > max_score) max_score = tscore;
       }
     }
     score += max_score;
+    if (score > cutoff)
+      return score;
     //printf("%d: +%d = %d\n", i, max_score, score);
   }
   return score;
 }
 
-int DoDFS(int i, int len, SimpleTrie* t) {
-  int score = 0;
+unsigned int DoDFS(int i, int len, SimpleTrie* t) {
+  unsigned int score = 0;
   used_ ^= (1 << i);
   //len += (c==kQ ? 2 : 1);
   len += 1;
@@ -106,14 +133,16 @@ int DoDFS(int i, int len, SimpleTrie* t) {
     // Should mark that this word has been found, but that's.. tricky
     if (t->Mark() != 1) {
       score += BogglerBase::kWordScores[len];
-      for (int i=0; i<16; i++)
-        if (used_ & (1<<i)) counts_[i] += BogglerBase::kWordScores[len];
+      if (count_letters) {
+        for (int i=0; i<16; i++)
+          if (used_ & (1<<i)) counts_[i] += BogglerBase::kWordScores[len];
+      }
       //t->Mark(1);
     }
   }
 
   int cc, idx, bc;
-  int max_score, tscore;
+  unsigned int max_score, tscore;
   // To help the loop unrolling...
 #define HIT(x,y) do { idx = (x) * 4 + y; \
                       if ((used_ & (1 << idx)) == 0) { \
@@ -127,6 +156,7 @@ int DoDFS(int i, int len, SimpleTrie* t) {
                           } \
                         } \
                         score += max_score; \
+                        if (score > cutoff) return score; \
                       } \
 		 } while(0)
 #define HIT3x(x,y) HIT(x,y); HIT(x+1,y); HIT(x+2,y)
@@ -176,7 +206,7 @@ void PrintBoard() {
       s[1] = '\0';
     } else {
       int j;
-      for (j = 0; buckets[bd_[i]][j] != -1; j++) {
+      for (j = 0; buckets[bd_[i]][j] >= 0; j++) {
         s[j] = buckets[bd_[i]][j] + 'a';
       }
       s[j] = '\0';
@@ -187,7 +217,7 @@ void PrintBoard() {
   //printf("\n");
 }
 int BucketSize(int i) {
-  for (int j=0; ; j++) if (buckets[i][j] == -1) return j;
+  for (int j=0; ; j++) if (buckets[i][j] < 0) return j;
 }
 unsigned long long NumReps() {
   unsigned long long cnt = 1;
@@ -195,39 +225,58 @@ unsigned long long NumReps() {
   return cnt;
 }
 
-static const int kCutoff = 3625;
+static const unsigned int kCutoff = 3625;
+//static const int kMaxDepth = 16;
+//static const int kMaxDepth = 32;
+static const int kMaxDepth = 10;
 unsigned long long elim = 0, pass = 0, outputs = 0;
 int deepest = 0;
 void Break(SimpleTrie* t, int times) {
-  if (16 - times > deepest) deepest = 16 - times;
+  if (kMaxDepth - times > deepest) deepest = kMaxDepth - times;
   memset(counts_, 0, sizeof(counts_));
-  int score = Score(t);
+  count_letters = true;
+  if (kMaxDepth - times < 2) {
+    //count_letters = false;
+    cutoff = UINT_MAX;
+  } else {
+    cutoff = kCutoff;
+  }
+  unsigned int score = Score(t);
   if (score < kCutoff) {
     elim += NumReps();
     return;
   } else if (times == 0) {
     pass += NumReps();
     outputs += 1;
-    PrintBoard();
-    printf(": %d\n", score);
+    //PrintBoard();
+    //printf(": %u\n", score);
     return;
   }
 
   // Pick the most-trafficked square to split
-  int best_square=0, best_score=-1;
+  int best_square=0, best_score=-1, best_size=0;
   for (int i=0; i<16; i++)
-    if (counts_[i] > best_score && BucketSize(bd_[i]) > 1)
-      best_square = i, best_score = counts_[i];
+    if (counts_[i] > best_score && BucketSize(bd_[i]) > 1) {
+      best_square = i;
+      best_score = counts_[i];
+      best_size = BucketSize(bd_[i]);
+    }
   int save = bd_[best_square];
+  //if (times > 13)
+  //  printf("Depth: %d, cell %d\n", 16 - times, best_square);
 
-  for (int* rep = buckets[bd_[best_square]]; *rep != -1; rep++) {
+  int* rep = buckets[bd_[best_square]];
+  if (rep[best_size] < -1) rep = rep + best_size + 1;
+  //printf("breaking on %d (size %d)\n", best_square, best_size);
+  for (; *rep != -1; rep++) {
     bd_[best_square] = *rep;
+    //printf("%2d: ", *rep); PrintBoard(); printf("\n");
     Break(t, times - 1);
   }
   bd_[best_square] = save;
     //printf("%c:\n", 'a' + *rep);
     //PrintBoard();
-    //printf("%d\n", score);
+    //printf(": %d\n", score);
 }
 
 int main(int argc, char** argv) {
@@ -240,12 +289,18 @@ int main(int argc, char** argv) {
       buckets[i][j] -= 'a';
   }
 
+  double total_elapsed = 0.0;
+  unsigned long long total_elim = 0, total_pass = 0;
   int count = 1000;
+  //int num_buckets = sizeof(buckets)/sizeof(*buckets) - 26;
+  int num_buckets = 3;
+  printf("num_buckets = %d\n", num_buckets);
   srandom(time(NULL));
   for (int k=0; k<count; k++) {
     // Generate a random board class
     for (int i = 0; i < 16; i++) {
-      bd_[i] = 26 + (random() % 5);
+      //bd_[i] = 26 + (random() % num_buckets);
+      bd_[i] = 33 + (random() % num_buckets);
     }
 
     deepest = elim = pass = board_evals = 0;
@@ -253,27 +308,20 @@ int main(int argc, char** argv) {
     printf("Breaking:\n");
     PrintBoard();
     printf("\n");
-    Break(t, 16);
+    Break(t, kMaxDepth);
     double end = secs();
+    total_pass += pass;
+    total_elim += elim;  // (elim + pass);
+    total_elapsed += (end - start);
 
     printf("Evaluated %u boards in %f seconds.\n", board_evals, end - start);
-    printf("Eliminated %llu / %llu = %f @ depth %d\n",
-           elim, elim + pass, 1.0 * elim / (elim+pass), deepest);
-    printf("%llu boards remain\n", pass);
+    printf("Eliminated %llu / %llu @ depth %d\n", elim, elim + pass, deepest);
+    if (pass > 0)
+      printf("%llu boards remain, would output %llu\n", pass, outputs);
+    printf("Total time: %f, %llu boards elim. (%.5f) => %.2fBbds/sec, %.2fs/bucket\n",
+           total_elapsed, total_elim, 1.0 * total_elim / (total_elim + total_pass),
+           1.0 * total_elim / total_elapsed / pow(10, 9),
+           1.0 * total_elapsed / (k+1));
     fflush(stdout);
-
-    //if (k == 0) {
-    //  printf("board score: %d\n", score);
-    //  printf("cell usage:\n");
-    //  for (int i=0;i<16;i++)
-    //    printf("%5d%c", counts_[i], i%4 == 3 ? '\n' : ' ');
-    //}
   }
-
-  //printf("evaluated %d boards\n", board_evals);
-  //printf("elapsed time: %f\n", end - start);
-  //printf("eliminated %llu / %llu = %f\n",
-  //       elim, elim + pass, 1.0 * elim / (elim+pass));
-  //printf("%llu = %fM boards remain\n", pass, pass / 1000000.0);
-  //printf("would output %llu board classes\n", outputs);
 }

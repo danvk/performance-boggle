@@ -4,10 +4,12 @@
 // Play bucketed boggle w/o a bucketed trie. This could potentially be really
 // slow, but will give better bounds and allow more flexible bucketing.
 
+#include <algorithm>
 #include <math.h>
 #include <sys/time.h>
 #include "trie.h"
 #include "boggler.h"
+using std::min;
 
 int buckets[][26] = {
                      {'a', -1},
@@ -37,18 +39,18 @@ int buckets[][26] = {
                      {'y', -1},
                      {'z', -1},
 
-         /* 26 */    { 'a', 'e', 'o', -1},
-         /* 27 */    { 'i', 'u', -1},
-         /* 28 */    { 'c', 's', -1},
-         /* 29 */    { 'h', 'y', -1},
-         /* 30 */    { 'd', 'l', 'n', 'r', 't', 'b', -1},
-         /* 31 */    { 'f', 'g', 'k', 'm', 'p', -1},
-         /* 32 */    { 'j', 'v', 'w', 'x', 'z', -1},
-
-         /* 33 */    { 'a', 'e', 'i', 'o', 'u', -2, 26, 27, -1},
-         /* 34 */    { 'c', 'h', 's', 'y', -2, 28, 29, -1 },
-         /* 35 */    { 'd', 'l', 'n', 'r', 't', 'b', 'f', 'g', 'j', 'k',
-                       'm', 'p', 'v', 'w', 'x', 'z', -2, 30, 31, 32, -1 },
+//       /* 26 */    { 'a', 'e', 'o', -1},
+//       /* 27 */    { 'i', 'u', -1},
+//       /* 28 */    { 'c', 's', -1},
+//       /* 29 */    { 'h', 'y', -1},
+//       /* 30 */    { 'd', 'l', 'n', 'r', 't', 'b', -1},
+//       /* 31 */    { 'f', 'g', 'k', 'm', 'p', -1},
+//       /* 32 */    { 'j', 'v', 'w', 'x', 'z', -1},
+//
+//       /* 33 */    { 'a', 'e', 'i', 'o', 'u', -2, 26, 27, -1},
+//       /* 34 */    { 'c', 'h', 's', 'y', -2, 28, 29, -1 },
+//       /* 35 */    { 'd', 'l', 'n', 'r', 't', 'b', 'f', 'g', 'j', 'k',
+//                     'm', 'p', 'v', 'w', 'x', 'z', -2, 30, 31, 32, -1 },
 
                      //{'a', 'e', 'i', 'o', 'u', -1},
                      //{'s', 'y', -1},
@@ -62,11 +64,11 @@ int buckets[][26] = {
                      //{ 'p', 'r', 's', 't', 'u', -1 },
                      //{ 'v', 'w', 'x', 'y', 'z', -1 },
 
-                     //{ 'a', 'e', 'i', 'o', -1},
-                     //{ 's', 'u', -1},
-                     //{ 'f', 'j', 'k', 'm', 'v', 'w', 'x', 'z', -1},
-                     //{ 'd', 'l', 'n', 'r', 't', -1},
-                     //{ 'b', 'c', 'g', 'h', 'p', 'y', -1}
+                     { 'a', 'e', 'i', 'o', -1},
+                     { 's', 'u', -1},
+                     { 'f', 'j', 'k', 'm', 'v', 'w', 'x', 'z', -1},
+                     { 'd', 'l', 'n', 'r', 't', -1},
+                     { 'b', 'c', 'g', 'h', 'p', 'y', -1}
 
                      //{ 0, 1, 2, 3, 4, -1},  // abcde = 26
                      //{ 5, 6, 7, 8, 9, -1},  // fghij = 27
@@ -74,6 +76,8 @@ int buckets[][26] = {
                      //{15,17,18,19,20, -1},  // prstu = 29
                      //{21,22,23,24,25, -1}   // vwxyz = 30
                    };
+int first_bucket = 26;
+int num_buckets = 5;
 
 SimpleTrie* dict_ = NULL;
 int used_ = 0;
@@ -96,12 +100,17 @@ int bd_[16] =
               //  8, 9, 10, 11,
               //  12, 13, 14, 15};
 
+unsigned int runs_ = 0;
+unsigned int alt_score;
 unsigned int cutoff = UINT_MAX;
 int board_evals = 0;
 bool count_letters = true;
 unsigned int DoDFS(int i, int len, SimpleTrie* t);
+unsigned int times_norm = 0, times_alt = 0;
 unsigned int Score(SimpleTrie* t) {
   board_evals += 1;
+  alt_score = 0;
+  runs_ += 1;
   unsigned int score = 0;
   used_ = 0;
   dict_ = t;
@@ -117,9 +126,17 @@ unsigned int Score(SimpleTrie* t) {
       }
     }
     score += max_score;
-    if (score > cutoff)
+    if (score > cutoff && alt_score > cutoff)
       return score;
-    //printf("%d: +%d = %d\n", i, max_score, score);
+  }
+  if (alt_score < score) {
+    times_alt += 1;
+    score = alt_score;
+  } else {
+    times_norm += 1;
+  }
+  if ((times_norm + times_alt) % 25000 == 0) {
+    printf("Norm/Alt scoring: %u/%u\n", times_norm, times_alt);
   }
   return score;
 }
@@ -131,13 +148,15 @@ unsigned int DoDFS(int i, int len, SimpleTrie* t) {
   len += 1;
   if (t->IsWord()) {
     // Should mark that this word has been found, but that's.. tricky
-    if (t->Mark() != 1) {
-      score += BogglerBase::kWordScores[len];
-      if (count_letters) {
-        for (int i=0; i<16; i++)
-          if (used_ & (1<<i)) counts_[i] += BogglerBase::kWordScores[len];
-      }
-      //t->Mark(1);
+    int word_score = BogglerBase::kWordScores[len];
+    score += word_score;
+    if (t->Mark() != runs_) {
+      alt_score += word_score;
+      t->Mark(runs_);
+    }
+    if (count_letters) {
+      for (int i=0; i<16; i++)
+        if (used_ & (1<<i)) counts_[i] += BogglerBase::kWordScores[len];
     }
   }
 
@@ -146,7 +165,7 @@ unsigned int DoDFS(int i, int len, SimpleTrie* t) {
   // To help the loop unrolling...
 #define HIT(x,y) do { idx = (x) * 4 + y; \
                       if ((used_ & (1 << idx)) == 0) { \
-                        bc = bd_[(x)*4+(y)]; \
+                        bc = bd_[idx]; \
                         max_score = 0; \
                         for (int j=0; buckets[bc][j] >= 0; j++) { \
                           cc = buckets[bc][j]; \
@@ -156,7 +175,7 @@ unsigned int DoDFS(int i, int len, SimpleTrie* t) {
                           } \
                         } \
                         score += max_score; \
-                        if (score > cutoff) return score; \
+                        if (score > cutoff && alt_score > cutoff) return score; \
                       } \
 		 } while(0)
 #define HIT3x(x,y) HIT(x,y); HIT(x+1,y); HIT(x+2,y)
@@ -240,6 +259,7 @@ void Break(SimpleTrie* t, int times) {
     cutoff = UINT_MAX;
   } else {
     cutoff = kCutoff;
+    //cutoff = kCutoff;
   }
   unsigned int score = Score(t);
   if (score < kCutoff) {
@@ -292,15 +312,12 @@ int main(int argc, char** argv) {
   double total_elapsed = 0.0;
   unsigned long long total_elim = 0, total_pass = 0;
   int count = 1000;
-  //int num_buckets = sizeof(buckets)/sizeof(*buckets) - 26;
-  int num_buckets = 3;
   printf("num_buckets = %d\n", num_buckets);
   srandom(time(NULL));
   for (int k=0; k<count; k++) {
     // Generate a random board class
     for (int i = 0; i < 16; i++) {
-      //bd_[i] = 26 + (random() % num_buckets);
-      bd_[i] = 33 + (random() % num_buckets);
+      bd_[i] = first_bucket + (random() % num_buckets);
     }
 
     deepest = elim = pass = board_evals = 0;

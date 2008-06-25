@@ -17,6 +17,7 @@ SimpleTrie* dict_ = NULL;
 int used_ = 0;
 char* bd_[16];
 unsigned int counts_[16];
+unsigned int choices_[16][26];
 
 map<SimpleTrie*, int> found_;  // word node -> length
 unsigned int cutoff = UINT_MAX;
@@ -29,20 +30,27 @@ unsigned int Score(SimpleTrie* t) {
   unsigned int score = 0;
   alt_score = 0;
   memset(counts_, 0, sizeof(counts_));
+  memset(choices_, 0, sizeof(choices_));
   used_ = 0;
   dict_ = t;
   runs_ += 1;
   int i;
   for (i=0; i<16; i++) {
     unsigned int max_score = 0;
+    int choice = -1;
     for (int j=0; bd_[i][j]; j++) {
       int c =  bd_[i][j] - 'a';
       if (t->StartsWord(c)) {
         unsigned int tscore = DoDFS(i, 0, t->Descend(c));
-        if (tscore > max_score) max_score = tscore;
+        if (tscore > max_score) {
+          max_score = tscore;
+          choice = c;
+        }
       }
     }
     score += max_score;
+    if (choice >= 0)
+      choices_[i][choice] += 1;
     if (score > cutoff && alt_score > cutoff)
       return score;
   }
@@ -73,52 +81,34 @@ unsigned int DoDFS(int i, int len, SimpleTrie* t) {
     }
   }
 
-  int cc, idx;
+  int cc, idx, choice;
+  int x = i / 4, y = i % 4;
   unsigned int max_score, tscore;
-  // To help the loop unrolling...
-#define HIT(x,y) do { idx = (x) * 4 + y; \
-                      if ((used_ & (1 << idx)) == 0) { \
-                        max_score = 0; \
-                        for (int j=0; bd_[idx][j]; j++) { \
-                          cc = bd_[idx][j] - 'a'; \
-                          if (t->StartsWord(cc)) { \
-                            tscore = DoDFS(idx, len, t->Descend(cc)); \
-                            if (tscore > max_score) max_score = tscore; \
-                          } \
-                        } \
-                        score += max_score; \
-                        if (score > cutoff && alt_score > cutoff) return score; \
-                      } \
-		 } while(0)
-#define HIT3x(x,y) HIT(x,y); HIT(x+1,y); HIT(x+2,y)
-#define HIT3y(x,y) HIT(x,y); HIT(x,y+1); HIT(x,y+2)
-#define HIT8(x,y) HIT3x(x-1,y-1); HIT(x-1,y); HIT(x+1,y); HIT3x(x-1,y+1)
-
-  switch (i) {
-    case 0*4 + 0: HIT(0, 1); HIT(1, 0); HIT(1, 1); break;
-    case 0*4 + 1: HIT(0, 0); HIT3y(1, 0); HIT(0, 2); break;
-    case 0*4 + 2: HIT(0, 1); HIT3y(1, 1); HIT(0, 3); break;
-    case 0*4 + 3: HIT(0, 2); HIT(1, 2); HIT(1, 3); break;
-
-    case 1*4 + 0: HIT(0, 0); HIT(2, 0); HIT3x(0, 1); break;
-    case 1*4 + 1: HIT8(1, 1); break;
-    case 1*4 + 2: HIT8(1, 2); break;
-    case 1*4 + 3: HIT3x(0, 2); HIT(0, 3); HIT(2, 3); break;
-
-    case 2*4 + 0: HIT(1, 0); HIT(3, 0); HIT3x(1, 1); break;
-    case 2*4 + 1: HIT8(2, 1); break;
-    case 2*4 + 2: HIT8(2, 2); break;
-    case 2*4 + 3: HIT3x(1, 2); HIT(1, 3); HIT(3, 3); break;
-
-    case 3*4 + 0: HIT(2, 0); HIT(2, 1); HIT(3, 1); break;
-    case 3*4 + 1: HIT3y(2, 0); HIT(3, 0); HIT(3, 2); break;
-    case 3*4 + 2: HIT3y(2, 1); HIT(3, 1); HIT(3, 3); break;
-    case 3*4 + 3: HIT(2, 2); HIT(3, 2); HIT(2, 3); break;
+  for (int dx = -1; dx <= 1; dx++) {
+    if (x + dx < 0 || x + dx > 3) continue;
+    for (int dy = -1; dy <= 1; dy++) {
+      if (y + dy < 0 || y + dy > 3) continue;
+      idx = (x+dx) * 4 + y + dy;
+      if ((used_ & (1 << idx)) == 0) {
+        max_score = 0;
+        choice = -1;
+        for (int j=0; bd_[idx][j]; j++) {
+          cc = bd_[idx][j] - 'a';
+          if (t->StartsWord(cc)) {
+            tscore = DoDFS(idx, len, t->Descend(cc));
+            if (tscore > max_score) {
+              choice = cc;
+              max_score = tscore;
+            }
+          }
+        }
+        score += max_score;
+        if (choice != -1)
+          choices_[idx][choice] += 1;
+        if (score > cutoff && alt_score > cutoff) return score;
+      }
+    }
   }
-#undef HIT
-#undef HIT3x
-#undef HIT3y
-#undef HIT8
   used_ ^= (1 << i);
   return score;
 }
@@ -153,6 +143,16 @@ int main(int argc, char** argv) {
   for (int i=0; i<16; i++) {
     printf("%7u%c", counts_[i], i%4==3 ? '\n' : ' ');
   }
+
+  printf("Frequency of letter choices:\n  ");
+  for (int i=0; i<16; i++)
+    printf("   (%d,%d)", i/4, i%4);
+  for (int j=0; j<26; j++) {
+    printf("\n%c:", 'a' + j);
+    for (int i=0; i<16; i++)
+      printf("%8d", choices_[i][j]);
+  }
+  printf("\n");
 
   printf("Score: %u\n", score);
   printf("%f secs elapsed\n", end - start);

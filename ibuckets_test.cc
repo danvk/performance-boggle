@@ -120,6 +120,49 @@ void TestMaxDelta() {
   strcpy(bb.Cell(2), "c");
   bb.UpperBound();
   assertEq(bb.Details().max_nomark, base_score - c_cost);
+
+  // Add in a third word:
+  // s e aci o
+  // z n  d  a
+  // z z  z  s
+  // z z  z  t
+  t.AddWord("din");
+  strcpy(bb.Cell(2), "aci");
+  strcpy(bb.Cell(6), "d");
+  strcpy(bb.Cell(5), "n");
+  bb.UpperBound();
+  base_score = bb.Details().max_nomark;
+  a_cost = bb.Details().max_delta[2]['a' - 'a'];
+  c_cost = bb.Details().max_delta[2]['c' - 'a'];
+  int i_cost = bb.Details().max_delta[2]['i' - 'a'];
+  assertEq(bb.Details().max_nomark, 4);
+  assertEq(a_cost, 3);
+  assertEq(c_cost, 2);
+  assertEq(i_cost, 3);
+
+  // Multiple bucketed cells
+  // s e ac o
+  // x x  x ad
+  // x x  x s
+  // x x  x t
+  assert(bb.ParseBoard("s e ac o z z z ad j z z s j z z t"));
+  bb.UpperBound();
+  assertEq(bb.Details().max_nomark, 3);
+  assertEq(bb.Details().max_delta[2]['a' - 'a'], 2);
+  assertEq(bb.Details().max_delta[2]['c' - 'a'], 1);
+  assertEq(bb.Details().max_delta[7]['a' - 'a'], 0);
+  assertEq(bb.Details().max_delta[7]['d' - 'a'], 2);
+
+  // Different paths have to be summed...
+  //  a b x x
+  // ab x x x
+  //  x x x x
+  //  x x x x
+  t.AddWord("baa");
+  assert(bb.ParseBoard("a b x x ab x x x j x x x j x x x"));
+  bb.UpperBound();
+  assertEq(bb.Details().max_nomark, 2);
+  assertEq(bb.Details().max_delta[4]['b' - 'a'], 2);
 }
 
 void TestRealDictionary() {
@@ -130,12 +173,9 @@ void TestRealDictionary() {
 
   bb.UpperBound();
   int base_score = bb.Details().max_nomark;
-  printf("base score: %d\n", base_score);
   int expected[26];
   for (int i = 0; i < 26; i++) {
     expected[i] = base_score - bb.Details().max_delta[9][i];
-    std::cout << std::string(1, 'a' + i) << ": " << base_score
-              << " - " << (base_score - expected[i]) << std::endl;
   }
 
   for (int i = 0; i < 26; i++) {

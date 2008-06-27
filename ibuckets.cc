@@ -54,6 +54,9 @@ int BucketBoggler::ShedLetters(int cutoff) {
 }
 
 // Now the fun stuff...
+// TODO: make this a 1D array with one element for each possible letter. This
+// will require storing the # of letters before each cell on the board, but
+// will save gobs of memory/copying.
 int max_delta[16][26];
 int BucketBoggler::UpperBound(int bailout_score) {
   int max_max_delta[16][26];
@@ -131,6 +134,7 @@ int BucketBoggler::DoDFS(int i, int len, SimpleTrie* t) {
 
   int score = 0;
   int sum_max_delta[16][26];
+  int max_max_delta[16][26];
   memset(sum_max_delta, 0, sizeof(sum_max_delta));
   used_ ^= (1 << i);
 
@@ -143,16 +147,22 @@ int BucketBoggler::DoDFS(int i, int len, SimpleTrie* t) {
       int idx = (x+dx) * 4 + y + dy;
       if ((used_ & (1 << idx)) == 0) {
         int max_score, choice;
-        DoAllDescents(idx, len, t, &choice, &max_score, &sum_max_delta);
+        memset(max_max_delta, 0, sizeof(sum_max_delta));
+        DoAllDescents(idx, len, t, &choice, &max_score, &max_max_delta);
         score += max_score;
+        for (int i=0; i<16; i++)
+          for (int j=0; j<26; j++)
+            sum_max_delta[i][j] += max_max_delta[i][j];
       }
     }
   }
 
   if (t->IsWord()) {
     int word_score = BogglerBase::kWordScores[len];
+    //std::cout << " Score " << word_score
+    //          << " for " << TrieUtils<SimpleTrie>::ReverseLookup(dict_, t)
+    //          << std::endl;
     score += word_score;
-    //sum_max_delta[i][actual_bd_[i]] += word_score;
 
     if (t->Mark() != runs_) {
       details_.sum_union += word_score;

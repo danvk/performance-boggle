@@ -2,6 +2,7 @@
 #include <iostream>
 #include "ibuckets.h"
 #include "trie.h"
+#include "boggler.h"
 
 #define assertEq(a, b) CheckEqual(__FILE__, __LINE__, #a, (a), (b));
 template<typename A, typename B>
@@ -69,9 +70,9 @@ void TestBound() {
 
   // Add in a "seat", test its shortcomings. Can't have 'seats' and 'teas' on
   // the board simultaneously, but it still counts both.
-  // st e  a s
-  //  e z  z st
-  //  a z  z z
+  // st e a s
+  //  e z z st
+  //  a z z z
   strcpy(bb.Cell(7), "st");
   strcpy(bb.Cell(4), "e");
   strcpy(bb.Cell(8), "a");
@@ -91,6 +92,59 @@ void TestBound() {
   assertEq(score, 3);
 }
 
+void TestMaxDelta() {
+  SimpleTrie t;
+  t.AddWord("sea");
+  t.AddWord("coast");
+
+  // max_nomark should find both 'sea' and 'cat', even though they can't occur
+  // on the same board. The max_depth array should reflect this fact.
+  // s e ac o
+  // z z  z a
+  // z z  z s
+  // z z  z t
+  BucketBoggler bb(&t);
+  assert(bb.ParseBoard("s e ac o z z z a j z z s j z z t"));
+  bb.UpperBound();
+  int base_score = bb.Details().max_nomark;
+  int a_cost = bb.Details().max_delta[2]['a' - 'a'];
+  int c_cost = bb.Details().max_delta[2]['c' - 'a'];
+  assertEq(base_score, 3);
+  assertEq(a_cost, 2);
+  assertEq(c_cost, 1);
+
+  strcpy(bb.Cell(2), "a");
+  bb.UpperBound();
+  assertEq(bb.Details().max_nomark, base_score - a_cost);
+
+  strcpy(bb.Cell(2), "c");
+  bb.UpperBound();
+  assertEq(bb.Details().max_nomark, base_score - c_cost);
+}
+
+void TestRealDictionary() {
+  SimpleTrie* t = GenericBoggler<SimpleTrie>::DictionaryFromFile("words");
+  BucketBoggler bb(t);
+  assert(bb.ParseBoard("a b c d e f g h i j k l m n o p"));
+  strcpy(bb.Cell(9), "abcdefghijklmnopqrstuvwxyz");  // replaces the 'j'
+
+  bb.UpperBound();
+  int base_score = bb.Details().max_nomark;
+  printf("base score: %d\n", base_score);
+  int expected[26];
+  for (int i = 0; i < 26; i++) {
+    expected[i] = base_score - bb.Details().max_delta[9][i];
+    std::cout << std::string(1, 'a' + i) << ": " << base_score
+              << " - " << (base_score - expected[i]) << std::endl;
+  }
+
+  for (int i = 0; i < 26; i++) {
+    sprintf(bb.Cell(9), "%c", 'a' + i);
+    bb.UpperBound();
+    assertEq(bb.Details().max_nomark, expected[i]);
+  }
+}
+
 template<typename A, typename B>
 void CheckEqual(const char* file, int line, const char* expr, A a, B b) {
   if (a != b) {
@@ -103,6 +157,8 @@ void CheckEqual(const char* file, int line, const char* expr, A a, B b) {
 int main(int argc, char** argv) {
   TestBoards();
   TestBound();
+  TestMaxDelta();
+  TestRealDictionary();
 
   printf("%s: All tests passed!\n", argv[0]);
 }

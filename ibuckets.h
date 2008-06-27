@@ -57,7 +57,7 @@ class BucketBoggler {
   };
 
  private:
-  void DoAllDescents(int i, int len, SimpleTrie* t, int*, int*);
+  void DoAllDescents(int i, int len, SimpleTrie* t, int*, int*, int(*)[16][26]);
   int DoDFS(int i, int len, SimpleTrie* t);
 
   SimpleTrie* dict_;

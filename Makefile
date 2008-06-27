@@ -26,6 +26,7 @@ bucket_descent: bucket_descent.o trie.o buckets.o boggler.o
 bucket_trie: bucket_trie.o trie.o boggler.o
 ibucket_breaker: ibucket_breaker.o trie.o boggler.o
 ibucket_boggle: ibucket_boggle.o trie.o boggler.o
+ibuckets_test: ibuckets.o ibuckets_test.o boggler.o trie.o
 
 trie.o: trie.h trie.cc
 boggler.o: trie.h boggler.h boggler.cc

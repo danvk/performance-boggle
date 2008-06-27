@@ -13,6 +13,7 @@ class BucketBoggler {
   // examples:
   // "a b c d e f g h i j k l m n o p"
   // "aeiou bcdfghjklmnprstvwxyz aeiou ..."
+  // NOTE: "qu" gets interpreted as "qu" or "u".
   bool ParseBoard(const char* bd);
   
   // Returns the possible characters in this cell. The result can be modified.
@@ -29,7 +30,7 @@ class BucketBoggler {
   // max_delta information in BoundDetails.
   class ScoreDetails;
   int UpperBound(int bailout_score = INT_MAX);
-  const ScoreDetails& BoundDetails() const { return details_; };  // See below.
+  const ScoreDetails& Details() const { return details_; };  // See below.
 
   // Compute an upper bound without any of the costly statistics.
   int SimpleUpperBound(int bailout_score = INT_MAX);

@@ -3,6 +3,7 @@
 #include "ibuckets.h"
 #include "boggler.h"
 using std::min;
+using std::max;
 
 // First the simple routines...
 
@@ -49,6 +50,7 @@ int BucketBoggler::ShedLetters(int cutoff) {
         shed++;
       }
     }
+    *out = '\0';
   }
   return shed;
 }
@@ -77,21 +79,9 @@ int BucketBoggler::UpperBound(int bailout_score) {
     for (int i=0; i<16; i++)
       for (int j=0; j<26; j++)
         details_.max_delta[i][j] += max_max_delta[i][j];
-
-    //std::cout << "Returning from search on " << i << std::endl;
-    //for (int idx=0; idx<16; idx++) {
-    //  for (int j=0; j<26; j++) {
-    //    if (details_.max_delta[idx][j])
-    //      std::cout << " " << details_.max_delta[idx][j];
-    //    else
-    //      std::cout << " .";
-    //  }
-    //  std::cout << std::endl;
-    //}
-    //std::cout << std::endl;
   }
 
-  return min(details_.max_nomark, details_.sum_union);
+  return BestBound();
 }
 
 // TODO: does o_max_delta need to be a pointer here?
@@ -121,17 +111,11 @@ inline void BucketBoggler::DoAllDescents(int idx, int len, SimpleTrie* t,
   *o_choice = choice;
   for (char* c = bd_[idx]; *c; c++) {
     int cc = *c - 'a';
-    //std::cout << "  setting " << idx << "," << cc
-    //          << " = " << (max_score-consequences[cc]) << std::endl;
     (*o_max_delta)[idx][cc] += (max_score - consequences[cc]);
   }
 }
 
 int BucketBoggler::DoDFS(int i, int len, SimpleTrie* t) {
-  //std::cout << "DoDFS("
-  //          << TrieUtils<SimpleTrie>::ReverseLookup(dict_, t)
-  //          << ", idx=" << i << ", len=" << len << ")" << std::endl;
-
   int score = 0;
   int sum_max_delta[16][26];
   int max_max_delta[16][26];
@@ -159,9 +143,6 @@ int BucketBoggler::DoDFS(int i, int len, SimpleTrie* t) {
 
   if (t->IsWord()) {
     int word_score = BogglerBase::kWordScores[len];
-    //std::cout << " Score " << word_score
-    //          << " for " << TrieUtils<SimpleTrie>::ReverseLookup(dict_, t)
-    //          << std::endl;
     score += word_score;
 
     if (t->Mark() != runs_) {
@@ -171,19 +152,33 @@ int BucketBoggler::DoDFS(int i, int len, SimpleTrie* t) {
   }
 
   memcpy(max_delta, sum_max_delta, sizeof(max_delta));
-  //std::cout << "Returning from "
-  //          << TrieUtils<SimpleTrie>::ReverseLookup(dict_, t)
-  //          << ", idx=" << i << ", len=" << len << std::endl;
-  //for (int idx=0; idx<16; idx++) {
-  //  for (int j=0; j<26; j++) {
-  //    if (max_delta[idx][j])
-  //      std::cout << " " << max_delta[idx][j];
-  //    else
-  //      std::cout << " .";
-  //  }
-  //  std::cout << std::endl;
-  //}
-  //std::cout << std::endl;
   used_ ^= (1 << i);
   return score;
+}
+
+int BucketBoggler::BestBound() {
+  // Calculate the tightest upper bound that can be achieved by forcing a
+  // letter choice in any one cell. This is picking max(min(delta))
+  details_.one_level_win = 0;
+  for (int i=0; i<16; i++) {
+    int worst_pick = INT_MAX;
+    for (char* c = bd_[i]; *c; c++) {
+      int delta = details_.max_delta[i][*c - 'a'];
+      worst_pick = min(delta, worst_pick);
+    }
+    details_.one_level_win = max(details_.one_level_win, worst_pick);
+  }
+
+  return min(details_.max_nomark - details_.one_level_win,
+             details_.sum_union);
+}
+
+const char* BucketBoggler::as_string() {
+  char* c = board_rep_;
+  for (int i=0; i<16; i++) {
+    strcpy(c, bd_[i]);
+    c += strlen(bd_[i]);
+    *c++ = (i == 15 ? '\0' : ' ');
+  }
+  return board_rep_;
 }

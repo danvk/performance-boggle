@@ -15,6 +15,7 @@ class BucketBoggler {
   // "aeiou bcdfghjklmnprstvwxyz aeiou ..."
   // NOTE: "qu" gets interpreted as "qu" or "u".
   bool ParseBoard(const char* bd);
+  const char* as_string();
   
   // Returns the possible characters in this cell. The result can be modified.
   char* Cell(int idx) { return bd_[idx]; }
@@ -53,16 +54,21 @@ class BucketBoggler {
     // assigned -1.
     int max_delta[16][26];
 
+    int most_constrained_cell;
+    int one_level_win;
+
     double elapsed_time;
   };
 
  private:
   void DoAllDescents(int i, int len, SimpleTrie* t, int*, int*, int(*)[16][26]);
   int DoDFS(int i, int len, SimpleTrie* t);
+  int BestBound();
 
   SimpleTrie* dict_;
   uintptr_t runs_;
   char bd_[16][27];  // null-terminated lists of possible letters
   int used_;
   ScoreDetails details_;
+  char board_rep_[27*16];
 };

@@ -61,7 +61,7 @@ class BucketBoggler {
   };
 
  private:
-  void DoAllDescents(int i, int len, SimpleTrie* t, int*, int*, int*);
+  void DoAllDescents(int i, int len, SimpleTrie* t, int*, int*);
   int DoDFS(int i, int len, SimpleTrie* t);
   int BestBound();
 

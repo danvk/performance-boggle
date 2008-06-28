@@ -73,10 +73,9 @@ int BucketBoggler::UpperBound(int bailout_score) {
   runs_ += 1;
   for (int i = 0; i < 16; i++) {
     int max_score = 0;
-    int choice = -1;
     memset(max_max_delta, 0, sizeof(max_max_delta));
 
-    DoAllDescents(i, 0, dict_, &choice, &max_score, max_max_delta);
+    DoAllDescents(i, 0, dict_, &max_score, max_max_delta);
     details_.max_nomark += max_score;
     for (int j=0; bd_[i][j]; j++) {
       char c = bd_[i][j];
@@ -96,13 +95,10 @@ int BucketBoggler::UpperBound(int bailout_score) {
   return BestBound();
 }
 
-// TODO: does o_max_delta need to be a pointer here?
 int actual_bd_[16];
 inline void BucketBoggler::DoAllDescents(int idx, int len, SimpleTrie* t,
-                                         int* o_choice, int* o_max_score,
-                                         int* o_max_delta) {
+                                         int* o_max_score, int* o_max_delta) {
   int consequences[26];
-  int choice = -1;
   int max_score = 0;
   for (char* c = bd_[idx]; *c; c++) {
     int cc = actual_bd_[idx] = *c - 'a';
@@ -110,9 +106,12 @@ inline void BucketBoggler::DoAllDescents(int idx, int len, SimpleTrie* t,
       int tscore = DoDFS(idx, len + (cc==kQ ? 2 : 1), t->Descend(cc));
       consequences[cc] = tscore;
       if (tscore > max_score) {
-        choice = cc;
         max_score = tscore;
         memcpy(o_max_delta, max_delta, num_letters_ * sizeof(*o_max_delta));
+      } else if (tscore == max_score) {
+        for (int i = 0; i < num_letters_; i++) {
+          o_max_delta[i] = min(o_max_delta[i], max_delta[i]);
+        }
       }
     } else {
       consequences[cc] = 0;
@@ -120,7 +119,6 @@ inline void BucketBoggler::DoAllDescents(int idx, int len, SimpleTrie* t,
   }
 
   *o_max_score = max_score;
-  *o_choice = choice;
   for (int j = 0; bd_[idx][j]; j++) {
     int cc = bd_[idx][j] - 'a';
     o_max_delta[cell_indices_[idx] + j] += (max_score - consequences[cc]);
@@ -142,9 +140,9 @@ int BucketBoggler::DoDFS(int i, int len, SimpleTrie* t) {
       if (y + dy < 0 || y + dy > 3) continue;
       int idx = (x+dx) * 4 + y + dy;
       if ((used_ & (1 << idx)) == 0) {
-        int max_score, choice;
+        int max_score;
         memset(max_max_delta, 0, sizeof(max_max_delta));
-        DoAllDescents(idx, len, t, &choice, &max_score, max_max_delta);
+        DoAllDescents(idx, len, t, &max_score, max_max_delta);
         score += max_score;
         for (int i=0; i<num_letters_; i++)
           sum_max_delta[i] += max_max_delta[i];
@@ -171,13 +169,17 @@ int BucketBoggler::BestBound() {
   // Calculate the tightest upper bound that can be achieved by forcing a
   // letter choice in any one cell. This is picking max(min(delta))
   details_.one_level_win = 0;
+  details_.most_constrained_cell = -1;
   for (int i=0; i<16; i++) {
     int worst_pick = INT_MAX;
     for (char* c = bd_[i]; *c; c++) {
       int delta = details_.max_delta[i][*c - 'a'];
       worst_pick = min(delta, worst_pick);
     }
-    details_.one_level_win = max(details_.one_level_win, worst_pick);
+    if (worst_pick > details_.one_level_win) {
+      details_.one_level_win = worst_pick;
+      details_.most_constrained_cell = i;
+    }
   }
 
   return min(details_.max_nomark - details_.one_level_win,

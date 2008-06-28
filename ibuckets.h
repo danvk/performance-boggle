@@ -60,6 +60,9 @@ class BucketBoggler {
     double elapsed_time;
   };
 
+  // Print out a summary of the effects of each possible one-letter choice.
+  void PrintChoices();
+
  private:
   void DoAllDescents(int i, int len, SimpleTrie* t, int*, int*);
   int DoDFS(int i, int len, SimpleTrie* t);

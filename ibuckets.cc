@@ -5,6 +5,10 @@
 using std::min;
 using std::max;
 
+// For debugging:
+static const bool PrintWords  = false;
+static const bool PrintDeltas = false;
+
 // First the simple routines...
 
 // TODO: check for duplicate letters, maybe allow "^aeiou" syntax?
@@ -18,6 +22,10 @@ bool BucketBoggler::ParseBoard(const char* bd) {
       cell += 1;
       cell_pos = 0;
       if (cell > 15) return false;  // too many cells
+    } else if (c == '.') {
+      // explicit "don't go here" cell, useful for tests
+      bd_[cell][0] = '\0';
+      cell_pos = 1;
     } else {
       if (c < 'a' || c > 'z') return false;  // invalid letter
       bd_[cell][cell_pos++] = c;
@@ -77,14 +85,11 @@ int BucketBoggler::UpperBound(int bailout_score) {
 
     DoAllDescents(i, 0, dict_, &max_score, max_max_delta);
     details_.max_nomark += max_score;
-    for (int j=0; bd_[i][j]; j++) {
-      char c = bd_[i][j];
-      details_.max_delta[i][c - 'a'] += max_max_delta[cell_indices_[i] + j];
-    }
     for (int j = 0; j < num_letters_; j++)
       sum_max_delta[j] += max_max_delta[j];
   }
 
+  memset(details_.max_delta, -1, sizeof(details_.max_delta));
   int pos = 0;
   for (int i = 0; i < 16; i++) {
     for (int j = 0; bd_[i][j]; j++) {
@@ -95,33 +100,50 @@ int BucketBoggler::UpperBound(int bailout_score) {
   return BestBound();
 }
 
+// TODO: make o_max_score the return value
 int actual_bd_[16];
 inline void BucketBoggler::DoAllDescents(int idx, int len, SimpleTrie* t,
                                          int* o_max_score, int* o_max_delta) {
-  int consequences[26];
+  int max_scores[num_letters_];
+  int these_scores[26];
   int max_score = 0;
-  for (char* c = bd_[idx]; *c; c++) {
-    int cc = actual_bd_[idx] = *c - 'a';
+  memset(max_scores, 0, sizeof(max_scores));
+  for (int j = 0; bd_[idx][j]; j++) {
+    int cc = actual_bd_[idx] = bd_[idx][j] - 'a';
     if (t->StartsWord(cc)) {
       int tscore = DoDFS(idx, len + (cc==kQ ? 2 : 1), t->Descend(cc));
-      consequences[cc] = tscore;
-      if (tscore > max_score) {
-        max_score = tscore;
-        memcpy(o_max_delta, max_delta, num_letters_ * sizeof(*o_max_delta));
-      } else if (tscore == max_score) {
-        for (int i = 0; i < num_letters_; i++) {
-          o_max_delta[i] = min(o_max_delta[i], max_delta[i]);
-        }
+      max_score = max(tscore, max_score);
+
+      // Remember the max score if we're forced to choose this letter.
+      these_scores[j] = tscore;
+
+      // Repeat that max for each other letter choice that could be made.
+      for (int i = 0; i < num_letters_; i++) {
+        max_scores[i] = max(max_scores[i], tscore - max_delta[i]);
       }
     } else {
-      consequences[cc] = 0;
+      these_scores[j] = 0;
     }
   }
 
+  for (int j=0; bd_[idx][j]; j++)
+    max_scores[cell_indices_[idx] + j] = these_scores[j];
+
   *o_max_score = max_score;
-  for (int j = 0; bd_[idx][j]; j++) {
-    int cc = bd_[idx][j] - 'a';
-    o_max_delta[cell_indices_[idx] + j] += (max_score - consequences[cc]);
+  for (int i = 0; i < num_letters_; i++) {
+    o_max_delta[i] = max_score - max_scores[i];
+  }
+
+  if (PrintDeltas) {
+    bool empty = true;
+    for (int j=0; j<num_letters_ && empty; j++)
+      if (o_max_delta[j]) empty = false;
+    if (!empty) {
+      printf("%s%2d:", std::string(len, ' ').c_str(), idx);
+      for (int j=0; j<num_letters_; j++)
+        printf(" %d", o_max_delta[j]);
+      printf("\n");
+    }
   }
 }
 
@@ -153,6 +175,9 @@ int BucketBoggler::DoDFS(int i, int len, SimpleTrie* t) {
   if (t->IsWord()) {
     int word_score = BogglerBase::kWordScores[len];
     score += word_score;
+    if (PrintWords)
+      printf(" +%2d (%d,%d) %s\n", word_score, i/4, i%4,
+            TrieUtils<SimpleTrie>::ReverseLookup(dict_, t).c_str());
 
     if (t->Mark() != runs_) {
       details_.sum_union += word_score;
@@ -176,7 +201,7 @@ int BucketBoggler::BestBound() {
       int delta = details_.max_delta[i][*c - 'a'];
       worst_pick = min(delta, worst_pick);
     }
-    if (worst_pick > details_.one_level_win) {
+    if (bd_[i][0] && worst_pick > details_.one_level_win) {
       details_.one_level_win = worst_pick;
       details_.most_constrained_cell = i;
     }
@@ -189,8 +214,12 @@ int BucketBoggler::BestBound() {
 const char* BucketBoggler::as_string() {
   char* c = board_rep_;
   for (int i=0; i<16; i++) {
-    strcpy(c, bd_[i]);
-    c += strlen(bd_[i]);
+    if (*bd_[i]) {
+      strcpy(c, bd_[i]);
+      c += strlen(bd_[i]);
+    } else {
+      strcpy(c++, ".");
+    }
     *c++ = (i == 15 ? '\0' : ' ');
   }
   return board_rep_;
@@ -201,5 +230,14 @@ void BucketBoggler::SetCellIndices() {
   for (int i=0; i<16; i++) {
     cell_indices_[i] = num_letters_; 
     num_letters_ += strlen(bd_[i]);
+  }
+}
+
+void BucketBoggler::PrintChoices() {
+  for (int i=0; i<16; i++) {
+    if (strlen(bd_[i]) < 2) continue;
+    for (char* c = bd_[i]; *c; c++) {
+      printf("%2d %c: %d\n", i, *c, details_.max_delta[i][*c - 'a']);
+    }
   }
 }

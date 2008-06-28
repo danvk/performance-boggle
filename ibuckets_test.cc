@@ -97,14 +97,12 @@ void TestMaxDelta() {
   t.AddWord("sea");
   t.AddWord("coast");
 
-  // max_nomark should find both 'sea' and 'cat', even though they can't occur
-  // on the same board. The max_depth array should reflect this fact.
   // s e ac o
-  // z z  z a
-  // z z  z s
-  // z z  z t
+  // . .  . a
+  // . .  . s
+  // . .  . t
   BucketBoggler bb(&t);
-  assert(bb.ParseBoard("s e ac o z z z a j z z s j z z t"));
+  assert(bb.ParseBoard("s e ac o . . . a . . . s . . . t"));
   bb.UpperBound();
   int base_score = bb.Details().max_nomark;
   int a_cost = bb.Details().max_delta[2]['a' - 'a'];
@@ -163,25 +161,91 @@ void TestMaxDelta() {
   bb.UpperBound();
   assertEq(bb.Details().max_nomark, 2);
   assertEq(bb.Details().max_delta[4]['b' - 'a'], 2);
+
+  // Try a board with a tie for best choice (c -> [ae])
+  // .  . c .
+  // e ae . .
+  // . ab . .
+  // .  . . .
+  // cab cee bee bee (can't have both cab and cee => 3)
+  // [ab] -> a => cee
+  t.AddWord("cee");
+  t.AddWord("cab");
+  t.AddWord("bee");
+  assert(bb.ParseBoard("j j c j e f j j j j j j j j j j"));
+  strcpy(bb.Cell(9), "ab");  // replaces the 'j'
+  strcpy(bb.Cell(5), "ae");  // replaces the 'e'
+
+  bb.UpperBound();
+  assertEq(bb.Details().max_nomark, 3);
+  assertEq(bb.Details().max_delta[9]['a' - 'a'], 2);
+  assertEq(bb.Details().max_delta[9]['b' - 'a'], 0);
+
+  // A board where a choice down the road changes the choice at the top.
+  //  . . . . 
+  // ao . . .
+  //  i . k . 
+  //  m n . rs
+  t.AddWord("aim");
+  t.AddWord("ain");
+  t.AddWord("oink");
+  t.AddWord("oinks");
+  assert(bb.ParseBoard(". . . . ao . . . i . k . m n . sr"));
+  bb.UpperBound();
+  assertEq(bb.Details().max_nomark, 3);
+  assertEq(bb.Details().max_delta[15]['r' - 'a'], 1);
 }
 
 void TestRealDictionary() {
   SimpleTrie* t = GenericBoggler<SimpleTrie>::DictionaryFromFile("words");
   BucketBoggler bb(t);
-  assert(bb.ParseBoard("a b c d e f g h i j k l m n o p"));
-  strcpy(bb.Cell(9), "abcdefghijklmnopqrstuvwxyz");  // replaces the 'j'
 
-  bb.UpperBound();
-  int base_score = bb.Details().max_nomark;
-  int expected[26];
-  for (int i = 0; i < 26; i++) {
-    expected[i] = base_score - bb.Details().max_delta[9][i];
+  {
+    // First a simple board.
+    assert(bb.ParseBoard("a b c d e f g h i j k l m n o p"));
+    strcpy(bb.Cell(9), "abcdefghijklmnopqrstuvwxyz");  // replaces the 'j'
+
+    bb.UpperBound();
+    int base_score = bb.Details().max_nomark;
+    int expected[26];
+    for (int i = 0; i < 26; i++) {
+      expected[i] = base_score - bb.Details().max_delta[9][i];
+    }
+
+    for (int i = 0; i < 26; i++) {
+      sprintf(bb.Cell(9), "%c", 'a' + i);
+      bb.UpperBound();
+      assertEq(bb.Details().max_nomark, expected[i]);
+    }
   }
 
-  for (int i = 0; i < 26; i++) {
-    sprintf(bb.Cell(9), "%c", 'a' + i);
+  {
+    // Now a real stress test...
+    int expected[16][3];
+    for (int i=0; i<16; i++) {
+      bb.Cell(i)[0] = 'a' + (3 * i + 0) % 26;
+      bb.Cell(i)[1] = 'a' + (3 * i + 1) % 26;
+      bb.Cell(i)[2] = 'a' + (3 * i + 2) % 26;
+      bb.Cell(i)[3] = '\0';
+    }
     bb.UpperBound();
-    assertEq(bb.Details().max_nomark, expected[i]);
+    const BucketBoggler::ScoreDetails& d = bb.Details();
+    for (int i=0; i<16; i++) {
+      for (int j=0; j<3; j++) {
+        expected[i][j] = d.max_nomark - d.max_delta[i][bb.Cell(i)[j] - 'a'];
+      }
+    }
+
+    for (int i=0; i<16; i++) {
+      char tmp[26];
+      strcpy(tmp, bb.Cell(i));
+      for (size_t j=0; j<strlen(tmp); j++) {
+        sprintf(bb.Cell(i), "%c", tmp[j]);
+        bb.UpperBound();
+        assertEq(bb.Details().max_nomark, expected[i][j]);
+      }
+      strcpy(bb.Cell(i), tmp);
+    }
   }
 }
 

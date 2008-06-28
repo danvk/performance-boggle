@@ -61,7 +61,7 @@ class BucketBoggler {
   };
 
  private:
-  void DoAllDescents(int i, int len, SimpleTrie* t, int*, int*, int(*)[16][26]);
+  void DoAllDescents(int i, int len, SimpleTrie* t, int*, int*, int*);
   int DoDFS(int i, int len, SimpleTrie* t);
   int BestBound();
 
@@ -71,4 +71,8 @@ class BucketBoggler {
   int used_;
   ScoreDetails details_;
   char board_rep_[27*16];
+
+  void SetCellIndices();
+  int cell_indices_[16];
+  int num_letters_;
 };

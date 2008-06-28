@@ -4,7 +4,7 @@
 #include "ibuckets.h"
 #include "trie.h"
 #include "boggler.h"
-const int NumBoards = 100;
+const int NumBoards = 200;
 
 double secs() {
   struct timeval t;
@@ -42,8 +42,7 @@ int main(int argc, char** argv) {
   double start = secs();
   for (int i=0; i < NumBoards; i++) {
     assert(bb.ParseBoard(bd[i]));
-    int bound = bb.UpperBound();
-    uint64_t reps = bb.NumReps();
+    bb.UpperBound();
     if (bb.Details().sum_union < 3625)  ruled_out[0] += 1;
     if (bb.Details().max_nomark < 3625) ruled_out[1] += 1;
     if (bb.Details().max_nomark - bb.Details().one_level_win < 3626)

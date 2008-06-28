@@ -19,6 +19,7 @@ double secs() {
 }
 
 // Generates a random bucketed board
+// aeiou sy bdfgjkmpvwxz chlnrt
 void RandomBoard(char* buf) {
   int used[26];
   for (int i=0; i<16; i++) {

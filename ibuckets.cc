@@ -56,29 +56,41 @@ int BucketBoggler::ShedLetters(int cutoff) {
 }
 
 // Now the fun stuff...
-// TODO: make this a 1D array with one element for each possible letter. This
-// will require storing the # of letters before each cell on the board, but
-// will save gobs of memory/copying.
-int max_delta[16][26];
+int max_delta[16*26];
 int BucketBoggler::UpperBound(int bailout_score) {
-  int max_max_delta[16][26];
+  SetCellIndices();
+
   details_.max_nomark = 0;
   details_.sum_union = 0;
-  memset(details_.max_delta, 0, sizeof(max_delta));
+
+  int max_max_delta[num_letters_];
+  int sum_max_delta[num_letters_];
+  memset(details_.max_delta, 0, sizeof(details_.max_delta));
+  memset(sum_max_delta, 0, sizeof(sum_max_delta));
 
   used_ = 0;
-  memset(max_delta, 0, sizeof(max_delta));
+  memset(max_delta, 0, num_letters_ * sizeof(*max_delta));
   runs_ += 1;
   for (int i = 0; i < 16; i++) {
     int max_score = 0;
     int choice = -1;
-    memset(max_max_delta, 0, sizeof(max_delta));
+    memset(max_max_delta, 0, sizeof(max_max_delta));
 
-    DoAllDescents(i, 0, dict_, &choice, &max_score, &max_max_delta);
+    DoAllDescents(i, 0, dict_, &choice, &max_score, max_max_delta);
     details_.max_nomark += max_score;
-    for (int i=0; i<16; i++)
-      for (int j=0; j<26; j++)
-        details_.max_delta[i][j] += max_max_delta[i][j];
+    for (int j=0; bd_[i][j]; j++) {
+      char c = bd_[i][j];
+      details_.max_delta[i][c - 'a'] += max_max_delta[cell_indices_[i] + j];
+    }
+    for (int j = 0; j < num_letters_; j++)
+      sum_max_delta[j] += max_max_delta[j];
+  }
+
+  int pos = 0;
+  for (int i = 0; i < 16; i++) {
+    for (int j = 0; bd_[i][j]; j++) {
+      details_.max_delta[i][bd_[i][j] - 'a'] = sum_max_delta[pos++];
+    }
   }
 
   return BestBound();
@@ -88,7 +100,7 @@ int BucketBoggler::UpperBound(int bailout_score) {
 int actual_bd_[16];
 inline void BucketBoggler::DoAllDescents(int idx, int len, SimpleTrie* t,
                                          int* o_choice, int* o_max_score,
-                                         int(*o_max_delta)[16][26]) {
+                                         int* o_max_delta) {
   int consequences[26];
   int choice = -1;
   int max_score = 0;
@@ -100,7 +112,7 @@ inline void BucketBoggler::DoAllDescents(int idx, int len, SimpleTrie* t,
       if (tscore > max_score) {
         choice = cc;
         max_score = tscore;
-        memcpy(o_max_delta, max_delta, sizeof(max_delta));
+        memcpy(o_max_delta, max_delta, num_letters_ * sizeof(*o_max_delta));
       }
     } else {
       consequences[cc] = 0;
@@ -109,16 +121,16 @@ inline void BucketBoggler::DoAllDescents(int idx, int len, SimpleTrie* t,
 
   *o_max_score = max_score;
   *o_choice = choice;
-  for (char* c = bd_[idx]; *c; c++) {
-    int cc = *c - 'a';
-    (*o_max_delta)[idx][cc] += (max_score - consequences[cc]);
+  for (int j = 0; bd_[idx][j]; j++) {
+    int cc = bd_[idx][j] - 'a';
+    o_max_delta[cell_indices_[idx] + j] += (max_score - consequences[cc]);
   }
 }
 
 int BucketBoggler::DoDFS(int i, int len, SimpleTrie* t) {
   int score = 0;
-  int sum_max_delta[16][26];
-  int max_max_delta[16][26];
+  int sum_max_delta[num_letters_];
+  int max_max_delta[num_letters_];
   memset(sum_max_delta, 0, sizeof(sum_max_delta));
   used_ ^= (1 << i);
 
@@ -131,12 +143,11 @@ int BucketBoggler::DoDFS(int i, int len, SimpleTrie* t) {
       int idx = (x+dx) * 4 + y + dy;
       if ((used_ & (1 << idx)) == 0) {
         int max_score, choice;
-        memset(max_max_delta, 0, sizeof(sum_max_delta));
-        DoAllDescents(idx, len, t, &choice, &max_score, &max_max_delta);
+        memset(max_max_delta, 0, sizeof(max_max_delta));
+        DoAllDescents(idx, len, t, &choice, &max_score, max_max_delta);
         score += max_score;
-        for (int i=0; i<16; i++)
-          for (int j=0; j<26; j++)
-            sum_max_delta[i][j] += max_max_delta[i][j];
+        for (int i=0; i<num_letters_; i++)
+          sum_max_delta[i] += max_max_delta[i];
       }
     }
   }
@@ -151,7 +162,7 @@ int BucketBoggler::DoDFS(int i, int len, SimpleTrie* t) {
     }
   }
 
-  memcpy(max_delta, sum_max_delta, sizeof(max_delta));
+  memcpy(max_delta, sum_max_delta, sizeof(sum_max_delta));
   used_ ^= (1 << i);
   return score;
 }
@@ -181,4 +192,12 @@ const char* BucketBoggler::as_string() {
     *c++ = (i == 15 ? '\0' : ' ');
   }
   return board_rep_;
+}
+
+void BucketBoggler::SetCellIndices() {
+  num_letters_ = 0;
+  for (int i=0; i<16; i++) {
+    cell_indices_[i] = num_letters_; 
+    num_letters_ += strlen(bd_[i]);
+  }
 }

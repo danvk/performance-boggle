@@ -87,6 +87,10 @@ int BucketBoggler::UpperBound(int bailout_score) {
     details_.max_nomark += max_score;
     for (int j = 0; j < num_letters_; j++)
       sum_max_delta[j] += max_max_delta[j];
+    if (details_.max_nomark > bailout_score &&
+        details_.sum_union > bailout_score) {
+      break;
+    }
   }
 
   memset(details_.max_delta, -1, sizeof(details_.max_delta));
@@ -154,7 +158,8 @@ int BucketBoggler::DoDFS(int i, int len, SimpleTrie* t) {
   memset(sum_max_delta, 0, sizeof(sum_max_delta));
   used_ ^= (1 << i);
 
-  // TODO: once this is correct, unroll these loops for a huge perf win.
+  // TODO: Unroll these loops w/ macros. It's only about a 7% win or less, but
+  // would be worth doing before any large run.
   int x = i / 4, y = i % 4;
   for (int dx = -1; dx <= 1; dx++) {
     if (x + dx < 0 || x + dx > 3) continue;
@@ -240,4 +245,69 @@ void BucketBoggler::PrintChoices() {
       printf("%2d %c: %d\n", i, *c, details_.max_delta[i][*c - 'a']);
     }
   }
+}
+
+int BucketBoggler::SimpleUpperBound(int bailout_score) {
+  SetCellIndices();
+
+  details_.max_nomark = 0;
+  details_.sum_union = 0;
+
+  used_ = 0;
+  runs_ += 1;
+  for (int i = 0; i < 16; i++) {
+    int max_score = SimpleDoAllDescents(i, 0, dict_);
+    details_.max_nomark += max_score;
+    if (details_.max_nomark > bailout_score &&
+        details_.sum_union > bailout_score) {
+      break;
+    }
+  }
+
+  return min(details_.max_nomark, details_.sum_union);
+}
+
+inline int BucketBoggler::SimpleDoAllDescents(int idx, int len, SimpleTrie* t) {
+  int max_score = 0;
+  for (int j = 0; bd_[idx][j]; j++) {
+    int cc = actual_bd_[idx] = bd_[idx][j] - 'a';
+    if (t->StartsWord(cc)) {
+      int tscore = SimpleDoDFS(idx, len + (cc==kQ ? 2 : 1), t->Descend(cc));
+      max_score = max(tscore, max_score);
+    }
+  }
+  return max_score;
+}
+
+int BucketBoggler::SimpleDoDFS(int i, int len, SimpleTrie* t) {
+  int score = 0;
+  used_ ^= (1 << i);
+
+  int x = i / 4, y = i % 4;
+  for (int dx = -1; dx <= 1; dx++) {
+    if (x + dx < 0 || x + dx > 3) continue;
+    for (int dy = -1; dy <= 1; dy++) {
+      if (y + dy < 0 || y + dy > 3) continue;
+      int idx = (x+dx) * 4 + y + dy;
+      if ((used_ & (1 << idx)) == 0) {
+        score += SimpleDoAllDescents(idx, len, t);
+      }
+    }
+  }
+
+  if (t->IsWord()) {
+    int word_score = BogglerBase::kWordScores[len];
+    score += word_score;
+    if (PrintWords)
+      printf(" +%2d (%d,%d) %s\n", word_score, i/4, i%4,
+            TrieUtils<SimpleTrie>::ReverseLookup(dict_, t).c_str());
+
+    if (t->Mark() != runs_) {
+      details_.sum_union += word_score;
+      t->Mark(runs_);
+    }
+  }
+
+  used_ ^= (1 << i);
+  return score;
 }

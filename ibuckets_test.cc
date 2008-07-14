@@ -58,6 +58,7 @@ void TestBound() {
   assertEq(bb.Details().sum_union, 7);   // sea(t), tea(s), hiccup
   assertEq(bb.Details().max_nomark, 9);  // seat*2, sea*2, tea, hiccup
   assertEq(score, 1 + 1 + 1 + 1 + 3);  // all words
+  assertEq(bb.SimpleUpperBound(), 7);
 
   // a board where both [st]ea can be found, but not simultaneously
   // st e a s
@@ -67,6 +68,7 @@ void TestBound() {
   assertEq(bb.Details().sum_union, 3);  // tea(s) + sea
   assertEq(bb.Details().max_nomark, 2);  // tea(s)
   assertEq(score, 2);
+  assertEq(bb.SimpleUpperBound(), 2);
 
   // Add in a "seat", test its shortcomings. Can't have 'seats' and 'teas' on
   // the board simultaneously, but it still counts both.

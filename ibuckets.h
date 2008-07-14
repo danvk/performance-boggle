@@ -67,6 +67,8 @@ class BucketBoggler {
   void DoAllDescents(int i, int len, SimpleTrie* t, int*, int*);
   int DoDFS(int i, int len, SimpleTrie* t);
   int BestBound();
+  int SimpleDoAllDescents(int idx, int len, SimpleTrie* t);
+  int SimpleDoDFS(int i, int len, SimpleTrie* t);
 
   SimpleTrie* dict_;
   uintptr_t runs_;

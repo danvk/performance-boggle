@@ -42,4 +42,4 @@ multiboggle.o: multiboggle.h multiboggle.cc trie.h
 buckets.o: buckets.h buckets.cc boggler.h trie.h
 
 clean:
-	rm -f -r *.o $(progs) $(tests) *.dSYM
+	rm -f -r *.o $(progs) $(tests) *.dSYM mtrandom/*.o

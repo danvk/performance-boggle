@@ -21,6 +21,7 @@ BUCKETS=buckets.o $(BOGGLE)
 IBUCKETS=ibuckets.o $(BOGGLE)
 
 solve: solve.o $(BOGGLE)
+anneal: anneal.o $(BOGGLE) mtrandom/mersenne.o
 perf_test: perf_test.o $(BOGGLE)
 trie_test: trie.o trie_test.o
 boggler_test: boggler_test.o $(BOGGLE)

@@ -24,16 +24,24 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include "gflags/gflags.h"
 #include "mtrandom/randomc.h"
 #include "trie.h"
 #include "boggler.h"
 
-static double cool_t0 = 100.0;
-static double cool_k = 0.05;
-static double swap_ratio = 1.0;
-static double mutation_p = 0.75;
-static int max_stall = 1000;
-static int rand_seed = -1;  // -1 = use time + pid
+DEFINE_double(cool_t0, 100.0, "Initial temperature");
+DEFINE_double(cool_k, 0.05, "Cooling constant (controls pace of cooling)");
+DEFINE_double(swap_ratio, 1.0, "Ratio of swaps to letter changes");
+DEFINE_double(mutation_p, 0.75, "Probability of just one change/mutation");
+DEFINE_int32(max_stall, 1000, "Number of generations before a change to exit");
+DEFINE_int32(rand_seed, -1, "Random seed (-1 means use time + pid)");
+
+DEFINE_bool(print_scores, false, "Print the score of each board considered");
+DEFINE_bool(print_stats, false, "Print statistics after the annealing run");
+DEFINE_bool(print_transitions, true, "Print each acceptedtransition");
+DEFINE_bool(print_params, true, "Print parameters before beginning run");
+
+DEFINE_string(dictionary, "words", "Path to dictionary of words");
 
 typedef TRandomMersenne Random;
 
@@ -47,7 +55,7 @@ bool AcceptTransition(int cur_score, int new_score, double T, Random* rand) {
 
 // "Temperature" after n iterations
 double Temperature(int n) {
-  return cool_t0 * exp(-cool_k * n);
+  return FLAGS_cool_t0 * exp(-FLAGS_cool_k * n);
 }
 
 // Mutate a board
@@ -59,7 +67,7 @@ void Mutate(char* bd, Random* rand) {
   total_mutate_calls += 1;
   do {
     total_mutations += 1;
-    if ((1.0 + swap_ratio) * rand->Random() > 1.0) {
+    if ((1.0 + FLAGS_swap_ratio) * rand->Random() > 1.0) {
       // swap two cells
       total_swaps += 1;
       int a, b;
@@ -82,7 +90,7 @@ void Mutate(char* bd, Random* rand) {
       } while (bd[cell] == letter);
       bd[cell] = letter;
     }
-  } while (rand->Random() > mutation_p);
+  } while (rand->Random() > FLAGS_mutation_p);
 }
 
 // A random initial board. Does not set a trailing null char!
@@ -93,79 +101,38 @@ void InitialBoard(char* bd, Random* rand) {
 }
 
 int main(int argc, char** argv) {
-  int print_scores = 0;
-  int print_stats = 0;
-  int print_transitions = 1;
-  int print_params = 1;
-
-  while (1) {
-    static struct option long_options[] = {
-      { "t0",         required_argument, 0, 't' },
-      { "k",          required_argument, 0, 'k' },
-      { "swap_ratio", required_argument, 0, 'r' },
-      { "mutation_p", required_argument, 0, 'p' },
-      { "max_stall",  required_argument, 0, 'm' },
-      { "rand_seed",  required_argument, 0, 's' },
-
-      { "print_scores",        no_argument, &print_scores, 1 },
-      { "print_stats",         no_argument, &print_stats, 1 },
-      { "print_transitions",   no_argument, &print_transitions, 1 },
-      { "print_params",        no_argument, &print_params, 1 },
-      { "noprint_scores",      no_argument, &print_scores, 0 },
-      { "noprint_stats",       no_argument, &print_stats, 0 },
-      { "noprint_transitions", no_argument, &print_transitions, 0 },
-      { "noprint_params",      no_argument, &print_params, 0 },
-      {0, 0, 0, 0}
-    };
-
-    int option_index = 0;
-    int c = getopt_long_only(argc, argv, "", long_options, &option_index);
-    if (c == -1) break;
-
-    switch (c) {
-      case 't': cool_t0 = atof(optarg);    break;
-      case 'k': cool_k = atof(optarg);     break;
-      case 'r': swap_ratio = atof(optarg); break;
-      case 'p': mutation_p = atof(optarg); break;
-      case 'm': max_stall = atoi(optarg);  break;
-      case 's': rand_seed = atoi(optarg);  break;
-
-      case 0: break;
-
-      default:
-        exit(1);
-    }
-  }
-  if (rand_seed == -1) {
-    rand_seed = time(NULL) + getpid();
+  google::ParseCommandLineFlags(&argc, &argv, true);
+  if (FLAGS_rand_seed == -1) {
+    FLAGS_rand_seed = time(NULL) + getpid();
   }
 
-  if (print_params) {
+  if (FLAGS_print_params) {
     printf("Annealing parameters:\n");
-    printf(" cool_t0: %lf\n", cool_t0);
-    printf(" cool_k: %lf\n", cool_k);
-    printf(" swap_ratio: %lf\n", swap_ratio);
-    printf(" mutation_p: %lf\n", mutation_p);
-    printf(" max_stall: %d\n", max_stall);
-    printf(" rand_seed: %d\n", rand_seed);
+    printf(" cool_t0: %lf\n", FLAGS_cool_t0);
+    printf(" cool_k: %lf\n", FLAGS_cool_k);
+    printf(" swap_ratio: %lf\n", FLAGS_swap_ratio);
+    printf(" mutation_p: %lf\n", FLAGS_mutation_p);
+    printf(" max_stall: %d\n", FLAGS_max_stall);
+    printf(" rand_seed: %d\n", FLAGS_rand_seed);
+    printf(" dictionary: %s\n", FLAGS_dictionary.c_str());
   }
 
-  Trie* t = Boggler::DictionaryFromFile("words");
+  Trie* t = Boggler::DictionaryFromFile(FLAGS_dictionary.c_str());
   Boggler b(t);
 
   // TODO(danvk): sanity-check parameters
-  Random r(rand_seed);
+  Random r(FLAGS_rand_seed);
   char bd[17] = "";
   char last[17] = "abcdefghijklmnop";
   InitialBoard(last, &r);
   int last_accept = 0;
   int last_score = -1;
   int total_transitions = 0;
-  for (int n = 0; n < last_accept + max_stall; n++) {
+  for (int n = 0; n < last_accept + FLAGS_max_stall; n++) {
     memcpy(bd, last, sizeof(last));
     Mutate(bd, &r);
     int score = b.Score(bd);
-    if (print_scores)
+    if (FLAGS_print_scores)
       printf("%d\t%d\n", n, score);
     double T = Temperature(n);
     if (AcceptTransition(last_score, score, T, &r)) {
@@ -173,7 +140,7 @@ int main(int argc, char** argv) {
       last_accept = n;
       last_score = score;
       memcpy(last, bd, sizeof(bd));
-      if (print_transitions)
+      if (FLAGS_print_transitions)
         printf("%5d T=%3.8lf accepting '%s' (%d)\n", n, T, last, last_score);
     }
   }
@@ -181,7 +148,7 @@ int main(int argc, char** argv) {
   printf(" final board: %s\n", last);
   printf(" final score: %d\n", last_score);
 
-  if (print_stats) {
+  if (FLAGS_print_stats) {
     printf(" transitions: %d\n", total_transitions);
     printf("       swaps: %d\n", total_swaps);
     printf("     changes: %d\n", total_changes);

@@ -22,7 +22,7 @@ IBUCKETS=ibuckets.o $(BOGGLE)
 GFLAGS=gflags/gflags.o gflags/gflags_reporting.o gflags/gflags_completions.o
 
 solve: solve.o $(BOGGLE)
-anneal: anneal.o $(BOGGLE) mtrandom/mersenne.o
+anneal: anneal.o $(BOGGLE) mtrandom/mersenne.o $(GFLAGS)
 perf_test: perf_test.o $(BOGGLE)
 trie_test: trie.o trie_test.o
 boggler_test: boggler_test.o $(BOGGLE)
@@ -43,4 +43,4 @@ multiboggle.o: multiboggle.h multiboggle.cc trie.h
 buckets.o: buckets.h buckets.cc boggler.h trie.h
 
 clean:
-	rm -f -r *.o $(progs) $(tests) *.dSYM mtrandom/*.o
+	rm -f -r *.o $(progs) $(tests) *.dSYM mtrandom/*.o gflags/*.o

@@ -1,5 +1,5 @@
 CC = g++
-CPPFLAGS = -g -Wall -O3 -march=i686
+CPPFLAGS = -g -Wall -O3 -march=i686 -I.
 #CPPFLAGS = -g -Wall
 
 tests = perf_test trie_test boggler_test buckets_test multiboggle_test multiboggle_perftest ibuckets_test ibuckets_perftest
@@ -19,6 +19,7 @@ BOGGLE=trie.o boggler.o
 MBOGGLE=multiboggle.o $(BOGGLE)
 BUCKETS=buckets.o $(BOGGLE)
 IBUCKETS=ibuckets.o $(BOGGLE)
+GFLAGS=gflags/gflags.o gflags/gflags_reporting.o gflags/gflags_completions.o
 
 solve: solve.o $(BOGGLE)
 anneal: anneal.o $(BOGGLE) mtrandom/mersenne.o

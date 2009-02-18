@@ -21,8 +21,9 @@ BUCKETS=buckets.o $(BOGGLE)
 IBUCKETS=ibuckets.o $(BOGGLE)
 GFLAGS=gflags/gflags.o gflags/gflags_reporting.o gflags/gflags_completions.o
 
-solve: solve.o $(BOGGLE)
+solve: solve.o $(BOGGLE) $(GFLAGS)
 anneal: anneal.o $(BOGGLE) mtrandom/mersenne.o $(GFLAGS)
+neighbors: neighbors.o $(GFLAGS)
 perf_test: perf_test.o $(BOGGLE)
 trie_test: trie.o trie_test.o
 boggler_test: boggler_test.o $(BOGGLE)

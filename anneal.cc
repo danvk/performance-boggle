@@ -96,6 +96,7 @@ int main(int argc, char** argv) {
   int print_scores = 0;
   int print_stats = 0;
   int print_transitions = 1;
+  int print_params = 1;
 
   while (1) {
     static struct option long_options[] = {
@@ -109,9 +110,11 @@ int main(int argc, char** argv) {
       { "print_scores",        no_argument, &print_scores, 1 },
       { "print_stats",         no_argument, &print_stats, 1 },
       { "print_transitions",   no_argument, &print_transitions, 1 },
+      { "print_params",        no_argument, &print_params, 1 },
       { "noprint_scores",      no_argument, &print_scores, 0 },
       { "noprint_stats",       no_argument, &print_stats, 0 },
       { "noprint_transitions", no_argument, &print_transitions, 0 },
+      { "noprint_params",      no_argument, &print_params, 0 },
       {0, 0, 0, 0}
     };
 
@@ -137,13 +140,15 @@ int main(int argc, char** argv) {
     rand_seed = time(NULL) + getpid();
   }
 
-  printf("Annealing parameters:\n");
-  printf(" cool_t0: %lf\n", cool_t0);
-  printf(" cool_k: %lf\n", cool_k);
-  printf(" swap_ratio: %lf\n", swap_ratio);
-  printf(" mutation_p: %lf\n", mutation_p);
-  printf(" max_stall: %d\n", max_stall);
-  printf(" rand_seed: %d\n", rand_seed);
+  if (print_params) {
+    printf("Annealing parameters:\n");
+    printf(" cool_t0: %lf\n", cool_t0);
+    printf(" cool_k: %lf\n", cool_k);
+    printf(" swap_ratio: %lf\n", swap_ratio);
+    printf(" mutation_p: %lf\n", mutation_p);
+    printf(" max_stall: %d\n", max_stall);
+    printf(" rand_seed: %d\n", rand_seed);
+  }
 
   Trie* t = Boggler::DictionaryFromFile("words");
   Boggler b(t);

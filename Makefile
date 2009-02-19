@@ -23,6 +23,7 @@ GFLAGS=gflags/gflags.o gflags/gflags_reporting.o gflags/gflags_completions.o
 
 solve: solve.o $(BOGGLE) $(GFLAGS)
 anneal: anneal.o $(BOGGLE) mtrandom/mersenne.o $(GFLAGS)
+normalize: normalize.o $(GFLAGS)
 neighbors: neighbors.o $(GFLAGS)
 perf_test: perf_test.o $(BOGGLE)
 trie_test: trie.o trie_test.o

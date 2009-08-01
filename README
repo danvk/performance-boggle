@@ -29,10 +29,13 @@ neighbors:
   Read in boards, print all other boards w/in an edit distance of N.
   One "edit" is either a die swap or changing a letter in one square.
 
-  echo "catdlinemaropets" | ./neighbors -d 2 | wc -l
+  $ echo "catdlinemaropets" | ./neighbors -d 2 | wc -l
   267205
 
-  echo "abcdefghijklmnop" | ./neighbors -d 2 | ./solve | sort -k2 -nr | head -1
+  $ echo "catdlinemaropets" | ./neighbors -d 2 | sort -u | wc -l
+  122532
+
+  $ echo "abcdefghijklmnop" | ./neighbors -d 2 | sort -u | ./solve | sort -k2 -nr | head -1
   abcderghisklmnop: 201
 
 

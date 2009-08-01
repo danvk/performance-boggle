@@ -1,23 +1,6 @@
 // Use Simulated Annealing to find a good Boggle board.
-//
-// To find a "nearby" board, a random set of mutations are performed. These
-// all fall into two classes:
-//
-//   1. Letter changes
-//   2. Cell swaps
-//
-// The ratio of these two is controlled by a command-line flag. It defaults to 1:1.
-//
-// The number of mutations follows a geometric distribution, whose parameter is
-// also set by a command line flag. It defaults to p=0.75.
-//
-// The cooling schedule is:
-//   T = T0 * exp(-k * n)
-//
-// The transition probability is:
-//   P(cur_score, new_score, T) =
-//                              1.0  if new_score >= cur_score
-//   exp((new_score - cur_score)/T)  if new_score < cur_score
+// 3x3/anneal.cc is just like anneal.cc, but uses 3x3 boards.
+// Best I've found so far: streaedlp = 545 points.
 
 #include <getopt.h>
 #include <stdio.h>
@@ -27,7 +10,7 @@
 #include "gflags/gflags.h"
 #include "mtrandom/randomc.h"
 #include "trie.h"
-#include "boggler.h"
+#include "3x3/boggler.h"
 
 DEFINE_double(cool_t0, 100.0, "Initial temperature");
 DEFINE_double(cool_k, 0.05, "Cooling constant (controls pace of cooling)");
@@ -43,7 +26,7 @@ DEFINE_bool(print_params, true, "Print parameters before beginning run");
 
 DEFINE_string(dictionary, "words", "Path to dictionary of words");
 
-static const int NumSquares = 16;
+static const int NumSquares = 9;
 
 typedef TRandomMersenne Random;
 
@@ -125,7 +108,7 @@ int main(int argc, char** argv) {
   // TODO(danvk): sanity-check parameters
   Random r(FLAGS_rand_seed);
   char bd[1 + NumSquares] = "";
-  char last[1 + NumSquares] = "abcdefghijklmnop";
+  char last[1 + NumSquares] = "abcdefghi";
   InitialBoard(last, &r);
   int last_accept = 0;
   int last_score = -1;

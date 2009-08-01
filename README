@@ -1,0 +1,83 @@
+Basic checks:
+
+$ make clean
+$ make test
+./trie_test: All tests passed!
+./boggler_test: All tests passed!
+./buckets_test: all tests passed
+Loaded/compacted 172203 words
+All test boards matched!
+All test boards matched!
+All test boards matched!
+$ make perf 
+Loaded 172203 words into 385272-node Trie (3770984 bytes)
+Total score: 22925120 = 105.977811 pts/bd
+Score hash: 0x000C1D3D
+Evaluated 216320 boards in 2.914387 seconds = 74224.871616 bds/sec
+
+
+What the binaries do:
+
+solve:
+  Reads in boards, prints out scores.
+
+  $ echo "catdlinemaropets" | ./solve --dictionary words
+  catdlinemaropets: 2338
+
+
+neighbors:
+  Read in boards, print all other boards w/in an edit distance of N.
+  One "edit" is either a die swap or changing a letter in one square.
+
+  echo "catdlinemaropets" | ./neighbors -d 2 | wc -l
+  267205
+
+  echo "abcdefghijklmnop" | ./neighbors -d 2 | ./solve | sort -k2 -nr | head -1
+  abcderghisklmnop: 201
+
+
+anneal:
+  Do simulated annealing to find a high-scoring board.
+
+  $ ./anneal --max_stall 2000
+  ...
+  final board: plessiagrtnrseed
+  final score: 2960
+
+
+bucket_boggle:
+  Bucket letters into classes and forms a new dictionary by reducing the
+  letter space. Reports the fraction of boards from a sample that can be
+  eliminated (i.e. have an upper bound on their score less than 3625) using
+  the given bucketing.
+
+  $ ./bucket_boggle words 100000 ab cd ef gh ij kl mn op rs tu vw xy z
+  Loaded 162848 words.
+  207 / 99793
+  ab cd ef gh ij kl mn op rs tu vw xy z : 0.99793
+
+  That means that 99.793% of boards (in normal board space) can be eliminated
+  by using this bucketing.
+
+
+ibucket_boggle:
+  Calculate an upper-bound on the highest score in a class of boards using
+  "implicit buckets", i.e. without forming a new, bucketed dictionary.
+
+  Takes a board where each cell is a class of letters. Reports the upper
+  bound, the time it took to compute it and the number of boards represented
+  in this class.
+
+  This can sometimes eliminate a stupendous number of boards very quickly,
+  e.g. the example below eliminates ~50 billion boards/sec.
+
+  $ all=abcdefghijklmnopqrstuvwxyz
+  $ ./ibucket_boggle words $all b $all j $all jkx g $all h i $all jkx jkx jkx jkx $all
+  Score: 3111
+  1.481485 secs elapsed
+  Details:
+   num_reps: 75066533568 = 75.066534B
+   sum_union: 71079
+   max_nomark: 7465
+   max+one: 3111 (force cell 10)
+

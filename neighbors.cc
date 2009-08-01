@@ -21,8 +21,9 @@ DEFINE_int32(d, 1, "Maximum edit distance for output");
 // Print all boards an edit distance of <= d from c
 // Leaves the board unaltered upon returning.
 void EditDistance(int d, char* c) {
+  int n = strlen(c);
   // First all the edits
-  for (int cell = 0; cell < 16; cell++) {
+  for (int cell = 0; cell < n; cell++) {
     int orig = c[cell];
     for (char let = 'a'; let <= 'z'; let++) {
       if (let == orig) continue;
@@ -34,9 +35,9 @@ void EditDistance(int d, char* c) {
   }
 
   // Then the swaps
-  for (int cell1 = 0; cell1 < 16; cell1++) {
+  for (int cell1 = 0; cell1 < n; cell1++) {
     char orig = c[cell1];
-    for (int cell2 = cell1 + 1; cell2 < 16; cell2++) {
+    for (int cell2 = cell1 + 1; cell2 < n; cell2++) {
       if (orig == c[cell2]) continue;
       char orig2 = c[cell2];
       c[cell2] = orig;

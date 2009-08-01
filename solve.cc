@@ -45,8 +45,9 @@ int main(int argc, char** argv) {
 void HandleBoard(Boggler* b, const char* bd) {
   // Parse the board.
   if (strlen(bd) != 16) {
-    fprintf(stderr, "Board strings must contain sixteen characters, got %zu\n",
-            strlen(bd));
+    fprintf(stderr,
+            "Board strings must contain sixteen characters, got %zu ('%s')\n",
+            strlen(bd), bd);
     return;
   }
 

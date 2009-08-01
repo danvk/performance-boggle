@@ -39,6 +39,13 @@ neighbors:
   abcderghisklmnop: 201
 
 
+random_boards:
+  Print out a bunch of random boards.
+
+  $ ./random_boards -n 10000 | ./solve | sort -k2 -nr | head -1
+  bqphumsroteilstq: 445
+
+
 anneal:
   Do simulated annealing to find a high-scoring board.
 

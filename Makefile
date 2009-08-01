@@ -3,7 +3,7 @@ CPPFLAGS = -g -Wall -O3 -march=i686 -I.
 #CPPFLAGS = -g -Wall
 
 tests = perf_test trie_test boggler_test buckets_test multiboggle_test multiboggle_perftest ibuckets_test ibuckets_perftest 3x3/boggler_test
-progs = $(tests) bucket_boggle bucket_descent ibucket_breaker ibucket_boggle solve neighbors anneal 3x3/solve 3x3/anneal
+progs = $(tests) bucket_boggle bucket_descent ibucket_breaker ibucket_boggle solve neighbors random_boards anneal 3x3/solve 3x3/anneal
 all: $(progs)
 
 test: trie_test boggler_test multiboggle_test buckets_test
@@ -26,6 +26,7 @@ solve: solve.o $(BOGGLE) $(GFLAGS)
 anneal: anneal.o $(BOGGLE) mtrandom/mersenne.o $(GFLAGS)
 normalize: normalize.o $(GFLAGS)
 neighbors: neighbors.o $(GFLAGS)
+random_boards: random_boards.o mtrandom/mersenne.o $(GFLAGS)
 perf_test: perf_test.o $(BOGGLE)
 trie_test: trie.o trie_test.o
 boggler_test: boggler_test.o $(BOGGLE)

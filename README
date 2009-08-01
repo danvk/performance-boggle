@@ -81,3 +81,20 @@ ibucket_boggle:
    max_nomark: 7465
    max+one: 3111 (force cell 10)
 
+
+ibucket_breaker:
+  Start with a random bucketed board (ala ibucket_boggle) created by setting
+  each cell to one of a few letter patterns (usually 4). Compute an upper
+  bound in the same way as ibucket_boggle. If it's > 3625, we're done. Entire
+  class eliminated. If not, break one of the cells into its constituent
+  letters and calculate upper bounds for each of those boards. Repeat until
+  the entire board class has been "broken".
+
+  One can imagine that, with the right classes of letters, this might be an
+  effective way to "solve boggle".
+
+  $ ./ibucket_breaker words
+  ...
+  1612431360000 reps in 703.99 s @ depth 8 = 2290433843.342557 bds/sec:
+  sy aeiou chlnrt bdfgjkmpvwxz aeiou sy bdfgjkmpvwxz aeiou bdfgjkmpvwxz bdfgjkmpvwxz bdfgjkmpvwxz chlnrt sy aeiou chlnrt chlnrt
+

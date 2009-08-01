@@ -2,8 +2,8 @@ CC = g++
 CPPFLAGS = -g -Wall -O3 -march=i686 -I.
 #CPPFLAGS = -g -Wall
 
-tests = perf_test trie_test boggler_test buckets_test multiboggle_test multiboggle_perftest ibuckets_test ibuckets_perftest
-progs = $(tests) bucket_boggle bucket_descent ibucket_breaker ibucket_boggle solve neighbors anneal
+tests = perf_test trie_test boggler_test buckets_test multiboggle_test multiboggle_perftest ibuckets_test ibuckets_perftest 3x3/boggler_test
+progs = $(tests) bucket_boggle bucket_descent ibucket_breaker ibucket_boggle solve neighbors anneal 3x3/solve
 all: $(progs)
 
 test: trie_test boggler_test multiboggle_test buckets_test
@@ -19,6 +19,7 @@ BOGGLE=trie.o boggler.o
 MBOGGLE=multiboggle.o $(BOGGLE)
 BUCKETS=buckets.o $(BOGGLE)
 IBUCKETS=ibuckets.o $(BOGGLE)
+BOGGLE3=trie.o 3x3/boggler.o
 GFLAGS=gflags/gflags.o gflags/gflags_reporting.o gflags/gflags_completions.o
 
 solve: solve.o $(BOGGLE) $(GFLAGS)
@@ -38,11 +39,14 @@ ibucket_breaker: ibucket_breaker.o $(IBUCKETS)
 ibucket_boggle: ibucket_boggle.o $(IBUCKETS)
 ibuckets_test: ibuckets_test.o $(IBUCKETS)
 ibuckets_perftest: ibuckets_perftest.o $(IBUCKETS)
+3x3/solve: 3x3/solve.o $(BOGGLE3) $(GFLAGS)
+3x3/boggler_test: 3x3/boggler_test.o $(BOGGLE3) $(GFLAGS)
 
 trie.o: trie.h trie.cc
 boggler.o: trie.h boggler.h boggler.cc
 multiboggle.o: multiboggle.h multiboggle.cc trie.h
 buckets.o: buckets.h buckets.cc boggler.h trie.h
+3x3/boggler.o: trie.h 3x3/boggler.h 3x3/boggler.cc
 
 clean:
-	rm -f -r *.o $(progs) $(tests) *.dSYM mtrandom/*.o gflags/*.o
+	rm -f -r *.o $(progs) $(tests) *.dSYM mtrandom/*.o gflags/*.o 3x3/*.o

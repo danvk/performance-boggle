@@ -3,7 +3,7 @@ CPPFLAGS = -g -Wall -O3 -march=i686 -I.
 #CPPFLAGS = -g -Wall
 
 tests = perf_test trie_test boggler_test buckets_test multiboggle_test multiboggle_perftest ibuckets_test ibuckets_perftest 3x3/boggler_test
-progs = $(tests) bucket_boggle bucket_descent ibucket_breaker ibucket_boggle solve neighbors random_boards anneal 3x3/solve 3x3/anneal
+progs = $(tests) bucket_boggle bucket_descent ibucket_breaker ibucket_boggle solve neighbors random_boards anneal 3x3/solve 3x3/anneal 3x3/ibucket_boggle
 all: $(progs)
 
 test: trie_test boggler_test multiboggle_test buckets_test
@@ -20,6 +20,7 @@ MBOGGLE=multiboggle.o $(BOGGLE)
 BUCKETS=buckets.o $(BOGGLE)
 IBUCKETS=ibuckets.o $(BOGGLE)
 BOGGLE3=trie.o 3x3/boggler.o
+IBUCKETS3=3x3/ibuckets.o $(BOGGLE3)
 GFLAGS=gflags/gflags.o gflags/gflags_reporting.o gflags/gflags_completions.o
 
 solve: solve.o $(BOGGLE) $(GFLAGS)
@@ -44,6 +45,7 @@ ibuckets_perftest: ibuckets_perftest.o $(IBUCKETS)
 3x3/solve: 3x3/solve.o $(BOGGLE3) $(GFLAGS)
 3x3/boggler_test: 3x3/boggler_test.o $(BOGGLE3) $(GFLAGS)
 3x3/anneal: 3x3/anneal.o $(BOGGLE3) mtrandom/mersenne.o $(GFLAGS)
+3x3/ibucket_boggle: 3x3/ibucket_boggle.o $(IBUCKETS3) $(GFLAGS)
 
 trie.o: trie.h trie.cc
 boggler.o: trie.h boggler.h boggler.cc

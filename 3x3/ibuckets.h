@@ -3,12 +3,13 @@
 //
 // This should be templated on Trie type, but I'd like to avoid that messiness
 // for the time being.
+#include <limits.h>
 #include "trie.h"
 
 class BucketBoggler {
  public:
   BucketBoggler(SimpleTrie* t) : dict_(t), runs_(0) {}
-  
+
   // bd is a class of boards with cells delimited by spaces.
   // examples:
   // "a b c d e f g h i j k l m n o p"
@@ -16,7 +17,7 @@ class BucketBoggler {
   // NOTE: "qu" gets interpreted as "qu" or "u".
   bool ParseBoard(const char* bd);
   const char* as_string();
-  
+
   // Returns the possible characters in this cell. The result can be modified.
   char* Cell(int idx) { return bd_[idx]; }
 
@@ -24,7 +25,7 @@ class BucketBoggler {
   // isn't guaranteed to fit in a uint64_t, but will for any class you care to
   // evaluate.
   uint64_t NumReps() const;
-  
+
   // Returns a score >= the score of the best possible board to form with the
   // current possibilities for each cell. For more detailed statistics, call
   // BoundDetails(). Note that setting a bailout_score invalidates the

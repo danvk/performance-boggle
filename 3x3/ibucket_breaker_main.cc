@@ -100,8 +100,11 @@ void PrintDetails(BreakDetails& d) {
   printf("Broke %llu/%llu @ depth %d in %.4fs = %fbds/sec\n",
          (d.num_reps - unbroken), d.num_reps, d.max_depth,
          d.elapsed, d.num_reps / d.elapsed);
-  printf("Unbroken boards:\n");
-  for (unsigned int i = 0; i < d.failures.size(); i++) {
-    printf("%s\n", d.failures[i].c_str());
+
+  if (!d.failures.empty()) {
+    printf("Unbroken boards:\n");
+    for (unsigned int i = 0; i < d.failures.size(); i++) {
+      printf("%s\n", d.failures[i].c_str());
+    }
   }
 }

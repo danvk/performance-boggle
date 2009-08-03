@@ -1,6 +1,8 @@
+#include "ibuckets.h"
+
 #include <algorithm>
 #include <iostream>
-#include "ibuckets.h"
+#include <string.h>
 #include "boggler.h"
 using std::min;
 using std::max;

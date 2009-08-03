@@ -7,12 +7,20 @@
 
 #include <assert.h>
 #include <algorithm>
+#include <inttypes.h>
+#include <iostream>
+#include <iomanip>
 #include <math.h>
 #include <string>
+#include <string.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <vector>
 #include "gflags/gflags.h"
+
+using std::cout;
+using std::endl;
+using std::setprecision;
 
 Breaker::Breaker(BucketBoggler* bb, int best_score)
     : bb_(bb), best_score_(best_score) {
@@ -84,7 +92,7 @@ int Breaker::PickABucket(double* expected_kills,
   for (unsigned int i = 0; i < splits->size(); i++)
     out_len += splits->at(i).size();
   if (out_len != len) {
-    printf("%s (%d) => %d\n", bb_->Cell(pick), len, out_len);
+    cout << bb_->Cell(pick) << " (" << len << ") => " << out_len << endl;
     exit(1);
   }
 
@@ -98,7 +106,7 @@ double DecreaseProb(int now, int then) {
   return 0.5 * (1.0 - erf((1.0 * now / then - avg_decrease) / stddev_sqrt2));
 }
 
-bool Breaker::ShedToConvergence(int level) { 
+bool Breaker::ShedToConvergence(int level) {
   if (level > details_->max_depth) details_->max_depth = level;
   int shed_letters=1;
   int bound;
@@ -107,20 +115,22 @@ bool Breaker::ShedToConvergence(int level) {
     uint64_t reps = bb_->NumReps();
 
     if (debug_)
-      printf("%s  => %llu reps, bound=%d (%d)", std::string(level, ' ').c_str(),
-             reps, bound, bb_->Details().max_nomark);
+      cout << std::string(level, ' ') << "  => "
+           << reps << " reps, bound=" << bound
+           << " (" << bb_->Details().max_nomark << ")";  // no endl
 
     if (bound >= best_score_) {
       shed_letters = bb_->ShedLetters(best_score_);
       uint64_t shed_reps = bb_->NumReps();
-      if (debug_)
-        printf(", shed %d=%f: %s\n",
-               shed_letters, 1.0*(reps-shed_reps)/reps, bb_->as_string());
+      if (debug_) {
+        cout << ", shed " << shed_letters << "=" << 1.0*(reps-shed_reps)/reps
+             << ": " << bb_->as_string() << endl;
+      }
       elim_ += (reps - shed_reps);
     } else {
       elim_ += reps;
       if (debug_)
-        printf(", DONE\n");
+        cout << ", DONE" << endl;
     }
   } while (bound >= best_score_ && shed_letters > 0);
   return (bound < best_score_);
@@ -133,9 +143,6 @@ void Breaker::SplitBucket(int level) {
   std::vector<std::string> splits;
   int cell = PickABucket(&expect, &splits, level);
   if (cell == -1) {
-    if (debug_) {
-      printf("Unable to break board: %s\n", bb_->as_string());
-    }
     // should be a board at this point, so the spaces are unneeded.
     std::string bd;
     const char* bd_class = bb_->as_string();
@@ -143,18 +150,21 @@ void Breaker::SplitBucket(int level) {
       if (*bd_class != ' ') bd.append(1, *bd_class);
     }
     details_->failures.push_back(bd);
+    if (debug_) {
+      cout << "Unable to break board: " << bd << endl;
+    }
     return;
   }
 
-  if (debug_)
-    printf("split cell %d\n",  cell);
+  if (debug_) cout << "split cell " << cell << endl;
 
   strcpy(orig_bd, bb_->as_string());
   strcpy(orig_cell, bb_->Cell(cell));
 
-  if (debug_)
-    printf("%sWill evaluate %lu more boards...\n",
-           std::string(level, ' ').c_str(), splits.size());
+  if (debug_) {
+    cout << std::string(level, ' ') << "Will evaluate "
+         << splits.size() << " more boards..." << endl;
+  }
 
   for (unsigned int i=0; i < splits.size(); i++) {
     assert(bb_->ParseBoard(orig_bd));
@@ -167,11 +177,12 @@ void Breaker::SplitBucket(int level) {
 void Breaker::AttackBoard(int level, int num, int outof) {
   uint64_t reps = bb_->NumReps();
   if (debug_) {
-    printf("(%2.2f%%)%s (%d;%d/%d) %s (%llu) est. %f s\n",
-           100.0 * elim_ / orig_reps_,
-           std::string(level, ' ').c_str(), level, num, outof, bb_->as_string(),
-           reps, (secs() - details_->start_time) * orig_reps_ / elim_);
-    fflush(stdout);
+    float frac = 100.0 * elim_ / orig_reps_;
+    float est = (secs() - details_->start_time) * orig_reps_ / elim_;
+    cout << "(" << setprecision(5) << frac << "%)" << std::string(level, ' ')
+         << " (" << level << ";" << num << "/" << outof << ") "
+         << bb_->as_string() << " (" << reps << ") est. " << est << " s"
+         << endl;
   }
 
   if (ShedToConvergence(level)) {
@@ -197,9 +208,13 @@ void Breaker::Break(BreakDetails* details) {
     AttackBoard();
   double b = secs();
   double a = details_->start_time;
-  if (debug_)
-    printf("%llu reps in %.2f s @ depth %d = %f bds/sec:\n  %s\n",
-            elim_, b-a, details_->max_depth, 1.0*elim_/(b-a), orig.c_str());
+  if (debug_) {
+    float pace = 1.0*elim_/(b-a);
+    cout << elim_ << " reps in " << setprecision(3) << (b - a) << " s "
+         << "@ depth " << details_->max_depth
+         << " = " << pace << " bds/sec:\n  " << orig
+         << endl;
+  }
 
   details->elapsed = b - a;
   details->num_reps = orig_reps_;

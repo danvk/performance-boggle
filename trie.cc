@@ -1,4 +1,5 @@
 #include "trie.h"
+#include <stdlib.h>
 #include <queue>
 #include <utility>
 #include <map>

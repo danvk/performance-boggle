@@ -1,6 +1,7 @@
 #include "3x3/boggler.h"
 #include <ctype.h>
 #include <stdio.h>
+#include <string.h>
 const int BogglerBase::kWordScores[] =
       //0, 1, 2, 3, 4, 5, 6, 7,  8,  9, 10
       { 0, 0, 0, 1, 1, 2, 3, 5, 11, 11, 11 };

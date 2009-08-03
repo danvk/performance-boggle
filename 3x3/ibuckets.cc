@@ -225,7 +225,7 @@ const char* BucketBoggler::as_string() {
     } else {
       strcpy(c++, ".");
     }
-    *c++ = (i == 15 ? '\0' : ' ');
+    *c++ = (i == 8 ? '\0' : ' ');
   }
   return board_rep_;
 }

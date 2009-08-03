@@ -16,13 +16,17 @@ DEFINE_bool(filter_canonical, false, "Skip non-canonical boards");
 DEFINE_string(letter_classes, "aeiou sy bdfgjkmpvwxz chlnrt",
               "space-separated classes of letters");
 
-DEFINE_int64(run_on_index, 123456,
+DEFINE_int64(run_on_index, -1,
              "Set to a value to break a specific board.");
 
 DEFINE_int32(rand_seed, -1,
              "Random number seed (default is based on time and pid)");
-DEFINE_int32(random_boards, -1,
+DEFINE_int32(random_boards, 1,
              "Run on this many random board classes from the bucket space.");
+
+DEFINE_string(break_class, "", "Set to break a specific board class");
+
+void PrintDetails(BreakDetails& d);
 
 int main(int argc, char** argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
@@ -58,6 +62,19 @@ int main(int argc, char** argv) {
 
     BreakDetails details;
     breaker.Break(&details);
+    PrintDetails(details);
+    exit(0);
+  }
+
+  if (!FLAGS_break_class.empty()) {
+    BreakDetails details;
+    if (!breaker.ParseBoard(FLAGS_break_class)) {
+      fprintf(stderr, "Breaker couldn't parse '%s'\n",
+              FLAGS_break_class.c_str());
+      exit(1);
+    }
+    breaker.Break(&details);
+    PrintDetails(details);
     exit(0);
   }
 
@@ -73,6 +90,18 @@ int main(int argc, char** argv) {
       uint64_t idx = r.IRandom(0, max_index - 1);
       breaker.FromId(classes, idx);
       breaker.Break(&details);
+      PrintDetails(details);
     }
+  }
+}
+
+void PrintDetails(BreakDetails& d) {
+  uint64_t unbroken = d.failures.size();
+  printf("Broke %llu/%llu @ depth %d in %.4fs = %fbds/sec\n",
+         (d.num_reps - unbroken), d.num_reps, d.max_depth,
+         d.elapsed, d.num_reps / d.elapsed);
+  printf("Unbroken boards:\n");
+  for (unsigned int i = 0; i < d.failures.size(); i++) {
+    printf("%s\n", d.failures[i].c_str());
   }
 }

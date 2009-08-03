@@ -4,12 +4,16 @@
 // slow, but will give better bounds and allow more flexible bucketing.
 
 #include "3x3/ibucket_breaker.h"
+#include "gflags/gflags.h"
 #include <algorithm>
 #include <math.h>
 #include <string>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <vector>
+
+DEFINE_bool(print_breaking_stats, true,
+            "Print detailed progress info about breaking runs");
 
 Breaker::Breaker(BucketBoggler* bb, int best_score)
   : bb_(bb), best_score_(best_score) {
@@ -26,20 +30,21 @@ double secs() {
 // Use the board solving details to pick a bucket to kill and guess how many
 // board representatives this will kill.
 double DecreaseProb(int now, int then);
-int PickABucket(BucketBoggler& bb, double* expected_kills,
-                std::vector<std::string>* splits, int level) {
+int Breaker::PickABucket(double* expected_kills,
+                         std::vector<std::string>* splits, int level) {
   int pick = -1;
   *expected_kills = 1.0;
-  const BucketBoggler::ScoreDetails& d = bb.Details();
+  const BucketBoggler::ScoreDetails& d = bb_->Details();
   int base_score = d.max_nomark;
-  uint64_t reps = bb.NumReps();
+  uint64_t reps = bb_->NumReps();
   splits->clear();
   for (int i=0; i<9; i++) {
     double expectation = 0.0;
-    int choices = strlen(bb.Cell(i));
+    int choices = strlen(bb_->Cell(i));
     for (int j = 0; j < choices; j++) {
-      int reduced_score = base_score - d.max_delta[i][bb.Cell(i)[j] - 'a'];
-      expectation += (reps / choices) * DecreaseProb(reduced_score, 545);
+      int reduced_score = base_score - d.max_delta[i][bb_->Cell(i)[j] - 'a'];
+      expectation += (reps / choices)
+                      * DecreaseProb(reduced_score, best_score_);
     }
     //printf("%2d: expect to kill %lf\n", i, expectation);
     if (expectation > *expected_kills) {
@@ -49,10 +54,10 @@ int PickABucket(BucketBoggler& bb, double* expected_kills,
   }
 
   if (pick == -1) {
-    pick = bb.Details().most_constrained_cell;
+    pick = bb_->Details().most_constrained_cell;
   }
 
-  int len = strlen(bb.Cell(pick));
+  int len = strlen(bb_->Cell(pick));
   if (len == 26) {
     splits->push_back("aeiou");
     splits->push_back("sy");
@@ -67,11 +72,11 @@ int PickABucket(BucketBoggler& bb, double* expected_kills,
         split += 1;
         splits->push_back("");
       }
-      splits->back() += std::string(1, bb.Cell(pick)[i]);
+      splits->back() += std::string(1, bb_->Cell(pick)[i]);
     }
   } else {
-    for (int j=0; bb.Cell(pick)[j]; j++) {
-      splits->push_back(std::string(1, bb.Cell(pick)[j]));
+    for (int j=0; bb_->Cell(pick)[j]; j++) {
+      splits->push_back(std::string(1, bb_->Cell(pick)[j]));
     }
   }
 
@@ -79,7 +84,7 @@ int PickABucket(BucketBoggler& bb, double* expected_kills,
   for (unsigned int i = 0; i < splits->size(); i++)
     out_len += splits->at(i).size();
   if (out_len != len) {
-    printf("%s (%d) => %d\n", bb.Cell(pick), len, out_len);
+    printf("%s (%d) => %d\n", bb_->Cell(pick), len, out_len);
     exit(1);
   }
 
@@ -93,68 +98,86 @@ double DecreaseProb(int now, int then) {
   return 0.5 * (1.0 - erf((1.0 * now / then - avg_decrease) / stddev_sqrt2));
 }
 
-// TODO(danvk): remove these
-double start_time = 0.0;
-uint64_t orig_reps = 0;
-uint64_t elim = 0;
-int max_depth = 0;
-bool ShedToConvergence(BucketBoggler& bb, int level) { 
-  if (level > max_depth) max_depth = level;
+bool Breaker::ShedToConvergence(int level) { 
+  if (level > details_->max_depth) details_->max_depth = level;
   int shed_letters=1;
   int bound;
   do {
-    bound = bb.UpperBound();
-    uint64_t reps = bb.NumReps();
+    bound = bb_->UpperBound();
+    uint64_t reps = bb_->NumReps();
 
-    printf("%s  => %llu reps, bound=%d (%d)", std::string(level, ' ').c_str(),
-           reps, bound, bb.Details().max_nomark);
-    if (bound >= 545) {
-      shed_letters = bb.ShedLetters(545);
-      uint64_t shed_reps = bb.NumReps();
-      printf(", shed %d=%f: %s\n",
-             shed_letters, 1.0*(reps-shed_reps)/reps, bb.as_string());
-      elim += (reps - shed_reps);
+    if (FLAGS_print_breaking_stats)
+      printf("%s  => %llu reps, bound=%d (%d)", std::string(level, ' ').c_str(),
+             reps, bound, bb_->Details().max_nomark);
+
+    if (bound >= best_score_) {
+      shed_letters = bb_->ShedLetters(best_score_);
+      uint64_t shed_reps = bb_->NumReps();
+      if (FLAGS_print_breaking_stats)
+        printf(", shed %d=%f: %s\n",
+               shed_letters, 1.0*(reps-shed_reps)/reps, bb_->as_string());
+      elim_ += (reps - shed_reps);
     } else {
-      elim += reps;
-      printf(", DONE\n");
+      elim_ += reps;
+      if (FLAGS_print_breaking_stats)
+        printf(", DONE\n");
     }
-  } while (bound >= 545 && shed_letters > 0);
-  return (bound < 545);
+  } while (bound >= best_score_ && shed_letters > 0);
+  return (bound < best_score_);
 }
 
-void AttackBoard(BucketBoggler&, int level = 0, int num=1, int outof=1);
-void SplitBucket(BucketBoggler& bb, int level) {
+void Breaker::SplitBucket(int level) {
   char orig_bd[27 * 9];
   char orig_cell[27];
   double expect;
   std::vector<std::string> splits;
-  int cell = PickABucket(bb, &expect, &splits, level);
-  printf("split cell %d\n",  cell);
+  int cell = PickABucket(&expect, &splits, level);
+  if (cell == -1) {
+    if (FLAGS_print_breaking_stats) {
+      printf("Unable to break board: %s\n", bb_->as_string());
+    }
+    // should be a board at this point, so the spaces are unneeded.
+    std::string bd;
+    const char* bd_class = bb_->as_string();
+    for (; *bd_class; bd_class++) {
+      if (*bd_class != ' ') bd.append(1, *bd_class);
+    }
+    details_->failures.push_back(bd);
+    return;
+  }
 
-  strcpy(orig_bd, bb.as_string());
-  strcpy(orig_cell, bb.Cell(cell));
+  if (FLAGS_print_breaking_stats)
+    printf("split cell %d\n",  cell);
 
-  printf("%sWill evaluate %lu more boards...\n",
-         std::string(level, ' ').c_str(), splits.size());
+  strcpy(orig_bd, bb_->as_string());
+  strcpy(orig_cell, bb_->Cell(cell));
+
+  if (FLAGS_print_breaking_stats)
+    printf("%sWill evaluate %lu more boards...\n",
+           std::string(level, ' ').c_str(), splits.size());
 
   for (unsigned int i=0; i < splits.size(); i++) {
-    assert(bb.ParseBoard(orig_bd));
-    strcpy(bb.Cell(cell), splits[i].c_str());
-    AttackBoard(bb, level + 1, 1+i, splits.size());
+    assert(bb_->ParseBoard(orig_bd));
+    strcpy(bb_->Cell(cell), splits[i].c_str());
+    AttackBoard(level + 1, 1+i, splits.size());
   }
 }
 
 // Shed/Split until finished
-void AttackBoard(BucketBoggler& bb, int level, int num, int outof) {
-  uint64_t reps = bb.NumReps();
-  printf("(%2.2f%%)%s (%d;%d/%d) %s (%llu) est. %f s\n", 100.0*elim/orig_reps,
-         std::string(level, ' ').c_str(), level, num, outof, bb.as_string(),
-         reps, (secs() - start_time) * orig_reps / elim);
-  fflush(stdout);
-  if (ShedToConvergence(bb, level)) {
+void Breaker::AttackBoard(int level, int num, int outof) {
+  uint64_t reps = bb_->NumReps();
+  if (FLAGS_print_breaking_stats) {
+    printf("(%2.2f%%)%s (%d;%d/%d) %s (%llu) est. %f s\n",
+           100.0 * elim_ / orig_reps_,
+           std::string(level, ' ').c_str(), level, num, outof, bb_->as_string(),
+           reps, (secs() - details_->start_time) * orig_reps_ / elim_);
+    fflush(stdout);
+  }
+
+  if (ShedToConvergence(level)) {
     return;
   } else {
-    SplitBucket(bb, level);
+    SplitBucket(level);
     //printf("expect to kill %lf boards by picking %d\n", expect, pick);
   }
 }
@@ -162,22 +185,23 @@ void AttackBoard(BucketBoggler& bb, int level, int num, int outof) {
 
 void Breaker::Break(BreakDetails* details) {
   std::string orig = bb_->as_string();
-  details->max_depth = 0;
-  details->num_reps = 0;
-  details->elapsed = 0.0;
+  details_ = details;
+  details_->max_depth = 0;
+  details_->num_reps = 0;
+  details_->elapsed = 0.0;
 
-  elim = max_depth = 0;
-  orig_reps = bb_->NumReps();
-  start_time = secs();
-    AttackBoard(*bb_);
+  elim_ = 0;
+  orig_reps_ = bb_->NumReps();
+  details_->start_time = secs();
+    AttackBoard();
   double b = secs();
-  double a = start_time;
-  printf("%llu reps in %.2f s @ depth %d = %f bds/sec:\n  %s\n",
-          elim, b-a, max_depth, 1.0*elim/(b-a), orig.c_str());
+  double a = details_->start_time;
+  if (FLAGS_print_breaking_stats)
+    printf("%llu reps in %.2f s @ depth %d = %f bds/sec:\n  %s\n",
+            elim_, b-a, details_->max_depth, 1.0*elim_/(b-a), orig.c_str());
 
   details->elapsed = b - a;
-  details->max_depth = max_depth;
-  details->num_reps = orig_reps;
+  details->num_reps = orig_reps_;
 }
 
 
@@ -210,13 +234,6 @@ uint64_t Breaker::BoardId(const BdArray& bd, int num_classes) {
     id *= num_classes;
     id += bd[i/3][i%3];
   }
-  for (int y = 0; y < 3; y++) {
-    for (int x = 0; x < 3; x++) {
-      printf(" %d", bd[x][y]);
-    }
-    printf("\n");
-  }
-  printf("       -> %llu\n", id);
   return id;
 }
 
@@ -230,9 +247,6 @@ bool Breaker::IsCanonical(int num_classes, uint64_t idx) {
     left /= num_classes;
   }
   if (left) return false;
-
-  uint64_t orig = BoardId(bd, num_classes);
-  printf("original id = %llu =? %llu\n", orig, idx);
 
   for (int rot = 0; rot < 2; rot++) {
     // ABC    CBA

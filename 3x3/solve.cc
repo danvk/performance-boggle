@@ -32,8 +32,6 @@ int main(int argc, char** argv) {
   Trie* t = Boggler::DictionaryFromFile(FLAGS_dictionary.c_str());
   Boggler b(t);
 
-  printf("IsWord('claimed') = %d\n", t->IsWord("claimed"));
-
   if (argc > 1) {
     for (int i = 1; i < argc; i++) {
       HandleBoard(&b, argv[i]);

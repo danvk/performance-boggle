@@ -5,7 +5,6 @@
 
 #include "3x3/ibucket_breaker.h"
 
-#include <assert.h>
 #include <algorithm>
 #include <inttypes.h>
 #include <iostream>
@@ -114,10 +113,11 @@ bool Breaker::ShedToConvergence(int level) {
     bound = bb_->UpperBound();
     uint64_t reps = bb_->NumReps();
 
-    if (debug_)
+    if (debug_) {
       cout << std::string(level, ' ') << "  => "
            << reps << " reps, bound=" << bound
            << " (" << bb_->Details().max_nomark << ")";  // no endl
+    }
 
     if (bound >= best_score_) {
       shed_letters = bb_->ShedLetters(best_score_);
@@ -129,8 +129,9 @@ bool Breaker::ShedToConvergence(int level) {
       elim_ += (reps - shed_reps);
     } else {
       elim_ += reps;
-      if (debug_)
+      if (debug_) {
         cout << ", DONE" << endl;
+      }
     }
   } while (bound >= best_score_ && shed_letters > 0);
   return (bound < best_score_);
@@ -167,7 +168,10 @@ void Breaker::SplitBucket(int level) {
   }
 
   for (unsigned int i=0; i < splits.size(); i++) {
-    assert(bb_->ParseBoard(orig_bd));
+    if (!bb_->ParseBoard(orig_bd)) {
+      fprintf(stderr, "bucket boggle couldn't parse '%s'\n", orig_bd);
+      exit(1);
+    }
     strcpy(bb_->Cell(cell), splits[i].c_str());
     AttackBoard(level + 1, 1+i, splits.size());
   }

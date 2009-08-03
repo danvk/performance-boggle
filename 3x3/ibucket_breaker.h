@@ -41,7 +41,7 @@ class Breaker {
   static uint64_t BoardId(const BdArray& bd, int num_classes);
 
   // Should progress information be displayed? Default is true.
-  void SetDisplayDebugOutput(bool display);
+  void SetDisplayDebugOutput(bool display) { debug_ = display; }
 
  private:
   // TODO(danvk): document these

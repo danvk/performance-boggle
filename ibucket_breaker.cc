@@ -5,6 +5,7 @@
 // slow, but will give better bounds and allow more flexible bucketing.
 
 #include <algorithm>
+#include <assert.h>
 #include <math.h>
 #include <sys/time.h>
 #include <string>

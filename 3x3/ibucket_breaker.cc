@@ -4,19 +4,19 @@
 // slow, but will give better bounds and allow more flexible bucketing.
 
 #include "3x3/ibucket_breaker.h"
-#include "gflags/gflags.h"
+
+#include <assert.h>
 #include <algorithm>
 #include <math.h>
 #include <string>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <vector>
-
-DEFINE_bool(print_breaking_stats, true,
-            "Print detailed progress info about breaking runs");
+#include "gflags/gflags.h"
 
 Breaker::Breaker(BucketBoggler* bb, int best_score)
-  : bb_(bb), best_score_(best_score) {
+    : bb_(bb), best_score_(best_score) {
+  debug_ = true;
 }
 
 // TODO(danvk): make these methods and stop passing around state.
@@ -106,20 +106,20 @@ bool Breaker::ShedToConvergence(int level) {
     bound = bb_->UpperBound();
     uint64_t reps = bb_->NumReps();
 
-    if (FLAGS_print_breaking_stats)
+    if (debug_)
       printf("%s  => %llu reps, bound=%d (%d)", std::string(level, ' ').c_str(),
              reps, bound, bb_->Details().max_nomark);
 
     if (bound >= best_score_) {
       shed_letters = bb_->ShedLetters(best_score_);
       uint64_t shed_reps = bb_->NumReps();
-      if (FLAGS_print_breaking_stats)
+      if (debug_)
         printf(", shed %d=%f: %s\n",
                shed_letters, 1.0*(reps-shed_reps)/reps, bb_->as_string());
       elim_ += (reps - shed_reps);
     } else {
       elim_ += reps;
-      if (FLAGS_print_breaking_stats)
+      if (debug_)
         printf(", DONE\n");
     }
   } while (bound >= best_score_ && shed_letters > 0);
@@ -133,7 +133,7 @@ void Breaker::SplitBucket(int level) {
   std::vector<std::string> splits;
   int cell = PickABucket(&expect, &splits, level);
   if (cell == -1) {
-    if (FLAGS_print_breaking_stats) {
+    if (debug_) {
       printf("Unable to break board: %s\n", bb_->as_string());
     }
     // should be a board at this point, so the spaces are unneeded.
@@ -146,13 +146,13 @@ void Breaker::SplitBucket(int level) {
     return;
   }
 
-  if (FLAGS_print_breaking_stats)
+  if (debug_)
     printf("split cell %d\n",  cell);
 
   strcpy(orig_bd, bb_->as_string());
   strcpy(orig_cell, bb_->Cell(cell));
 
-  if (FLAGS_print_breaking_stats)
+  if (debug_)
     printf("%sWill evaluate %lu more boards...\n",
            std::string(level, ' ').c_str(), splits.size());
 
@@ -166,7 +166,7 @@ void Breaker::SplitBucket(int level) {
 // Shed/Split until finished
 void Breaker::AttackBoard(int level, int num, int outof) {
   uint64_t reps = bb_->NumReps();
-  if (FLAGS_print_breaking_stats) {
+  if (debug_) {
     printf("(%2.2f%%)%s (%d;%d/%d) %s (%llu) est. %f s\n",
            100.0 * elim_ / orig_reps_,
            std::string(level, ' ').c_str(), level, num, outof, bb_->as_string(),
@@ -189,6 +189,7 @@ void Breaker::Break(BreakDetails* details) {
   details_->max_depth = 0;
   details_->num_reps = 0;
   details_->elapsed = 0.0;
+  details_->failures.clear();
 
   elim_ = 0;
   orig_reps_ = bb_->NumReps();
@@ -196,7 +197,7 @@ void Breaker::Break(BreakDetails* details) {
     AttackBoard();
   double b = secs();
   double a = details_->start_time;
-  if (FLAGS_print_breaking_stats)
+  if (debug_)
     printf("%llu reps in %.2f s @ depth %d = %f bds/sec:\n  %s\n",
             elim_, b-a, details_->max_depth, 1.0*elim_/(b-a), orig.c_str());
 

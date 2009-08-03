@@ -1,5 +1,5 @@
 CC = g++
-CPPFLAGS = -g -Wall -O3 -march=i686 -I.
+CPPFLAGS = -g -Wall -O3 -I.
 #CPPFLAGS = -g -Wall
 
 tests = perf_test trie_test boggler_test buckets_test multiboggle_test multiboggle_perftest ibuckets_test ibuckets_perftest 3x3/boggler_test

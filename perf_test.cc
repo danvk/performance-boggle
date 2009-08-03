@@ -3,6 +3,7 @@
 // machine is ~20kbds/sec, so this test takes just over one second to complete.
 const int reps = 10;
 
+#include <assert.h>
 #include <stdio.h>
 #include <sys/time.h>
 #include <map>

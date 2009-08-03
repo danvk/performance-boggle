@@ -40,6 +40,9 @@ class Breaker {
   typedef int BdArray[3][3];
   static uint64_t BoardId(const BdArray& bd, int num_classes);
 
+  // Should progress information be displayed? Default is true.
+  void SetDisplayDebugOutput(bool display);
+
  private:
   // TODO(danvk): document these
   int PickABucket(double* expected_kills,
@@ -53,6 +56,8 @@ class Breaker {
   int best_score_;
   uint64_t elim_;
   uint64_t orig_reps_;
+
+  bool debug_;
 };
 
 struct BreakDetails {

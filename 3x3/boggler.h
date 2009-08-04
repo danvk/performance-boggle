@@ -129,7 +129,7 @@ bool GenericBoggler<TrieT>::WordFinder::operator()(TrieT* t, int x, int y,
 			for (int i = 0; idx < len; i++) {
 				char buf[3];
 				int cell = boggler_->path[idx];
-				sprintf(buf, " %d%d", cell/3, cell%3);
+				sprintf(buf, " %d%d", cell%3, cell/3);
 				word += buf;
 				idx += 1;
 				if (word[i] == 'q') idx += 1;

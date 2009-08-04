@@ -40,7 +40,7 @@ class GenericBoggler : public BogglerBase {
   int Score(const char* lets);
 
   // Find the actual words on the board.
-  void FindWords(std::set<std::string>* out);
+  void FindWords(bool annotate, std::set<std::string>* out);
 
   // Set a cell on the current board. Must have 0 <= x, y < 4 and 0 <= c < 26.
   // These constraints are NOT checked.
@@ -60,6 +60,10 @@ class GenericBoggler : public BogglerBase {
   template<class Callback>
   void DoSearch(Callback& c);
 
+	// filled with indices. A 'q' results in an element of this array being
+	// skipped. Can be used to reconstruct the path used to find a word.
+	int path[18];
+
  private:
   template<class Callback>
   void DoDFS(int i, int len, TrieT* t, Callback& cb);
@@ -72,9 +76,11 @@ class GenericBoggler : public BogglerBase {
 
   struct WordFinder {
     bool operator()(TrieT* t, int x, int y, int len, int used);
+		bool annotate_;
     uintptr_t runs_;
     TrieT* base_;
     std::set<std::string>* words_;
+		GenericBoggler<TrieT>* boggler_;
   };
 
   TrieT* dict_;
@@ -117,7 +123,19 @@ bool GenericBoggler<TrieT>::WordFinder::operator()(TrieT* t, int x, int y,
                                                    int len, int used) {
   if (t->Mark() != runs_) {
     t->Mark(runs_);
-    words_->insert(TrieUtils<TrieT>::ReverseLookup(base_, t));
+		std::string word = TrieUtils<TrieT>::ReverseLookup(base_, t);
+		if (annotate_) {
+			int idx = 0;
+			for (int i = 0; idx < len; i++) {
+				char buf[3];
+				int cell = boggler_->path[idx];
+				sprintf(buf, " %d%d", cell/3, cell%3);
+				word += buf;
+				idx += 1;
+				if (word[i] == 'q') idx += 1;
+			}
+		}
+    words_->insert(word);
   }
   return true;
 }
@@ -136,12 +154,15 @@ int GenericBoggler<TrieT>::Score(unsigned int cutoff) {
 }
 
 template<class TrieT>
-void GenericBoggler<TrieT>::FindWords(std::set<std::string>* out) {
+void GenericBoggler<TrieT>::FindWords(bool annotate,
+		                                  std::set<std::string>* out) {
   runs_ += 1;
   WordFinder wf;
+	wf.annotate_ = annotate;
   wf.runs_ = runs_;
   wf.words_ = out;
   wf.base_ = dict_;
+	wf.boggler_ = this;
   DoSearch(wf);
 
   // Really should check for overflow here
@@ -177,6 +198,7 @@ template<class TrieT>
 template<class Callback>
 void GenericBoggler<TrieT>::DoDFS(int i, int len, TrieT* t, Callback& cb) {
   int c = bd_[i];
+	path[len] = i;
 
   used_ ^= (1 << i);
   len += (c==kQ ? 2 : 1);

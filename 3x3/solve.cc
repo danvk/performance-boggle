@@ -16,6 +16,7 @@ const char kUsage[] =
 
 DEFINE_string(dictionary, "words", "Dictionary file");
 DEFINE_bool(print_words, false, "Print the words that are on the board?");
+DEFINE_bool(include_path, false, "When printing found words, include the path");
 
 void HandleBoard(Boggler* b, const char* bd);
 
@@ -67,13 +68,14 @@ void HandleBoard(Boggler* b, const char* bd) {
     return;
   }
   int score = b->Score();
-  fprintf(stdout, "%s: %d\n", b->ToString().c_str(), score);
   if (FLAGS_print_words) {
     std::set<std::string> words;
-    b->FindWords(&words);
+    b->FindWords(FLAGS_include_path, &words);
     for (std::set<std::string>::const_iterator it = words.begin();
          it != words.end(); ++it) {
       fprintf(stdout, "%s\n", it->c_str());
     }
-  }
+  } else {
+		fprintf(stdout, "%s: %d\n", b->ToString().c_str(), score);
+	}
 }

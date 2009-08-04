@@ -2,7 +2,7 @@ CC = g++
 CPPFLAGS = -g -Wall -O3 -I.
 #CPPFLAGS = -g -Wall
 
-tests = perf_test trie_test boggler_test buckets_test multiboggle_test multiboggle_perftest ibuckets_test ibuckets_perftest 3x3/boggler_test
+tests = perf_test trie_test boggler_test buckets_test multiboggle_test multiboggle_perftest ibuckets_test ibuckets_perftest 3x3/boggler_test 3x3/ibuckets_test
 progs = $(tests) bucket_boggle bucket_descent ibucket_breaker ibucket_boggle solve neighbors random_boards anneal 3x3/solve 3x3/anneal 3x3/ibucket_boggle 3x3/ibucket_breaker
 all: $(progs)
 
@@ -14,6 +14,9 @@ mperf: multiboggle_perftest
 
 perf: perf_test
 	./perf_test
+
+test3: 3x3/ibuckets_test
+	./3x3/ibuckets_test
 
 BOGGLE=trie.o boggler.o
 MBOGGLE=multiboggle.o $(BOGGLE)
@@ -47,6 +50,7 @@ ibuckets_perftest: ibuckets_perftest.o $(IBUCKETS)
 3x3/anneal: 3x3/anneal.o $(BOGGLE3) mtrandom/mersenne.o $(GFLAGS)
 3x3/ibucket_boggle: 3x3/ibucket_boggle.o $(IBUCKETS3) $(GFLAGS)
 3x3/ibucket_breaker: 3x3/ibucket_breaker.o 3x3/ibucket_breaker_main.o mtrandom/mersenne.o $(IBUCKETS3) $(GFLAGS)
+3x3/ibuckets_test: 3x3/ibuckets_test.o $(IBUCKETS3)
 
 trie.o: trie.h trie.cc
 boggler.o: trie.h boggler.h boggler.cc

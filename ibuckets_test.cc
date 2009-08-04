@@ -80,7 +80,7 @@ void TestBound() {
   strcpy(bb.Cell(8), "a");
   score = bb.UpperBound();
   assertEq(bb.Details().sum_union, 2 + 4);  // all but "hiccup"
-  assertEq(bb.Details().max_nomark, 4 + 1);  // sea(t(s)) + tea
+  assertEq(bb.Details().max_nomark, 4 + 1);  // sea(t(s)) + sea (2 ways)
   assertEq(score, 5);
 
   // A worst-case for max_nomark

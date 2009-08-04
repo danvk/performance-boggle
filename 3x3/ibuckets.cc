@@ -87,6 +87,7 @@ int BucketBoggler::UpperBound(int bailout_score) {
 
     DoAllDescents(i, 0, dict_, &max_score, max_max_delta);
     details_.max_nomark += max_score;
+    // printf("%d (%s) %d\n -> %d\n", i, bd_[i], max_score, details_.max_nomark);
     for (int j = 0; j < num_letters_; j++)
       sum_max_delta[j] += max_max_delta[j];
     if (details_.max_nomark > bailout_score &&

@@ -77,10 +77,38 @@ void TestBound() {
   strcpy(bb.Cell(5), "st");
   strcpy(bb.Cell(8), "s");
 
-  printf("\n\nhere comes the bad one.... %s\n", bb.as_string());
   score = bb.UpperBound();
   assertEq(bb.Details().sum_union, 2 + 4);  // all but "hiccup"
   assertEq(bb.Details().max_nomark, 4);  // sea(t(s))
+  assertEq(score, 4);
+}
+
+void TestQ() {
+  SimpleTrie t;
+  t.AddWord("qa");    // qua = 1
+  t.AddWord("qas");   // qua = 1
+  t.AddWord("qest");  // quest = 2
+
+  BucketBoggler bb(&t);
+  int score;
+
+  // q a s
+  // a e z
+  // s t z
+  assert(bb.ParseBoard("q a s a e z s t z"));
+  score = bb.UpperBound();
+  assertEq(bb.Details().sum_union, 4);
+  assertEq(bb.Details().max_nomark, 6);  // (qa + qas)*2 + qest
+  assertEq(score, 4);
+
+  // Make sure "qu" gets parsed as "either 'qu' or 'u'"
+  // qu a s
+  // a e z
+  // s t z
+  assert(bb.ParseBoard("qu a s a e z s t z"));
+  score = bb.UpperBound();
+  assertEq(bb.Details().sum_union, 4);
+  assertEq(bb.Details().max_nomark, 6);  // (qa + qas)*2 + qest
   assertEq(score, 4);
 }
 
@@ -149,6 +177,7 @@ void CheckEqual(const char* file, int line, const char* expr, A a, B b) {
 int main(int argc, char** argv) {
   TestBoards();
   TestBound();
+  TestQ();
   TestRealDictionary();
 
   printf("%s: All tests passed!\n", argv[0]);

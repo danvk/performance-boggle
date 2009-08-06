@@ -26,6 +26,9 @@ DEFINE_int32(random_boards, 1,
 
 DEFINE_string(break_class, "", "Set to break a specific board class");
 
+DEFINE_bool(simple_breaking, false, "Don't use max_delta bounds.");
+
+
 void PrintDetails(BreakDetails& d);
 
 int main(int argc, char** argv) {
@@ -61,7 +64,7 @@ int main(int argc, char** argv) {
     }
 
     BreakDetails details;
-    breaker.Break(&details);
+    breaker.Break(&details, FLAGS_simple_breaking);
     PrintDetails(details);
     exit(0);
   }
@@ -73,7 +76,7 @@ int main(int argc, char** argv) {
               FLAGS_break_class.c_str());
       exit(1);
     }
-    breaker.Break(&details);
+    breaker.Break(&details, FLAGS_simple_breaking);
     PrintDetails(details);
     exit(0);
   }
@@ -89,11 +92,12 @@ int main(int argc, char** argv) {
     for (int i = 0; i < FLAGS_random_boards; i++) {
       uint64_t idx = r.IRandom(0, max_index - 1);
       breaker.FromId(classes, idx);
-      breaker.Break(&details);
+      breaker.Break(&details, FLAGS_simple_breaking);
       PrintDetails(details);
     }
   }
 }
+
 
 void PrintDetails(BreakDetails& d) {
   uint64_t unbroken = d.failures.size();

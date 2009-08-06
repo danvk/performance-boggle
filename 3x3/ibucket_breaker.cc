@@ -137,7 +137,7 @@ bool Breaker::ShedToConvergence(int level) {
   return (bound < best_score_);
 }
 
-void Breaker::SplitBucket(int level) {
+void Breaker::SplitBucket(int level, bool simple) {
   char orig_bd[27 * 9];
   char orig_cell[27];
   double expect;
@@ -173,7 +173,11 @@ void Breaker::SplitBucket(int level) {
       exit(1);
     }
     strcpy(bb_->Cell(cell), splits[i].c_str());
-    AttackBoard(level + 1, 1+i, splits.size());
+    if (simple) {
+      AttackBoard(level + 1, 1+i, splits.size());
+    } else {
+      SimpleAttackBoard(level + 1, 1+i, splits.size());
+    }
   }
 }
 
@@ -192,13 +196,32 @@ void Breaker::AttackBoard(int level, int num, int outof) {
   if (ShedToConvergence(level)) {
     return;
   } else {
-    SplitBucket(level);
+    SplitBucket(level, false);
+    //printf("expect to kill %lf boards by picking %d\n", expect, pick);
+  }
+}
+
+void Breaker::SimpleAttackBoard(int level, int num, int outof) {
+  uint64_t reps = bb_->NumReps();
+  if (debug_) {
+    float frac = 100.0 * elim_ / orig_reps_;
+    float est = (secs() - details_->start_time) * orig_reps_ / elim_;
+    cout << "(" << setprecision(5) << frac << "%)" << std::string(level, ' ')
+         << " (" << level << ";" << num << "/" << outof << ") "
+         << bb_->as_string() << " (" << reps << ") est. " << est << " s"
+         << endl;
+  }
+
+  if (bb_->SimpleUpperBound(best_score_) <= best_score_) {
+    return;
+  } else {
+    SplitBucket(level, true);
     //printf("expect to kill %lf boards by picking %d\n", expect, pick);
   }
 }
 
 
-void Breaker::Break(BreakDetails* details) {
+void Breaker::Break(BreakDetails* details, bool simple) {
   std::string orig = bb_->as_string();
   details_ = details;
   details_->max_depth = 0;
@@ -209,7 +232,11 @@ void Breaker::Break(BreakDetails* details) {
   elim_ = 0;
   orig_reps_ = bb_->NumReps();
   details_->start_time = secs();
+  if (simple) {
+    SimpleAttackBoard();
+  } else {
     AttackBoard();
+  }
   double b = secs();
   double a = details_->start_time;
   if (debug_) {
@@ -223,7 +250,6 @@ void Breaker::Break(BreakDetails* details) {
   details->elapsed = b - a;
   details->num_reps = orig_reps_;
 }
-
 
 
 // misc board parsing stuff

@@ -19,7 +19,7 @@ class Breaker {
   Breaker(BucketBoggler* bb, int best_score);
 
   // Attempt to break the board class.
-  void Break(BreakDetails* details);
+  void Break(BreakDetails* details, bool simple=false);
 
 
   // board is a space-separated list of letters on each cell, e.g.
@@ -48,8 +48,9 @@ class Breaker {
   int PickABucket(double* expected_kills,
                   std::vector<std::string>* splits, int level);
   bool ShedToConvergence(int level);
-  void SplitBucket(int level);
+  void SplitBucket(int level, bool simple);
   void AttackBoard(int level = 0, int num=1, int outof=1);
+  void SimpleAttackBoard(int level=0, int num=1, int outof=1);
 
   BucketBoggler* bb_;
   BreakDetails* details_;

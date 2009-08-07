@@ -3,6 +3,9 @@
 #include <limits.h>
 #include "trie.h"
 
+#ifndef PAPER_BUCKET_H
+#define PAPER_BUCKET_H
+
 namespace paper {
 
 class BucketBoggler {
@@ -68,3 +71,5 @@ class BucketBoggler {
 };
 
 }  // namespace paper
+
+#endif

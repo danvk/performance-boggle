@@ -48,12 +48,12 @@ class Breaker {
   int PickABucket(double* expected_kills,
                   std::vector<std::string>* splits, int level);
   bool ShedToConvergence(int level);
-  void SplitBucket(int level, bool simple);
+  void SplitBucket(int level);
   void AttackBoard(int level = 0, int num=1, int outof=1);
-  void SimpleAttackBoard(int level=0, int num=1, int outof=1);
 
   BucketBoggler* bb_;
   BreakDetails* details_;
+  bool simple_;
   int best_score_;
   uint64_t elim_;
   uint64_t orig_reps_;

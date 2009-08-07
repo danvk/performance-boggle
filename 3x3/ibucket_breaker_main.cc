@@ -27,6 +27,7 @@ DEFINE_int32(random_boards, 1,
 DEFINE_string(break_class, "", "Set to break a specific board class");
 
 DEFINE_bool(simple_breaking, false, "Don't use max_delta bounds.");
+DEFINE_bool(display_debug_output, true, "");
 
 
 void PrintDetails(BreakDetails& d);
@@ -38,6 +39,7 @@ int main(int argc, char** argv) {
 
   BucketBoggler b(t);
   Breaker breaker(&b, FLAGS_best_score);
+  breaker.SetDisplayDebugOutput(FLAGS_display_debug_output);
 
   std::vector<std::string> classes;
   int letter_count = 0;

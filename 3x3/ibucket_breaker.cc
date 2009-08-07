@@ -40,30 +40,55 @@ double DecreaseProb(int now, int then);
 int Breaker::PickABucket(double* expected_kills,
                          std::vector<std::string>* splits, int level) {
   int pick = -1;
-  *expected_kills = 1.0;
-  const BucketBoggler::ScoreDetails& d = bb_->Details();
-  int base_score = d.max_nomark;
-  uint64_t reps = bb_->NumReps();
+
   splits->clear();
-  for (int i=0; i<9; i++) {
-    double expectation = 0.0;
-    int choices = strlen(bb_->Cell(i));
-    for (int j = 0; j < choices; j++) {
-      int reduced_score = base_score - d.max_delta[i][bb_->Cell(i)[j] - 'a'];
-      expectation += (reps / choices)
-                      * DecreaseProb(reduced_score, best_score_);
+  if (!simple_) {
+    *expected_kills = 1.0;
+    const BucketBoggler::ScoreDetails& d = bb_->Details();
+    int base_score = d.max_nomark;
+    uint64_t reps = bb_->NumReps();
+    for (int i=0; i<9; i++) {
+      double expectation = 0.0;
+      int choices = strlen(bb_->Cell(i));
+      for (int j = 0; j < choices; j++) {
+        int reduced_score = base_score - d.max_delta[i][bb_->Cell(i)[j] - 'a'];
+        expectation += (reps / choices)
+                        * DecreaseProb(reduced_score, best_score_);
+      }
+      //printf("%2d: expect to kill %lf\n", i, expectation);
+      if (expectation > *expected_kills) {
+        *expected_kills = expectation;
+        pick = i;
+      }
     }
-    //printf("%2d: expect to kill %lf\n", i, expectation);
-    if (expectation > *expected_kills) {
-      *expected_kills = expectation;
-      pick = i;
+
+    if (pick == -1) {
+      pick = bb_->Details().most_constrained_cell;
     }
+  } else {
+    // There's no max_delta information, so the above approach makes no sense.
+    // Possible heuristics:
+    //   - always pick the center when possible or a non-corner
+    //   - pick the cell with the most letters
+    //   - pick the cell with the least letters > 1
+    int order[] = { 4, 5, 3, 1, 7, 0, 2, 6, 8 };
+    for (int i = 0; i < 9; i++) {
+      if (strlen(bb_->Cell(order[i])) > 1) {
+        pick = order[i];
+        break;
+      }
+    }
+    // int max_len = 1;
+    // for (int i = 0; i < 9; i++) {
+    //   int len = strlen(bb_->Cell(i));
+    //   if (len > max_len) {
+    //     max_len = len;
+    //     pick = i;
+    //   }
+    // }
   }
 
-  if (pick == -1) {
-    pick = bb_->Details().most_constrained_cell;
-  }
-
+  // TODO(danvk): analyze this in more detail; it has a big impact on speed.
   int len = strlen(bb_->Cell(pick));
   if (len == 26) {
     splits->push_back("aeiou");
@@ -137,7 +162,7 @@ bool Breaker::ShedToConvergence(int level) {
   return (bound < best_score_);
 }
 
-void Breaker::SplitBucket(int level, bool simple) {
+void Breaker::SplitBucket(int level) {
   char orig_bd[27 * 9];
   char orig_cell[27];
   double expect;
@@ -173,11 +198,7 @@ void Breaker::SplitBucket(int level, bool simple) {
       exit(1);
     }
     strcpy(bb_->Cell(cell), splits[i].c_str());
-    if (simple) {
-      AttackBoard(level + 1, 1+i, splits.size());
-    } else {
-      SimpleAttackBoard(level + 1, 1+i, splits.size());
-    }
+    AttackBoard(level + 1, 1+i, splits.size());
   }
 }
 
@@ -193,29 +214,14 @@ void Breaker::AttackBoard(int level, int num, int outof) {
          << endl;
   }
 
-  if (ShedToConvergence(level)) {
+  if (simple_ && bb_->SimpleUpperBound(best_score_) <= best_score_) {
+    elim_ += bb_->NumReps();
+    if (level > details_->max_depth) details_->max_depth = level;
+    return;
+  } else if (!simple_ && ShedToConvergence(level)) {
     return;
   } else {
-    SplitBucket(level, false);
-    //printf("expect to kill %lf boards by picking %d\n", expect, pick);
-  }
-}
-
-void Breaker::SimpleAttackBoard(int level, int num, int outof) {
-  uint64_t reps = bb_->NumReps();
-  if (debug_) {
-    float frac = 100.0 * elim_ / orig_reps_;
-    float est = (secs() - details_->start_time) * orig_reps_ / elim_;
-    cout << "(" << setprecision(5) << frac << "%)" << std::string(level, ' ')
-         << " (" << level << ";" << num << "/" << outof << ") "
-         << bb_->as_string() << " (" << reps << ") est. " << est << " s"
-         << endl;
-  }
-
-  if (bb_->SimpleUpperBound(best_score_) <= best_score_) {
-    return;
-  } else {
-    SplitBucket(level, true);
+    SplitBucket(level);
     //printf("expect to kill %lf boards by picking %d\n", expect, pick);
   }
 }
@@ -232,11 +238,8 @@ void Breaker::Break(BreakDetails* details, bool simple) {
   elim_ = 0;
   orig_reps_ = bb_->NumReps();
   details_->start_time = secs();
-  if (simple) {
-    SimpleAttackBoard();
-  } else {
+  simple_ = simple;
     AttackBoard();
-  }
   double b = secs();
   double a = details_->start_time;
   if (debug_) {

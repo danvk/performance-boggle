@@ -60,9 +60,9 @@ class GenericBoggler : public BogglerBase {
   template<class Callback>
   void DoSearch(Callback& c);
 
-	// filled with indices. A 'q' results in an element of this array being
-	// skipped. Can be used to reconstruct the path used to find a word.
-	int path[18];
+  // filled with indices. A 'q' results in an element of this array being
+  // skipped. Can be used to reconstruct the path used to find a word.
+  int path[18];
 
  private:
   template<class Callback>
@@ -80,7 +80,7 @@ class GenericBoggler : public BogglerBase {
     uintptr_t runs_;
     TrieT* base_;
     std::set<std::string>* words_;
-		GenericBoggler<TrieT>* boggler_;
+    GenericBoggler<TrieT>* boggler_;
   };
 
   TrieT* dict_;

@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <iostream>
 #include <math.h>
 #include <sys/types.h>
 #include <string>
@@ -15,18 +16,21 @@ DEFINE_int32(best_score, 545, "Best known score for a 3x3 boggle board");
 DEFINE_bool(filter_canonical, false, "Skip non-canonical boards");
 DEFINE_string(letter_classes, "aeiou sy bdfgjkmpvwxz chlnrt",
               "space-separated classes of letters");
+DEFINE_bool(break_all, false,
+            "Set to true to break all classes based on letter_classes. "
+            "Strongly recommended to set --filter_canonical in addition to "
+            "this flag. May take a while (i.e. a day)");
 
 DEFINE_int64(run_on_index, -1,
              "Set to a value to break a specific board.");
 
 DEFINE_int32(rand_seed, -1,
              "Random number seed (default is based on time and pid)");
-DEFINE_int32(random_boards, 1,
+DEFINE_int32(random_boards, 0,
              "Run on this many random board classes from the bucket space.");
 
 DEFINE_string(break_class, "", "Set to break a specific board class");
 
-DEFINE_bool(simple_breaking, false, "Don't use max_delta bounds.");
 DEFINE_bool(display_debug_output, true, "");
 
 
@@ -96,6 +100,31 @@ int main(int argc, char** argv) {
       breaker.FromId(classes, idx);
       breaker.Break(&details);
       PrintDetails(details);
+    }
+    exit(0);
+  }
+
+  if (FLAGS_break_all) {
+    uint64_t max_index = pow(classes.size(), 9);
+    std::vector<std::string> good_boards;
+    for (uint64_t idx = 0; idx < max_index; idx++) {
+      if (idx % 100 == 0) {
+        std::cout << idx << std::endl;
+      }
+      if (breaker.IsCanonical(classes.size(), idx)) {
+        BreakDetails details;
+        breaker.FromId(classes, idx);
+        breaker.Break(&details);
+        if (!details.failures.empty()) {
+          for (int i = 0; i < details.failures.size(); i++) {
+            std::cout << details.failures[i] << std::endl;
+            good_boards.push_back(details.failures[i]);
+          }
+        }
+      }
+    }
+    for (int i = 0; i < good_boards.size(); i++) {
+      std::cout << good_boards[i] << std::endl;
     }
   }
 }

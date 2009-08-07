@@ -3,13 +3,16 @@
 #include <algorithm>
 #include <iostream>
 #include <string.h>
-#include "boggler.h"
 using std::min;
 using std::max;
 
 // For debugging:
 static const bool PrintWords  = false;
 static const bool PrintDeltas = false;
+const int kWordScores[] =
+      //0, 1, 2, 3, 4, 5, 6, 7,  8,  9, 10
+      { 0, 0, 0, 1, 1, 2, 3, 5, 11, 11, 11 };
+
 
 // First the simple routines...
 
@@ -116,7 +119,7 @@ int BucketBoggler::SimpleDoDFS(int i, int len, SimpleTrie* t) {
   }
 
   if (t->IsWord()) {
-    int word_score = BogglerBase::kWordScores[len];
+    int word_score = kWordScores[len];
     score += word_score;
     if (PrintWords)
       printf(" +%2d (%d,%d) %s\n", word_score, i/3, i%3,

@@ -18,7 +18,7 @@ DEFINE_string(dictionary, "words", "Dictionary file");
 DEFINE_bool(print_words, false, "Print the words that are on the board?");
 DEFINE_bool(include_path, false, "When printing found words, include the path");
 
-void HandleBoard(Boggler* b, const char* bd);
+void HandleBoard(GenericBoggler<SimpleTrie>* b, const char* bd);
 
 int main(int argc, char** argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
@@ -30,8 +30,9 @@ int main(int argc, char** argv) {
   }
   fclose(f);
 
-  Trie* t = Boggler::DictionaryFromFile(FLAGS_dictionary.c_str());
-  Boggler b(t);
+  SimpleTrie* t = GenericBoggler<SimpleTrie>::DictionaryFromFile(
+    FLAGS_dictionary.c_str());
+  GenericBoggler<SimpleTrie> b(t);
 
   if (argc > 1) {
     for (int i = 1; i < argc; i++) {
@@ -45,7 +46,7 @@ int main(int argc, char** argv) {
   }
 }
 
-void HandleBoard(Boggler* b, const char* bd) {
+void HandleBoard(GenericBoggler<SimpleTrie>* b, const char* bd) {
   // Parse the board.
   if (strlen(bd) != 9) {
     fprintf(stderr, "Board strings must contain sixteen characters, got %zu\n",

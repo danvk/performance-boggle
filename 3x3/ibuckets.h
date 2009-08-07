@@ -31,16 +31,10 @@ class BucketBoggler {
   // BoundDetails(). Note that setting a bailout_score invalidates the
   // max_delta information in BoundDetails.
   class ScoreDetails;
-  int UpperBound(int bailout_score = INT_MAX);
   const ScoreDetails& Details() const { return details_; };  // See below.
 
   // Compute an upper bound without any of the costly statistics.
   int SimpleUpperBound(int bailout_score = INT_MAX);
-
-  // Removes any possible letter choices that would reduce the max_nomark upper
-  // bound below the cutoff. Returns a count of the number of shed letters.
-  // Returns -1 on any error (e.g. board has changed since last UpperBound).
-  int ShedLetters(int cutoff);
 
   // We should really write a paper on the exact meaning of these...
   struct ScoreDetails {
@@ -50,13 +44,7 @@ class BucketBoggler {
     // Approx number of points going through each cell.
     int point_counts[9];
 
-    // The amount by which the max_nomark bound would decrease if a cell were
-    // forced to take on a particular value. Values that weren't considered are
-    // assigned -1.
-    int max_delta[9][26];
-
     int most_constrained_cell;
-    int one_level_win;
 
     double elapsed_time;
   };
@@ -65,9 +53,6 @@ class BucketBoggler {
   void PrintChoices();
 
  private:
-  void DoAllDescents(int i, int len, SimpleTrie* t, int*, int*);
-  int DoDFS(int i, int len, SimpleTrie* t);
-  int BestBound();
   int SimpleDoAllDescents(int idx, int len, SimpleTrie* t);
   int SimpleDoDFS(int i, int len, SimpleTrie* t);
 

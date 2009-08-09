@@ -2,10 +2,7 @@
 #include "test.h"
 #include "trie.h"
 
-using paper::Breaker;
-using paper::BreakDetails;
-using paper::BucketBoggler;
-using paper::Trie;
+using namespace paper;
 
 void BasicTest() {
   Trie t;

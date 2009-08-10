@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
   printf("Board: %s\n", bb.as_string());
 
   double start = secs();
-  int score = bb.UpperBound();
+  int score = bb.SimpleUpperBound();
   double end = secs();
   printf("Score: %u\n", score);
   printf("%f secs elapsed\n", end - start);
@@ -55,14 +55,4 @@ int main(int argc, char** argv) {
   printf(" num_reps: %llu = %fB\n", bb.NumReps(), bb.NumReps() / 1.0e9);
   printf(" sum_union: %d\n", d.sum_union);
   printf(" max_nomark: %d\n", d.max_nomark);
-
-  int cell = d.most_constrained_cell;
-  printf(" max+one: %d (force cell %d)\n",
-         d.max_nomark - d.one_level_win, cell);
-  if (cell >= 0) {
-    char* c = bb.Cell(cell);
-    for (int i=0; c[i]; i++) {
-      printf("   %c: %d\n", c[i], d.max_nomark - d.max_delta[cell][c[i] - 'a']);
-    }
-  }
 }

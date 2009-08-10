@@ -106,17 +106,36 @@ int BucketBoggler::SimpleDoDFS(int i, int len, SimpleTrie* t) {
   int score = 0;
   used_ ^= (1 << i);
 
-  int x = i / 3, y = i % 3;
-  for (int dx = -1; dx <= 1; dx++) {
-    if (x + dx < 0 || x + dx > 2) continue;
-    for (int dy = -1; dy <= 1; dy++) {
-      if (y + dy < 0 || y + dy > 2) continue;
-      int idx = (x+dx) * 3 + y + dy;
-      if ((used_ & (1 << idx)) == 0) {
-        score += SimpleDoAllDescents(idx, len, t);
-      }
-    }
+// Using these macros avoids all kinds of branching.
+  int idx;
+#define HIT(x,y) do { idx = (x) * 3 + y; \
+                      if ((used_ & (1 << idx)) == 0) { \
+                        score += SimpleDoAllDescents(idx, len, t); \
+                      } \
+                    } while(0)
+#define HIT3x(x,y) HIT(x,y); HIT(x+1,y); HIT(x+2,y)
+#define HIT3y(x,y) HIT(x,y); HIT(x,y+1); HIT(x,y+2)
+#define HIT8(x,y) HIT3x(x-1,y-1); HIT(x-1,y); HIT(x+1,y); HIT3x(x-1,y+1)
+
+  // x*3 + y
+  switch (i) {
+    case 0*3 + 0: HIT(0, 1); HIT(1, 0); HIT(1, 1); break;
+    case 0*3 + 1: HIT(0, 0); HIT3y(1, 0); HIT(0, 2); break;
+    case 0*3 + 2: HIT(0, 1); HIT(1, 1); HIT(1, 2); break;
+
+    case 1*3 + 0: HIT(0, 0); HIT(2, 0); HIT3x(0, 1); break;
+    case 1*3 + 1: HIT8(1, 1); break;
+    case 1*3 + 2: HIT3x(0, 1); HIT(0, 2); HIT(2, 2); break;
+
+    case 2*3 + 0: HIT(1, 0); HIT(1, 1); HIT(2, 1); break;
+    case 2*3 + 1: HIT3y(1, 0); HIT(2, 0); HIT(2, 2); break;
+    case 2*3 + 2: HIT(1, 2); HIT(1, 1); HIT(2, 1); break;
   }
+
+#undef HIT
+#undef HIT3x
+#undef HIT3y
+#undef HIT8
 
   if (t->IsWord()) {
     int word_score = kWordScores[len];

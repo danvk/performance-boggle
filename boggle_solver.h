@@ -34,7 +34,6 @@ class BoggleSolver {
   // Returns the total number of boards that have evaluated.
   int NumBoards() { return num_boards_; }
 
-
   // Is this a valid boggle word? e.g. only has 'q' followed by 'u'.
   static bool IsBoggleWord(const char* word);
 

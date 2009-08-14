@@ -27,7 +27,9 @@
 #include "gflags/gflags.h"
 #include "mtrandom/randomc.h"
 #include "trie.h"
-#include "boggler.h"
+#include "boggle_solver.h"
+#include "3x3/boggler.h"
+#include "4x4/boggler.h"
 
 DEFINE_double(cool_t0, 100.0, "Initial temperature");
 DEFINE_double(cool_k, 0.05, "Cooling constant (controls pace of cooling)");
@@ -42,8 +44,9 @@ DEFINE_bool(print_transitions, true, "Print each acceptedtransition");
 DEFINE_bool(print_params, true, "Print parameters before beginning run");
 
 DEFINE_string(dictionary, "words", "Path to dictionary of words");
+DEFINE_int32(size, 44, "Type of boggle board to use (MN = MxN)");
 
-static const int NumSquares = 16;
+static int NumSquares = 16;
 
 typedef TRandomMersenne Random;
 
@@ -119,13 +122,23 @@ int main(int argc, char** argv) {
     printf(" dictionary: %s\n", FLAGS_dictionary.c_str());
   }
 
-  Trie* t = Boggler::DictionaryFromFile(FLAGS_dictionary.c_str());
-  Boggler b(t);
+  SimpleTrie* t = Boggler::DictionaryFromFile(FLAGS_dictionary.c_str());
+  BoggleSolver* solver = NULL;
+  switch (FLAGS_size) {
+    case 33: solver = new Boggler3(t); break;
+    case 44: solver = new Boggler(t); break;
+    default:
+      fprintf(stderr, "Unknown board size: %d\n", FLAGS_size);
+      exit(1);
+  }
+  NumSquares = solver->Width() * solver->Height();
 
   // TODO(danvk): sanity-check parameters
   Random r(FLAGS_rand_seed);
-  char bd[1 + NumSquares] = "";
-  char last[1 + NumSquares] = "abcdefghijklmnop";
+  char bd[1 + NumSquares];
+  bd[0] = bd[NumSquares] = '\0';
+  char last[1 + NumSquares];
+  last[NumSquares] = '\0';
   InitialBoard(last, &r);
   int last_accept = 0;
   int last_score = -1;
@@ -133,7 +146,11 @@ int main(int argc, char** argv) {
   for (int n = 0; n < last_accept + FLAGS_max_stall; n++) {
     memcpy(bd, last, sizeof(last));
     Mutate(bd, &r);
-    int score = b.Score(bd);
+    int score = solver->Score(bd);
+    if (score == -1) {
+      fprintf(stderr, "Board '%s' couldn't be scored. Quitting...\n", bd);
+      exit(1);
+    }
     if (FLAGS_print_scores)
       printf("%d\t%d\n", n, score);
     double T = Temperature(n);

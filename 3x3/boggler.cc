@@ -11,6 +11,7 @@ int Boggler3::Cell(int x, int y) const { return bd_[x*3 + y]; }
 
 int Boggler3::InternalScore() {
   used_ = 0;
+  score_ = 0;
   for (int i = 0; i < 9; i++) {
     int c = bd_[i];
     if (dict_->StartsWord(c))

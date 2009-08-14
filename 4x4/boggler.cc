@@ -8,6 +8,7 @@ int Boggler::Cell(int x, int y) const { return bd_[(x << 2) + y]; }
 
 int Boggler::InternalScore() {
   used_ = 0;
+  score_ = 0;
   for (int i = 0; i < 16; i++) {
     int c = bd_[i];
     if (dict_->StartsWord(c))

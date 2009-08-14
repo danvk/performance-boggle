@@ -26,7 +26,10 @@ BOGGLE3=trie.o 3x3/boggler.o
 IBUCKETS3=3x3/ibuckets.o $(BOGGLE3)
 GFLAGS=gflags/gflags.o gflags/gflags_reporting.o gflags/gflags_completions.o
 
-solve: solve.o boggle_solver.o trie.o 3x3/boggler.o 4x4/boggler.o $(GFLAGS)
+BOGGLE_ALL=trie.o boggle_solver.o 3x3/boggler.o 4x4/boggler.o
+
+solve: solve.o $(BOGGLE_ALL) $(GFLAGS)
+anneal: anneal.o $(BOGGLE_ALL) mtrandom/mersenne.o $(GFLAGS)
 
 
 #solve: solve.o $(BOGGLE) $(GFLAGS)

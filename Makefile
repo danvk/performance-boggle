@@ -31,11 +31,11 @@ BOGGLE_ALL=trie.o boggle_solver.o 3x3/boggler.o 4x4/boggler.o
 solve: solve.o $(BOGGLE_ALL) $(GFLAGS)
 anneal: anneal.o $(BOGGLE_ALL) mtrandom/mersenne.o $(GFLAGS)
 
+neighbors: neighbors.o $(GFLAGS)
 
 #solve: solve.o $(BOGGLE) $(GFLAGS)
 #anneal: anneal.o $(BOGGLE) mtrandom/mersenne.o $(GFLAGS)
 #normalize: normalize.o $(GFLAGS)
-#neighbors: neighbors.o $(GFLAGS)
 #random_boards: random_boards.o mtrandom/mersenne.o $(GFLAGS)
 #perf_test: perf_test.o $(BOGGLE)
 #trie_test: trie.o trie_test.o

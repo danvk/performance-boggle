@@ -1,0 +1,6 @@
+Code for speeding up boggle by reducing shared work between solving similar
+boards. Does some precomputation on boards w/ the top-left and bottom-right
+corners cut out to evaluate 26*26=676 boards by looking at only three.
+
+Abandoned because the speedup wasn't spectacular (the precomputation step
+is significantly more expensive than solving a board).

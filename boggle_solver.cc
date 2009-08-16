@@ -48,7 +48,7 @@ bool BoggleSolver::ParseBoard(const char* bd) {
       fprintf(stderr, "Found unexpected letter: '%c'\n", bd[i]);
       return false;
     }
-    SetCell(i/Width(), i%Width(), bd[i] - 'a');
+    SetCell(i%Width(), i/Width(), bd[i] - 'a');
   }
   return true;
 }
@@ -72,8 +72,8 @@ std::string BoggleSolver::ToString() const {
   std::string out;
   int w = Width();
   int h = Height();
-  for (int x=0; x<w; x++)
-    for (int y=0; y<h; y++)
+  for (int y=0; y<h; y++)
+    for (int x=0; x<w; x++)
       out += std::string(1, 'a' + Cell(x, y));
   return out;
 }

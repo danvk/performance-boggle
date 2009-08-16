@@ -21,7 +21,7 @@ BOGGLE3=trie.o 3x3/boggler.o
 IBUCKETS3=3x3/ibuckets.o $(BOGGLE3)
 GFLAGS=gflags/gflags.o gflags/gflags_reporting.o gflags/gflags_completions.o
 
-BOGGLE_ALL=trie.o boggle_solver.o 3x3/boggler.o 4x4/boggler.o
+BOGGLE_ALL=trie.o boggle_solver.o 3x3/boggler.o 4x4/boggler.o 3x4/boggler.o
 
 solve: solve.o $(BOGGLE_ALL) $(GFLAGS)
 anneal: anneal.o $(BOGGLE_ALL) mtrandom/mersenne.o $(GFLAGS)
@@ -46,4 +46,4 @@ random_boards: random_boards.o mtrandom/mersenne.o $(GFLAGS)
 trie.o: trie.h trie.cc
 
 clean:
-	rm -f -r *.o $(progs) $(tests) *.dSYM mtrandom/*.o gflags/*.o 3x3/*.o
+	rm -f -r *.o $(progs) $(tests) *.dSYM mtrandom/*.o gflags/*.o 3x3/*.o 3x4/*.o

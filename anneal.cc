@@ -29,6 +29,7 @@
 #include "trie.h"
 #include "boggle_solver.h"
 #include "3x3/boggler.h"
+#include "3x4/boggler.h"
 #include "4x4/boggler.h"
 
 DEFINE_double(cool_t0, 100.0, "Initial temperature");
@@ -126,6 +127,7 @@ int main(int argc, char** argv) {
   BoggleSolver* solver = NULL;
   switch (FLAGS_size) {
     case 33: solver = new Boggler3(t); break;
+    case 34: solver = new Boggler34(t); break;
     case 44: solver = new Boggler(t); break;
     default:
       fprintf(stderr, "Unknown board size: %d\n", FLAGS_size);

@@ -1,0 +1,4 @@
+Code that uses a hard-coded letter bucketing to achieve fast upper bounds.
+
+Abandoned because it lacked the flexibility of ibuckets. But it is significantly
+faster, so it might be used in conjunction with ibuckets.

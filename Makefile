@@ -18,7 +18,7 @@ test3: 3x3/ibuckets_test
 GFLAGS=gflags/gflags.o gflags/gflags_reporting.o gflags/gflags_completions.o
 
 BOGGLE_ALL=trie.o boggle_solver.o 3x3/boggler.o 4x4/boggler.o 3x4/boggler.o
-IBUCKETS_ALL=trie.o bucket_solver.o 3x3/ibuckets.o
+IBUCKETS_ALL=trie.o bucket_solver.o 3x3/ibuckets.o 4x4/ibuckets.o
 
 solve: solve.o $(BOGGLE_ALL) $(GFLAGS)
 anneal: anneal.o $(BOGGLE_ALL) mtrandom/mersenne.o $(GFLAGS)

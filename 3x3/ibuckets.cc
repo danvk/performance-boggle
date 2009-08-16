@@ -13,7 +13,6 @@ static const bool PrintDeltas = false;
 int BucketSolver3::Width() const { return 3; }
 int BucketSolver3::Height() const { return 3; }
 
-// Returns the possible characters in this cell. The result can be modified.
 char* BucketSolver3::MutableCell(int idx) { return bd_[idx]; }
 const char* BucketSolver3::Cell(int idx) const { return bd_[idx]; }
 

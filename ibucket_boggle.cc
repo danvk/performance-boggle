@@ -8,6 +8,7 @@
 #include "trie.h"
 #include "bucket_solver.h"
 #include "3x3/ibuckets.h"
+#include "4x4/ibuckets.h"
 #include "4x4/boggler.h"  // gross
 #include "gflags/gflags.h"
 using namespace std;
@@ -39,6 +40,7 @@ int main(int argc, char** argv) {
   BucketSolver* solver = NULL;
   switch (FLAGS_size) {
     case 33: solver = new BucketSolver3(t); break;
+    case 44: solver = new BucketSolver4(t); break;
     default:
       fprintf(stderr, "Unknown board size: %d\n", FLAGS_size);
       exit(1);

@@ -6,9 +6,14 @@
 
 #include <sys/time.h>
 #include "trie.h"
-#include "boggler.h"
-#include "ibuckets.h"
+#include "bucket_solver.h"
+#include "3x3/ibuckets.h"
+#include "4x4/boggler.h"  // gross
+#include "gflags/gflags.h"
 using namespace std;
+
+DEFINE_string(dictionary, "words", "Dictionary file");
+DEFINE_int32(size, 44, "Type of boggle board to use (MN = MxN)");
 
 double secs() {
   struct timeval t;
@@ -22,44 +27,44 @@ void Usage(char* prog) {
 }
 
 int main(int argc, char** argv) {
-  if (argc != 18) Usage(argv[0]);
+  google::ParseCommandLineFlags(&argc, &argv, true);
 
-  const char* dict_file = argv[1];
-  printf("loading words from %s\n", dict_file);
-  SimpleTrie* t = GenericBoggler<SimpleTrie>::DictionaryFromFile(dict_file);
-  BucketBoggler bb(t);
+  printf("loading words from %s\n", FLAGS_dictionary.c_str());
+  SimpleTrie* t = Boggler::DictionaryFromFile(FLAGS_dictionary.c_str());
+  if (!t) {
+    fprintf(stderr, "Couldn't load dictionary\n");
+    exit(1);
+  }
+
+  BucketSolver* solver = NULL;
+  switch (FLAGS_size) {
+    case 33: solver = new BucketSolver3(t); break;
+    default:
+      fprintf(stderr, "Unknown board size: %d\n", FLAGS_size);
+      exit(1);
+  }
 
   char buf[400] = "";
-  for (int i=2; i<argc; i++) {
-    //strcpy(bb.Cell(i-2), argv[i]);
+  for (int i=1; i<argc; i++) {
     strcat(buf, argv[i]);
     if (i < argc-1) strcat(buf, " ");
   }
-  if (!bb.ParseBoard(buf)) {
-    fprintf(stderr, "Couldn't parse %s\n", buf);
+  if (!solver->ParseBoard(buf)) {
+    fprintf(stderr, "Couldn't parse '%s'\n", buf);
     exit(1);
   }
-  printf("Board: %s\n", bb.as_string());
+  printf("Board: %s\n", solver->as_string());
 
   double start = secs();
-  int score = bb.UpperBound();
+  int score = solver->UpperBound();
   double end = secs();
   printf("Score: %u\n", score);
   printf("%f secs elapsed\n", end - start);
 
-  const BucketBoggler::ScoreDetails& d = bb.Details();
+  const BucketSolver::ScoreDetails& d = solver->Details();
+  uint64_t reps = solver->NumReps();
   printf("Details:\n");
-  printf(" num_reps: %llu = %fB\n", bb.NumReps(), bb.NumReps() / 1.0e9);
+  printf(" num_reps: %llu = %fB\n", reps, reps / 1.0e9);
   printf(" sum_union: %d\n", d.sum_union);
   printf(" max_nomark: %d\n", d.max_nomark);
-
-  int cell = d.most_constrained_cell;
-  printf(" max+one: %d (force cell %d)\n",
-         d.max_nomark - d.one_level_win, cell);
-  if (cell >= 0) {
-    char* c = bb.Cell(cell);
-    for (int i=0; c[i]; i++) {
-      printf("   %c: %d\n", c[i], d.max_nomark - d.max_delta[cell][c[i] - 'a']);
-    }
-  }
 }

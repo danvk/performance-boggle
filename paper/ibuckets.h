@@ -41,18 +41,8 @@ class BucketBoggler {
   // We should really write a paper on the exact meaning of these...
   struct ScoreDetails {
     int max_nomark;  // select the maximizing letter at each juncture.
-    int sum_union;  // all words that can be found, counting each once.
-
-    // Approx number of points going through each cell.
-    int point_counts[9];
-
-    int most_constrained_cell;
-
-    double elapsed_time;
+    int sum_union;   // all words that can be found, counting each once.
   };
-
-  // Print out a summary of the effects of each possible one-letter choice.
-  void PrintChoices();
 
  private:
   int DoAllDescents(int idx, int len, Trie* t);
@@ -63,11 +53,7 @@ class BucketBoggler {
   char bd_[9][27];  // null-terminated lists of possible letters
   int used_;
   ScoreDetails details_;
-  char board_rep_[27*9];
-
-  void SetCellIndices();
-  int cell_indices_[9];
-  int num_letters_;
+  char board_rep_[27*9];  // for as_string()
 };
 
 }  // namespace paper

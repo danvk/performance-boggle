@@ -8,7 +8,6 @@ using std::max;
 
 // For debugging:
 static const bool PrintWords  = false;
-static const bool PrintDeltas = false;
 const int kWordScores[] =
       //0, 1, 2, 3, 4, 5, 6, 7,  8,  9, 10
       { 0, 0, 0, 1, 1, 2, 3, 5, 11, 11, 11 };
@@ -60,17 +59,7 @@ const char* BucketBoggler::as_string() {
   return board_rep_;
 }
 
-void BucketBoggler::SetCellIndices() {
-  num_letters_ = 0;
-  for (int i=0; i<9; i++) {
-    cell_indices_[i] = num_letters_; 
-    num_letters_ += strlen(bd_[i]);
-  }
-}
-
 int BucketBoggler::UpperBound(int bailout_score) {
-  SetCellIndices();
-
   details_.max_nomark = 0;
   details_.sum_union = 0;
 

@@ -1,7 +1,7 @@
 // Given a partition of the 26 letters, break all possible classes of boards.
 //
 // For the partition {bdfgjvwxz, aeiou, lnrsy, chkmpt} with the Enable2K word
-// list and best_score=500, this took ~6 hours on a single machine.
+// list and best_score=500, this took ~4 hours on a single machine.
 
 #include <iostream>
 #include <math.h>

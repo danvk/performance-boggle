@@ -1,9 +1,9 @@
 CC = g++
-CPPFLAGS = -g -Wall -O3 -I.
+CPPFLAGS = -g -Wall -O3 -I. -Wno-sign-compare
 #CPPFLAGS = -g -Wall
 
-tests = perf_test trie_test boggler_test ibuckets_test ibuckets_perftest 3x3/boggler_test 3x3/ibuckets_test
-progs = $(tests) ibucket_breaker ibucket_boggle solve neighbors random_boards anneal 3x3/ibucket_boggle 3x3/ibucket_breaker
+tests = perf_test trie_test boggler_test ibuckets_test ibuckets_perftest 3x3/boggler_test 3x3/ibuckets_test board-utils_test
+progs = $(tests) ibucket_breaker ibucket_boggle solve neighbors random_boards anneal 3x3/ibucket_boggle 3x3/ibucket_breaker normalize
 all: $(progs)
 
 test: trie_test boggler_test
@@ -19,17 +19,20 @@ GFLAGS=gflags/gflags.o gflags/gflags_reporting.o gflags/gflags_completions.o
 
 BOGGLE_ALL=trie.o boggle_solver.o 3x3/boggler.o 4x4/boggler.o 3x4/boggler.o
 IBUCKETS_ALL=trie.o bucket_solver.o 3x3/ibuckets.o 4x4/ibuckets.o
+UTILS=board-utils.o
 
 solve: solve.o $(BOGGLE_ALL) $(GFLAGS)
 anneal: anneal.o $(BOGGLE_ALL) mtrandom/mersenne.o $(GFLAGS)
 
 neighbors: neighbors.o $(GFLAGS)
 random_boards: random_boards.o mtrandom/mersenne.o $(GFLAGS)
+normalize: normalize.o $(GFLAGS) $(UTILS)
 
-# Buckets
 ibucket_boggle: ibucket_boggle.o $(IBUCKETS_ALL) $(BOGGLE_ALL) $(GFLAGS)
 
-#normalize: normalize.o $(GFLAGS)
+# Tests
+board-utils_test: board-utils_test.o $(UTILS)
+
 #perf_test: perf_test.o $(BOGGLE)
 #trie_test: trie.o trie_test.o
 #boggler_test: boggler_test.o $(BOGGLE)

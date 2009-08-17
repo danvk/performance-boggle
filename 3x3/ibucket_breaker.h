@@ -3,8 +3,6 @@
 // Attempt to eliminate whole classes of 3x3 boggle boards by computing upper
 // bounds and recursively splitting cells into individual letters.
 
-// TODO(danvk): investigate the state of 'q'
-
 #ifndef BREAKER3_H
 #define BREAKER3_H
 

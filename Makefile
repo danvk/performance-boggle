@@ -18,7 +18,7 @@ test3: 3x3/ibuckets_test
 GFLAGS=gflags/gflags.o gflags/gflags_reporting.o gflags/gflags_completions.o
 
 BOGGLE_ALL=trie.o boggle_solver.o 3x3/boggler.o 4x4/boggler.o 3x4/boggler.o
-IBUCKETS_ALL=trie.o bucket_solver.o 3x3/ibuckets.o 4x4/ibuckets.o
+IBUCKETS_ALL=trie.o bucket_solver.o 3x3/ibuckets.o 4x4/ibuckets.o 3x4/ibuckets.o
 UTILS=board-utils.o
 BREAK=ibucket_breaker.o $(IBUCKETS_ALL) $(UTILS)
 RAND=mtrandom/mersenne.o
@@ -51,4 +51,4 @@ board-utils_test: board-utils_test.o $(UTILS)
 trie.o: trie.h trie.cc
 
 clean:
-	rm -f -r *.o $(progs) $(tests) *.dSYM mtrandom/*.o gflags/*.o 3x3/*.o 3x4/*.o
+	rm -f -r *.o $(progs) $(tests) *.dSYM mtrandom/*.o gflags/*.o 3x3/*.o 3x4/*.o 4x4/*.o

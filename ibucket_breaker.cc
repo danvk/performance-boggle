@@ -1,78 +1,85 @@
-// Copyright 2008 Google Inc. All Rights Reserved.
 // Author: danvk@google.com (Dan Vanderkam)
 //
 // Play bucketed boggle w/o a bucketed trie. This could potentially be really
 // slow, but will give better bounds and allow more flexible bucketing.
 
-#include <algorithm>
-#include <assert.h>
-#include <math.h>
-#include <sys/time.h>
-#include <string>
-#include <vector>
-#include "trie.h"
-#include "boggler.h"
-#include "ibuckets.h"
-const int NumBoards = 200;
-using std::string;
-using std::vector;
-using std::pair;
-using std::make_pair;
+#include "ibucket_breaker.h"
 
+#include <algorithm>
+#include <inttypes.h>
+#include <iostream>
+#include <iomanip>
+#include <math.h>
+#include <string>
+#include <string.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <vector>
+#include "gflags/gflags.h"
+#include "board-utils.h"
+
+using std::cout;
+using std::endl;
+using std::setprecision;
+
+Breaker::Breaker(BucketSolver* solver, int best_score)
+    : solver_(solver), best_score_(best_score) {
+  debug_ = true;
+  cells_ = solver_->Width() * solver_->Height();
+
+  // Construct a preferred order in which to break cells, starting with the
+  // middle and moving outwards.
+  BoardUtils bu(solver_->Width(), solver_->Height());
+  std::vector<std::pair<double, int> > distance;  // (distance from center, idx)
+  for (int x = 0; x < solver_->Width(); x++) {
+    for (int y = 0; y < solver_->Height(); y++) {
+      double dx = 1.0 * x - solver_->Width() / 2.0;
+      double dy = 1.0 * y - solver_->Height() / 2.0;
+      distance.push_back(std::make_pair(dx * dx + dy * dy, bu.Id(x, y)));
+    }
+  }
+  stable_sort(distance.begin(), distance.end());
+  for (int i = 0; i < distance.size(); i++) {
+    order_.push_back(distance[i].second);
+  }
+}
+
+// TODO(danvk): make these methods and stop passing around state.
 double secs() {
   struct timeval t;
   gettimeofday(&t, NULL);
   return t.tv_sec + t.tv_usec / 1000000.0;
 }
 
-// Generates a random bucketed board
-// aeiou sy bdfgjkmpvwxz chlnrt
-// aeio su fjkmvwxz dlnrt bcghpy
-void RandomBoard(char* buf) {
-  static char* classes[] = {"aeiou", "sy", "bdfgjkmpvwxz", "chlnrt"};
-  //static char* classes[] = {"aeio", "su", "fjkmvwxz", "dlnrt", "bcghpy"};
-  //static char* classes[] = {"aeiou", "chsy", "dlnrtbfgjkmpvwxz" };
-  //static char* classes[] = {"abcdef", "ghijkl", "mnoprs", "tuvwxyz"};
-
-  static int num_classes = sizeof(classes)/sizeof(*classes);
-
-  *buf = '\0';
-  for (int i=0; i<16; i++) {
-    strcat(buf, classes[random() % num_classes]);
-    if (i < 15) strcat(buf, " ");
-  }
-}
 
 // Use the board solving details to pick a bucket to kill and guess how many
 // board representatives this will kill.
-double DecreaseProb(int now, int then);
-int PickABucket(BucketBoggler& bb, double* expected_kills,
-                vector<string>* splits, int level) {
+int Breaker::PickABucket(std::vector<std::string>* splits, int level) {
   int pick = -1;
-  *expected_kills = 1.0;
-  const BucketBoggler::ScoreDetails& d = bb.Details();
-  int base_score = d.max_nomark;
-  uint64_t reps = bb.NumReps();
+
   splits->clear();
-  for (int i=0; i<16; i++) {
-    double expectation = 0.0;
-    int choices = strlen(bb.Cell(i));
-    for (int j = 0; j < choices; j++) {
-      int reduced_score = base_score - d.max_delta[i][bb.Cell(i)[j] - 'a'];
-      expectation += (reps / choices) * DecreaseProb(reduced_score, 3625);
-    }
-    //printf("%2d: expect to kill %lf\n", i, expectation);
-    if (expectation > *expected_kills) {
-      *expected_kills = expectation;
-      pick = i;
+  // Possible heuristics:
+  //   - always pick the center when possible or a non-corner
+  //   - pick the cell with the most letters
+  //   - pick the cell with the least letters > 1
+  // TODO(danvk): make this choice a parameter
+  for (int i = 0; i < cells_; i++) {
+    if (strlen(solver_->Cell(order_[i])) > 1) {
+      pick = order_[i];
+      break;
     }
   }
+  // int max_len = 1;
+  // for (int i = 0; i < 9; i++) {
+  //   int len = strlen(solver_->Cell(i));
+  //   if (len > max_len) {
+  //     max_len = len;
+  //     pick = i;
+  //   }
+  // }
 
-  if (pick == -1) {
-    pick = bb.Details().most_constrained_cell;
-  }
-
-  int len = strlen(bb.Cell(pick));
+  // TODO(danvk): analyze this in more detail; it has a big impact on speed.
+  int len = strlen(solver_->Cell(pick));
   if (len == 26) {
     splits->push_back("aeiou");
     splits->push_back("sy");
@@ -87,168 +94,113 @@ int PickABucket(BucketBoggler& bb, double* expected_kills,
         split += 1;
         splits->push_back("");
       }
-      splits->back() += string(1, bb.Cell(pick)[i]);
+      splits->back() += std::string(1, solver_->Cell(pick)[i]);
     }
   } else {
-    for (int j=0; bb.Cell(pick)[j]; j++) {
-      splits->push_back(string(1, bb.Cell(pick)[j]));
+    for (int j=0; solver_->Cell(pick)[j]; j++) {
+      splits->push_back(std::string(1, solver_->Cell(pick)[j]));
     }
   }
 
   int out_len = 0;
-  for (int i = 0; i < splits->size(); i++)
+  for (unsigned int i = 0; i < splits->size(); i++)
     out_len += splits->at(i).size();
   if (out_len != len) {
-    printf("%s (%d) => %d\n", bb.Cell(pick), len, out_len);
+    cout << solver_->Cell(pick) << " (" << len << ") => " << out_len << endl;
     exit(1);
   }
-  // split into a class of good and bad letters
-  //if (strlen(bb.Cell(pick)) <= 3 || level > 5) {
-  //  for (int j=0; bb.Cell(pick)[j]; j++) {
-  //    splits->push_back(string(1, bb.Cell(pick)[j]));
-  //  }
-  //} else {
-  //  vector<pair<int, char> > letters;
-  //  for (int j=0; bb.Cell(pick)[j]; j++) {
-  //    char c = bb.Cell(pick)[j];
-  //    letters.push_back(make_pair(d.max_delta[pick][c - 'a'], c));
-  //  }
-  //  sort(letters.begin(), letters.end());
-  //  int midway = letters.size() / 2;
-  //  splits->push_back(string());
-  //  splits->push_back(string());
-  //  for (int i = 0; i < letters.size(); i++) {
-  //    (*splits)[i < midway ? 0 : 1] += letters[i].second;
-  //  }
-  //}
 
-  //for (int j = 0; bb.Cell(pick)[j]; j++) {
-  //  int reduced_score = base_score - d.max_delta[pick][bb.Cell(pick)[j] - 'a'];
-  //  printf("%c => %d @ %f\n", bb.Cell(pick)[j], reduced_score,
-  //                            DecreaseProb(reduced_score, 3625));
-  //}
   return pick;
 }
 
-double DecreaseProb(int now, int then) {
-  static const double avg_decrease = 2.16;
-  static const double stddev_sqrt2 = 0.843 * sqrt(2.0);
-  if (now < then) return 1.0;
-  return 0.5 * (1.0 - erf((1.0 * now / then - avg_decrease) / stddev_sqrt2));
-}
-
-double start_time = 0.0;
-uint64_t orig_reps = 0;
-uint64_t elim = 0;
-int max_depth = 0;
-bool ShedToConvergence(BucketBoggler& bb, int level) { 
-  if (level > max_depth) max_depth = level;
-  int shed_letters=1;
-  int bound;
-  do {
-    bound = bb.UpperBound();
-    uint64_t reps = bb.NumReps();
-
-    printf("%s  => %llu reps, bound=%d (%d)", string(level, ' ').c_str(),
-           reps, bound, bb.Details().max_nomark);
-    if (bound >= 3625) {
-      shed_letters = bb.ShedLetters(3625);
-      uint64_t shed_reps = bb.NumReps();
-      printf(", shed %d=%f: %s\n",
-             shed_letters, 1.0*(reps-shed_reps)/reps, bb.as_string());
-      elim += (reps - shed_reps);
-    } else {
-      elim += reps;
-      printf(", DONE\n");
-    }
-  } while (bound >= 3625 && shed_letters > 0);
-  return (bound < 3625);
-}
-
-void AttackBoard(BucketBoggler&, int level = 0, int num=1, int outof=1);
-void SplitBucket(BucketBoggler& bb, int level) {
-  char orig_bd[27 * 16];
+void Breaker::SplitBucket(int level) {
+  char orig_bd[27 * cells_];
   char orig_cell[27];
-  double expect;
-  vector<string> splits;
-  int cell = PickABucket(bb, &expect, &splits, level);
-  printf("split cell %d\n",  cell);
+  std::vector<std::string> splits;
+  int cell = PickABucket(&splits, level);
+  if (cell == -1) {
+    // should be a board at this point, so the spaces are unneeded.
+    std::string bd;
+    const char* bd_class = solver_->as_string();
+    for (; *bd_class; bd_class++) {
+      if (*bd_class != ' ') bd.append(1, *bd_class);
+    }
+    details_->failures.push_back(bd);
+    if (debug_) {
+      cout << "Unable to break board: " << bd << endl;
+    }
+    return;
+  }
 
-  strcpy(orig_bd, bb.as_string());
-  strcpy(orig_cell, bb.Cell(cell));
+  if (debug_) cout << "split cell " << cell << endl;
 
-  printf("%sWill evaluate %d more boards...\n",
-         string(level, ' ').c_str(), splits.size());
+  strcpy(orig_bd, solver_->as_string());
+  strcpy(orig_cell, solver_->Cell(cell));
 
-  for (int i=0; i < splits.size(); i++) {
-    assert(bb.ParseBoard(orig_bd));
-    strcpy(bb.Cell(cell), splits[i].c_str());
-    AttackBoard(bb, level + 1, 1+i, splits.size());
+  if (debug_) {
+    cout << std::string(level, ' ') << "Will evaluate "
+         << splits.size() << " more boards..." << endl;
+  }
+
+  for (unsigned int i=0; i < splits.size(); i++) {
+    if (!solver_->ParseBoard(orig_bd)) {
+      fprintf(stderr, "bucket boggle couldn't parse '%s'\n", orig_bd);
+      exit(1);
+    }
+    strcpy(solver_->MutableCell(cell), splits[i].c_str());
+    AttackBoard(level + 1, 1+i, splits.size());
   }
 }
 
 // Shed/Split until finished
-void AttackBoard(BucketBoggler& bb, int level, int num, int outof) {
-  uint64_t reps = bb.NumReps();
-  printf("(%2.2f%%)%s (%d;%d/%d) %s (%llu) est. %f s\n", 100.0*elim/orig_reps,
-         string(level, ' ').c_str(), level, num, outof, bb.as_string(), reps,
-         (secs() - start_time) * orig_reps / elim);
-  fflush(stdout);
-  if (ShedToConvergence(bb, level)) {
+void Breaker::AttackBoard(int level, int num, int outof) {
+  uint64_t reps = solver_->NumReps();
+  if (debug_) {
+    float frac = 100.0 * elim_ / orig_reps_;
+    float est = (secs() - details_->start_time) * orig_reps_ / elim_;
+    cout << "(" << setprecision(5) << frac << "%)" << std::string(level, ' ')
+         << " (" << level << ";" << num << "/" << outof << ") "
+         << solver_->as_string() << " (" << reps << ") est. " << est << " s"
+         << endl;
+  }
+
+  if (solver_->UpperBound(best_score_) <= best_score_) {
+    elim_ += solver_->NumReps();
+    if (level > details_->max_depth) details_->max_depth = level;
     return;
   } else {
-    SplitBucket(bb, level);
-    //printf("expect to kill %lf boards by picking %d\n", expect, pick);
+    SplitBucket(level);
   }
 }
 
-int main(int argc, char** argv) {
-  const char* dict_file = argv[1];
-  printf("loading words from %s\n", dict_file);
-  SimpleTrie* t = GenericBoggler<SimpleTrie>::DictionaryFromFile("words");
-  BucketBoggler bb(t);
 
-  if (argc == 3) {
-    srandom(atoi(argv[2]));
-  } else if (argc == 2) {
-    time_t t = time(NULL);
-    srandom(t);
-    printf("Using seed %d\n", t);
-  } else if (argc > 3) {
-    if (argc != 18) {
-      fprintf(stderr, "Need %d args, got %d\n", 18, argc);
-      exit(1);
-    }
+void Breaker::Break(BreakDetails* details) {
+  std::string orig = solver_->as_string();
+  details_ = details;
+  details_->max_depth = 0;
+  details_->num_reps = 0;
+  details_->elapsed = 0.0;
+  details_->failures.clear();
+
+  elim_ = 0;
+  orig_reps_ = solver_->NumReps();
+  details_->start_time = secs();
+    AttackBoard();
+  double b = secs();
+  double a = details_->start_time;
+  if (debug_) {
+    float pace = 1.0*elim_/(b-a);
+    cout << elim_ << " reps in " << setprecision(3) << (b - a) << " s "
+         << "@ depth " << details_->max_depth
+         << " = " << pace << " bds/sec:\n  " << orig
+         << endl;
   }
 
-  double start = secs();
-  uint64_t total_elim = 0;
-  for (int bds=0; bds < NumBoards; bds++) {
-    char bd[16 * 26] = "";
-    if (argc == 18) {
-      if (bds > 0) break;
-      for (int i=2; i<argc; i++) {
-        strcat(bd, argv[i]);
-        if (i < argc-1) strcat(bd, " ");
-      }
-    } else {
-      RandomBoard(bd);
-    }
+  details->elapsed = b - a;
+  details->num_reps = orig_reps_;
+}
 
-    assert(bb.ParseBoard(bd));
-    elim = max_depth = 0;
-    orig_reps = bb.NumReps();
-    start_time = secs();
-      AttackBoard(bb);
-    double b = secs();
-    double a = start_time;
-    printf("%llu reps in %.2f s @ depth %d = %f bds/sec:\n  %s\n",
-            elim, b-a, max_depth, 1.0*elim/(b-a), bd);
-    total_elim += elim;
-  }
-  double end = secs();
 
-  printf("elapsed: %fs = %f sec/break\n", end-start, 1.0*(end-start)/NumBoards);
-  printf("eliminated %llu boards = %f B bds/sec equivalent\n",
-         total_elim, 1.0 * total_elim / (end-start) / 1e9);
+bool Breaker::ParseBoard(const std::string& board) {
+  return solver_->ParseBoard(board.c_str());
 }

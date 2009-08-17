@@ -39,11 +39,12 @@ class BoardUtils {
   std::string FlipLeftRight(const std::string& bd);
   std::string Rotate90CW(const std::string& bd);
 
- private:
+  // Conversions between indices and coordinates.
   int Id(int x, int y);
   int X(int id);
   int Y(int id);
 
+ private:
   int w_;
   int h_;
   int num_classes_;

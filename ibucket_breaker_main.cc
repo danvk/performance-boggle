@@ -4,14 +4,18 @@
 #include <sys/types.h>
 #include <string>
 #include <vector>
-#include "3x3/boggler.h"
-#include "3x3/ibucket_breaker.h"
+#include "3x3/ibuckets.h"
+#include "4x4/ibuckets.h"
+#include "4x4/boggler.h"  // gross
+#include "board-utils.h"
+#include "ibucket_breaker.h"
 #include "gflags/gflags.h"
 #include "mtrandom/randomc.h"
 #include "trie.h"
 
+DEFINE_int32(size, 44, "Type of boggle board to use (MN = MxN)");
 DEFINE_string(dictionary, "words", "Dictionary file");
-DEFINE_int32(best_score, 545, "Best known score for a 3x3 boggle board");
+DEFINE_int32(best_score, 3625, "Best known score for a 3x3 boggle board");
 
 DEFINE_bool(filter_canonical, false, "Skip non-canonical boards");
 DEFINE_string(letter_classes, "aeiou sy bdfgjkmpvwxz chlnrt",
@@ -34,18 +38,26 @@ DEFINE_string(break_class, "", "Set to break a specific board class");
 DEFINE_bool(display_debug_output, true, "");
 
 
+using namespace std;
 void PrintDetails(BreakDetails& d);
 
 int main(int argc, char** argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
-  SimpleTrie* t = GenericBoggler<SimpleTrie>::DictionaryFromFile(
-    FLAGS_dictionary.c_str());
+  SimpleTrie* t = Boggler::DictionaryFromFile(FLAGS_dictionary.c_str());
 
-  BucketBoggler b(t);
-  Breaker breaker(&b, FLAGS_best_score);
+  BucketSolver* solver = NULL;
+  switch (FLAGS_size) {
+    case 33: solver = new BucketSolver3(t); break;
+    case 44: solver = new BucketSolver4(t); break;
+    default:
+      fprintf(stderr, "Unknown board size: %d\n", FLAGS_size);
+      exit(1);
+  }
+
+  Breaker breaker(solver, FLAGS_best_score);
   breaker.SetDisplayDebugOutput(FLAGS_display_debug_output);
 
-  std::vector<std::string> classes;
+  vector<string> classes;
   int letter_count = 0;
   classes.push_back("");
   for (unsigned int i = 0; i < FLAGS_letter_classes.size(); i++) {
@@ -53,19 +65,23 @@ int main(int argc, char** argv) {
     if (c == ' ') {
       classes.push_back("");
     } else {
-      (*classes.rbegin()) += std::string(1, c);
+      (*classes.rbegin()) += string(1, c);
       letter_count += 1;
     }
   }
-  // assert(letter_count == 26);
+  BoardUtils bu(solver->Width(), solver->Height());
+  bu.UsePartition(classes);
 
   if (FLAGS_run_on_index >= 0) {
-    if (FLAGS_run_on_index > pow(classes.size(), 9)) {
-      fprintf(stderr, "board index is too large.\n");
+    string encoded_board = bu.BoardFromId(FLAGS_run_on_index);
+    string board = bu.ExpandPartitions(encoded_board);
+    if (encoded_board.empty() || board.empty()) {
+      cerr << "Couldn't parse board id " << FLAGS_run_on_index << endl;
       exit(1);
     }
-    if (!breaker.FromId(classes, FLAGS_run_on_index)) {
-      fprintf(stderr, "Couldn't parse board id %lld\n", FLAGS_run_on_index);
+
+    if (!breaker.ParseBoard(board)) {
+      fprintf(stderr, "Couldn't parse board %s", board.c_str());
       exit(1);
     }
 
@@ -94,10 +110,17 @@ int main(int argc, char** argv) {
     TRandomMersenne r(FLAGS_rand_seed);
 
     BreakDetails details;
-    uint64_t max_index = pow(classes.size(), 9);
+    int num_cells = solver->Width() * solver->Height();
+    uint64_t max_index = pow(classes.size(), num_cells);
     for (int i = 0; i < FLAGS_random_boards; i++) {
       uint64_t idx = r.IRandom(0, max_index - 1);
-      breaker.FromId(classes, idx);
+      string encoded_board = bu.BoardFromId(idx);
+      string board = bu.ExpandPartitions(encoded_board);
+      if (board.empty() || encoded_board.empty()) {
+        cerr << "Ugh: " << idx << endl;
+        exit(1);
+      }
+      breaker.ParseBoard(board);
       breaker.Break(&details);
       PrintDetails(details);
     }
@@ -105,26 +128,29 @@ int main(int argc, char** argv) {
   }
 
   if (FLAGS_break_all) {
-    uint64_t max_index = pow(classes.size(), 9);
-    std::vector<std::string> good_boards;
+    int num_cells = solver->Width() * solver->Height();
+    uint64_t max_index = pow(classes.size(), num_cells);
+    vector<string> good_boards;
     for (uint64_t idx = 0; idx < max_index; idx++) {
       if (idx % 100 == 0) {
-        std::cout << idx << std::endl;
+        cout << idx << endl;
       }
-      if (breaker.IsCanonical(classes.size(), idx)) {
+      string encoded_board = bu.BoardFromId(idx);
+      if (bu.IsCanonical(encoded_board)) {
+        string board = bu.ExpandPartitions(encoded_board);
         BreakDetails details;
-        breaker.FromId(classes, idx);
+        breaker.ParseBoard(board);
         breaker.Break(&details);
         if (!details.failures.empty()) {
           for (int i = 0; i < details.failures.size(); i++) {
-            std::cout << details.failures[i] << std::endl;
+            cout << details.failures[i] << endl;
             good_boards.push_back(details.failures[i]);
           }
         }
       }
     }
     for (int i = 0; i < good_boards.size(); i++) {
-      std::cout << good_boards[i] << std::endl;
+      cout << good_boards[i] << endl;
     }
   }
 }

@@ -20,15 +20,18 @@ GFLAGS=gflags/gflags.o gflags/gflags_reporting.o gflags/gflags_completions.o
 BOGGLE_ALL=trie.o boggle_solver.o 3x3/boggler.o 4x4/boggler.o 3x4/boggler.o
 IBUCKETS_ALL=trie.o bucket_solver.o 3x3/ibuckets.o 4x4/ibuckets.o
 UTILS=board-utils.o
+BREAK=ibucket_breaker.o $(IBUCKETS_ALL) $(UTILS)
+RAND=mtrandom/mersenne.o
 
 solve: solve.o $(BOGGLE_ALL) $(GFLAGS)
-anneal: anneal.o $(BOGGLE_ALL) mtrandom/mersenne.o $(GFLAGS)
+anneal: anneal.o $(BOGGLE_ALL) $(RAND) $(GFLAGS)
 
 neighbors: neighbors.o $(GFLAGS)
-random_boards: random_boards.o mtrandom/mersenne.o $(GFLAGS)
+random_boards: random_boards.o $(RAND) $(GFLAGS)
 normalize: normalize.o $(GFLAGS) $(UTILS)
 
 ibucket_boggle: ibucket_boggle.o $(IBUCKETS_ALL) $(BOGGLE_ALL) $(GFLAGS)
+ibucket_breaker: ibucket_breaker_main.o $(BREAK) $(GFLAGS) $(BOGGLE_ALL) $(UTILS) $(RAND)
 
 # Tests
 board-utils_test: board-utils_test.o $(UTILS)

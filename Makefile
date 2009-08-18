@@ -44,7 +44,6 @@ trie_test: trie.o trie_test.o
 
 4x4/perf_test: 4x4/perf_test.o $(BOGGLE_ALL)
 4x4/ibuckets_test: 4x4/ibuckets_test.o $(IBUCKETS_ALL)
-#ibuckets_perftest: ibuckets_perftest.o $(IBUCKETS)
 
 trie.o: trie.h trie.cc
 

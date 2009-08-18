@@ -1,15 +1,9 @@
-#include <assert.h>
 #include <stdio.h>
 #include <unistd.h>
 
+#include "test.h"
 #include "trie.h"
 #include "boggler.h"
-
-void CheckInt(int expected, int actual) {
-  if (expected == actual) return;
-  fprintf(stderr, "Expected %d, got %d\n", expected, actual);
-  assert(false);
-}
 
 int main(int argc, char** argv) {
   SimpleTrie t;
@@ -20,23 +14,22 @@ int main(int argc, char** argv) {
   t.AddWord("teak");
   t.AddWord("fiver");
   t.AddWord("sixers");
-  Trie* pt = Trie::CompactTrie(t);
 
   // try out the various interfaces
-  Boggler b(pt);
-  CheckInt(0, b.NumBoards());
-  CheckInt(4, b.Score("texxaxxxyyyyzzzz"));
-  CheckInt(5, b.Score("texxakxxyyyyzzzz"));
-  CheckInt(2, b.NumBoards());
+  Boggler b(&t);
+  CHECK_EQ(0, b.NumBoards());
+  CHECK_EQ(4, b.Score("texxaxxxyyyyzzzz"));
+  CHECK_EQ(5, b.Score("texxakxxyyyyzzzz"));
+  CHECK_EQ(2, b.NumBoards());
 
   b.SetCell(0, 0, 'f' - 'a');
   b.SetCell(1, 0, 'i' - 'a');
   b.SetCell(2, 0, 'v' - 'a');
   b.SetCell(3, 0, 'e' - 'a');
   b.SetCell(3, 1, 'r' - 'a');
-  CheckInt(2, b.Score());
-  CheckInt(3, b.Score("sxxxixxxexxxrsxx"));
-  CheckInt(4, b.NumBoards());
+  CHECK_EQ(2, b.Score());
+  CHECK_EQ(3, b.Score("sxxxixxxexxxrsxx"));
+  CHECK_EQ(4, b.NumBoards());
 
   printf("%s: All tests passed!\n", argv[0]);
 }

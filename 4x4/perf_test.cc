@@ -7,10 +7,11 @@ const int reps = 10;
 #include <stdio.h>
 #include <sys/time.h>
 #include <map>
+#include "test.h"
 #include "trie.h"
-#include "boggler.h"
+#include "4x4/boggler.h"
 
-void TrieStats(const Trie& pt);
+void TrieStats(const SimpleTrie& pt);
 double secs();
 
 int main(int argc, char** argv) {
@@ -22,14 +23,11 @@ int main(int argc, char** argv) {
   assert(Boggler::BogglifyWord(tmp));
   assert(0 == strcmp(tmp, "eqalizes"));
 
-  SimpleTrie* st = GenericBoggler<SimpleTrie>::DictionaryFromFile(dict_file);
-  Trie* pt = Trie::CompactTrie(*st);
-  assert(pt != NULL);
-  assert( pt->IsWord("eqalizer"));
-  assert(!pt->IsWord("equalizer"));
-  TrieStats(*pt);
+  SimpleTrie* st = Boggler::DictionaryFromFile(dict_file);
+  CHECK(st != NULL);
+  TrieStats(*st);
 
-  Boggler b(pt);
+  Boggler b(st);
   unsigned int prime = (1 << 20) - 3;
   unsigned int total_score = 0;
   unsigned int hash;
@@ -41,12 +39,12 @@ int main(int argc, char** argv) {
     hash = 1234;
     for (int i=0; i<bds; ++i) {
       b.ParseBoard(bases[i]);
-      for (int x1 = 0; x1 < 4; x1++) {
-	for (int x2 = 0; x2 < 4; x2++) {
+      for (int y1 = 0; y1 < 4; y1++) {
+	for (int y2 = 0; y2 < 4; y2++) {
 	  for (int c1 = 0; c1 < 26; c1++) {
-	    b.SetCell(x1, 1, c1);
+	    b.SetCell(1, y1, c1);
 	    for (int c2 = 0; c2 < 26; c2++) {
-	      b.SetCell(x2, 2, c2);
+	      b.SetCell(2, y2, c2);
 	      int score = b.Score();
 	      hash *= (123 + score);
 	      hash = hash % prime;
@@ -68,6 +66,7 @@ int main(int argc, char** argv) {
   printf("Score hash: 0x%08X\n", hash);
   printf("Evaluated %d boards in %lf seconds = %lf bds/sec\n",
       b.NumBoards(), (end-start), b.NumBoards()/(end-start));
+  printf("%s: All tests passed!\n", argv[0]);
   return 0;
 }
 
@@ -86,54 +85,36 @@ size_t NumNodes(const Trie& pt) {
   return r;
 }
 
-size_t Childless(const Trie& pt) {
-  size_t r = pt.NumChildren() == 0 ? 1 : 0;
+size_t Childless(const SimpleTrie& pt) {
+  size_t r = 0;
+  bool children = false;
   for (int i = 0; i < 26; i++) {
-    if (pt.StartsWord(i))
+    if (pt.StartsWord(i)) {
+      children = true;
       r += Childless(*pt.Descend(i));
+    }
   }
-  return r;
+  return r + (children ? 1 : 0);
 }
 
-size_t WordsWithChildren(const Trie& pt) {
-  size_t r = (pt.NumChildren() > 0 && pt.IsWord()) ? 1 : 0;
+size_t WordsWithChildren(const SimpleTrie& pt) {
+  bool children = false;
+  size_t r = 0;
   for (int i = 0; i < 26; i++) {
-    if (pt.StartsWord(i))
+    if (pt.StartsWord(i)) {
+      children = true;
       r += WordsWithChildren(*pt.Descend(i));
+    }
   }
+  if (children && pt.IsWord()) r += 1;
   return r;
 }
 
-void Gaps(const Trie* pt, std::map<int, int>* gaps) {
-  for (int i = 0; i < 26; i++) {
-    if (!pt->StartsWord(i)) continue;
-    (*gaps)[(char*)pt->Descend(i) - (char*)pt] += 1;
-    Gaps(pt->Descend(i), gaps);
-  }
-}
-
-size_t EvenNodes(const Trie& pt) {
-  int nc = pt.NumChildren();
-  size_t r = (nc > 0 && nc % 2 ==0) ? nc : 0;
-  for (int i = 0; i < 26; i++) {
-    if (pt.StartsWord(i))
-      r += EvenNodes(*pt.Descend(i));
-  }
-  return r;
-}
-
-void TrieStats(const Trie& pt) {
-  printf("Loaded %zd words into %zd-node Trie (%zd bytes)\n",
-	  TrieUtils<Trie>::Size(&pt),
-          TrieUtils<Trie>::NumNodes(&pt), pt.MemoryUsage());
+void TrieStats(const SimpleTrie& pt) {
+  printf("Loaded %zd words into %zd-node Trie\n",
+	  TrieUtils<SimpleTrie>::Size(&pt),
+          TrieUtils<SimpleTrie>::NumNodes(&pt));
 
   printf("Trie contains %zd childless nodes, %zd words w/ children\n", 
 	 Childless(pt), WordsWithChildren(pt));
-
-  printf("Trie contains %lu paired nodes.\n", EvenNodes(pt));
-
-  std::map<int, int> gaps; Gaps(&pt, &gaps);
-  std::map<int, int>::const_reverse_iterator i = gaps.rbegin();
-  for (int j=0; j<20; j+=1, i++)
-    printf("%5d: %d\n", i->first, i->second);
 }

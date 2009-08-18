@@ -2,15 +2,19 @@ CC = g++
 CPPFLAGS = -g -Wall -O3 -I. -Wno-sign-compare
 #CPPFLAGS = -g -Wall -I. -Wno-sign-compare
 
-tests = trie_test 3x3/boggler_test 3x3/ibuckets_test 4x4/boggler_test board-utils_test
+tests = trie_test 3x3/boggler_test 3x3/ibuckets_test 4x4/boggler_test board-utils_test 4x4/perf_test
 progs = $(tests) ibucket_breaker ibucket_boggle solve neighbors random_boards anneal normalize
 all: $(progs)
 
 test: $(tests)
-	./trie_test && ./4x4/boggler_test && ./3x3/boggler_test && ./3x3/ibuckets_test && ./board-utils_test
+	./trie_test && \
+        ./4x4/boggler_test && \
+        ./3x3/boggler_test && \
+        ./3x3/ibuckets_test && \
+        ./board-utils_test
 
-perf: perf_test
-	./perf_test
+perf: 4x4/perf_test
+	./4x4/perf_test
 
 GFLAGS=gflags/gflags.o gflags/gflags_reporting.o gflags/gflags_completions.o
 
@@ -37,7 +41,7 @@ trie_test: trie.o trie_test.o
 4x4/boggler_test: 4x4/boggler_test.o $(BOGGLE_ALL)
 3x3/ibuckets_test: 3x3/ibuckets_test.o $(IBUCKETS_ALL)
 
-#perf_test: perf_test.o $(BOGGLE)
+4x4/perf_test: 4x4/perf_test.o $(BOGGLE_ALL)
 #ibucket_breaker: ibucket_breaker.o $(IBUCKETS)
 #ibuckets_test: ibuckets_test.o $(IBUCKETS)
 #ibuckets_perftest: ibuckets_perftest.o $(IBUCKETS)

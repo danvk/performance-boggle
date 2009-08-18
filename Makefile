@@ -1,6 +1,6 @@
 CC = g++
 CPPFLAGS = -g -Wall -O3 -I. -Wno-sign-compare
-#CPPFLAGS = -g -Wall
+#CPPFLAGS = -g -Wall -I. -Wno-sign-compare
 
 tests = perf_test trie_test boggler_test ibuckets_test ibuckets_perftest 3x3/boggler_test 3x3/ibuckets_test board-utils_test
 progs = $(tests) ibucket_breaker ibucket_boggle solve neighbors random_boards anneal 3x3/ibucket_boggle 3x3/ibucket_breaker normalize

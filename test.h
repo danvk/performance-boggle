@@ -4,6 +4,7 @@
 #define PAPER_TEST_H__
 
 #include <iostream>
+#include <string>
 #include <vector>
 
 #define CHECK_EQ(a, b) CheckEqual(__FILE__, __LINE__, #a, (a), (b));
@@ -19,6 +20,11 @@ void CheckEqual(const char* file, int line, const char* expr, A a, B b) {
               << ", expected " << a << std::endl;
     exit(1);
   }
+}
+
+void CheckEqual(const char* file, int line, const char* expr,
+                const char* a, const char* b) {
+  CheckEqual(file, line, expr, std::string(a), std::string(b));
 }
 
 template<typename A>

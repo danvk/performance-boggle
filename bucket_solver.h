@@ -52,6 +52,8 @@ class BucketSolver {
   };
 
   virtual BreakingNode* Tree() { return NULL; }
+  char CharAtIndex(int idx);
+  int NumPossibilities();
 
  protected:
   virtual void InternalUpperBound(int bailout_score) = 0;

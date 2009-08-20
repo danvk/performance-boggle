@@ -1,6 +1,7 @@
 #ifndef BREAKING_TREE_H
 #define BREAKING_TREE_H
 
+#include <map>
 #include <vector>
 
 class BreakingNode {
@@ -13,7 +14,9 @@ class BreakingNode {
   }
 
   // This may not be strictly necessary to keep around, weird as it seems.
-  char letter;  // set to '\0' for a 'choice' node or 'R' for root.
+  int letter;
+  static const int CHOICE_NODE = -1;
+  static const int ROOT_NODE = -2;
 
   // These might be the various options on a cell or the various directions.
   std::vector<BreakingNode*> children;
@@ -29,8 +32,13 @@ class BreakingNode {
   std::vector<bool> child_possibilities;
 
   int RecomputeScore();
-
   BreakingNode* Prune();
+  void ChoiceStats(std::map<int, int>* counts);
+
+  int NodeCount();
+  int ScoreWithForce(int force);
+
+  void AttachPossibilities(int num_possibilities);
 };
 
 #endif

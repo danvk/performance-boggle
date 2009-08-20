@@ -29,7 +29,7 @@ void Usage(char* prog) {
   fprintf(stderr, "Usage: %s <dict> <class1> ... <class16>\n", prog);
   exit(1);
 }
-void PrintTree(BreakingNode* node, int indentation = 0);
+void PrintTree(BucketSolver* solver, BreakingNode* node, int indentation = 0);
 
 int main(int argc, char** argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
@@ -75,25 +75,46 @@ int main(int argc, char** argv) {
   printf(" sum_union: %d\n", d.sum_union);
   printf(" max_nomark: %d\n", d.max_nomark);
 
-  printf("tree: %08x\n", solver->Tree());
   if (solver->Tree()) {
-    // PrintTree(solver->Tree()->Prune());
+    // PrintTree(solver, solver->Tree()->Prune());
+    double a = secs();
     cout << "Recomputed score: " << solver->Tree()->RecomputeScore() << endl;
+    double b = secs();
+    cout << " elapsed: " << (b - a) << endl;
+    solver->Tree()->Prune();
+    a = secs();
+    cout << "Pruned: " << solver->Tree()->RecomputeScore() << endl;
+    b = secs();
+    cout << " elapsed: " << (b - a) << endl;
+
+    cout << "Nodes: " << solver->Tree()->NodeCount() << endl;
+    // std::map<int, int> counts;
+    // solver->Tree()->ChoiceStats(&counts);
+    // for (std::map<int, int>::const_iterator it = counts.begin();
+    //      it != counts.end(); ++it) {
+    //   cout << "  " << it->first << ": " << it->second << endl;
+    // }
+    solver->Tree()->AttachPossibilities(solver->NumPossibilities());
+
+    for (int i = 0; i < solver->NumPossibilities(); i++) {
+      cout << "Force " << i << " (" << solver->CharAtIndex(i) << "): "
+           << solver->Tree()->ScoreWithForce(i) << endl;
+    }
   }
 }
 
-void PrintTree(BreakingNode* root, int indentation) {
-  if (root->letter == 'R') {
+void PrintTree(BucketSolver* solver, BreakingNode* root, int indentation) {
+  if (root->letter == BreakingNode::ROOT_NODE) {
     cout << "ROOT (" << root->bound << ")" << endl;
-  } else if (root->letter == '\0') {
+  } else if (root->letter == BreakingNode::CHOICE_NODE) {
     cout << string(indentation, ' ') << "CHOICE " << root->bound << endl;
   } else {
-    cout << string(indentation, ' ') << root->letter
+    cout << string(indentation, ' ') << solver->CharAtIndex(root->letter)
          << " (" << root->points << "/" << root->bound << ")" << endl;
   }
 
   for (int i = 0; i < root->children.size(); i++) {
     if (root->children[i])
-      PrintTree(root->children[i], indentation + 1);
+      PrintTree(solver, root->children[i], indentation + 1);
   }
 }

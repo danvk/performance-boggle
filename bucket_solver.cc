@@ -67,3 +67,24 @@ int BucketSolver::UpperBound(int bailout_score) {
   InternalUpperBound(bailout_score);
   return min(details_.max_nomark, details_.sum_union);
 }
+
+char BucketSolver::CharAtIndex(int idx) {
+  int offset = 0;
+  for (int i = 0; i < Width() * Height(); i++) {
+    int len = strlen(Cell(i));
+    if (offset + len > idx) {
+      return Cell(i)[idx - offset];
+    } else {
+      offset += len;
+    }
+  }
+  return '?';
+}
+
+int BucketSolver::NumPossibilities() {
+  int len = 0;
+  for (int i = 0; i < Width() * Height(); i++) {
+    len += strlen(Cell(i));
+  }
+  return len;
+}

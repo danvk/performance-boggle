@@ -53,6 +53,9 @@ struct BreakDetails {
   double start_time;
   double elapsed;
 
+  int sum_wins;
+  int max_wins;
+
   std::vector<std::string> failures;
 };
 

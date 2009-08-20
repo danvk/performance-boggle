@@ -4,8 +4,10 @@
 // Play bucketed boggle w/o a bucketed trie. This could potentially be really
 // slow, but will give better bounds and allow more flexible bucketing.
 
+#include <iostream>
 #include <sys/time.h>
 #include "trie.h"
+#include "breaking_tree.h"
 #include "bucket_solver.h"
 #include "3x3/ibuckets.h"
 #include "3x4/ibuckets.h"
@@ -27,6 +29,7 @@ void Usage(char* prog) {
   fprintf(stderr, "Usage: %s <dict> <class1> ... <class16>\n", prog);
   exit(1);
 }
+void PrintTree(BreakingNode* node, int indentation = 0);
 
 int main(int argc, char** argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
@@ -71,4 +74,26 @@ int main(int argc, char** argv) {
   printf(" num_reps: %llu = %fB\n", reps, reps / 1.0e9);
   printf(" sum_union: %d\n", d.sum_union);
   printf(" max_nomark: %d\n", d.max_nomark);
+
+  printf("tree: %08x\n", solver->Tree());
+  if (solver->Tree()) {
+    // PrintTree(solver->Tree()->Prune());
+    cout << "Recomputed score: " << solver->Tree()->RecomputeScore() << endl;
+  }
+}
+
+void PrintTree(BreakingNode* root, int indentation) {
+  if (root->letter == 'R') {
+    cout << "ROOT (" << root->bound << ")" << endl;
+  } else if (root->letter == '\0') {
+    cout << string(indentation, ' ') << "CHOICE " << root->bound << endl;
+  } else {
+    cout << string(indentation, ' ') << root->letter
+         << " (" << root->points << "/" << root->bound << ")" << endl;
+  }
+
+  for (int i = 0; i < root->children.size(); i++) {
+    if (root->children[i])
+      PrintTree(root->children[i], indentation + 1);
+  }
 }

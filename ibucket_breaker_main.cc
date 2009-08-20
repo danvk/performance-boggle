@@ -41,6 +41,7 @@ DEFINE_bool(display_debug_output, true, "");
 
 using namespace std;
 void PrintDetails(BreakDetails& d);
+uint64_t Rand64(uint64_t max, TRandomMersenne& rand);
 
 int main(int argc, char** argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
@@ -115,13 +116,14 @@ int main(int argc, char** argv) {
     int num_cells = solver->Width() * solver->Height();
     uint64_t max_index = pow(classes.size(), num_cells);
     for (int i = 0; i < FLAGS_random_boards; i++) {
-      uint64_t idx = r.IRandom(0, max_index - 1);
+      uint64_t idx = Rand64(max_index - 1, r);
       string encoded_board = bu.BoardFromId(idx);
       string board = bu.ExpandPartitions(encoded_board);
       if (board.empty() || encoded_board.empty()) {
         cerr << "Ugh: " << idx << endl;
         exit(1);
       }
+      cout << idx << ": " << board << endl;
       breaker.ParseBoard(board);
       breaker.Break(&details);
       PrintDetails(details);
@@ -160,14 +162,26 @@ int main(int argc, char** argv) {
 
 void PrintDetails(BreakDetails& d) {
   uint64_t unbroken = d.failures.size();
-  printf("Broke %llu/%llu @ depth %d in %.4fs = %fbds/sec\n",
+  printf("Broke %llu/%llu @ depth %d in %.4fs = %fbds/sec (%d/%d sum/max)\n",
          (d.num_reps - unbroken), d.num_reps, d.max_depth,
-         d.elapsed, d.num_reps / d.elapsed);
+         d.elapsed, d.num_reps / d.elapsed,
+         d.sum_wins, d.max_wins);
 
   if (!d.failures.empty()) {
     printf("Unbroken boards:\n");
     for (unsigned int i = 0; i < d.failures.size(); i++) {
       printf("%s\n", d.failures[i].c_str());
     }
+  }
+}
+
+uint64_t Rand64(uint64_t max, TRandomMersenne& rand) {
+  if (max < (uint64_t)numeric_limits<int>::max()) {
+    return rand.IRandom(0, max);
+  } else {
+    uint64_t r;
+    r = uint64_t((max + 1) * rand.Random());
+    if (r > max) r = max;
+    return r;
   }
 }

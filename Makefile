@@ -32,7 +32,7 @@ neighbors: neighbors.o $(GFLAGS)
 random_boards: random_boards.o $(RAND) $(GFLAGS)
 normalize: normalize.o $(GFLAGS) $(UTILS)
 
-ibucket_boggle: ibucket_boggle.o $(IBUCKETS_ALL) $(BOGGLE_ALL) $(GFLAGS)
+ibucket_boggle: ibucket_boggle.o $(IBUCKETS_ALL) $(BOGGLE_ALL) $(GFLAGS) breaking_tree.o
 ibucket_breaker: ibucket_breaker_main.o $(BREAK) $(GFLAGS) $(BOGGLE_ALL) $(UTILS) $(RAND)
 
 # Tests

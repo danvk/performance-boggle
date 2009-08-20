@@ -166,6 +166,11 @@ void Breaker::AttackBoard(int level, int num, int outof) {
 
   if (solver_->UpperBound(best_score_) <= best_score_) {
     elim_ += solver_->NumReps();
+    if (solver_->Details().max_nomark <= solver_->Details().sum_union) {
+      details_->max_wins += 1;
+    } else {
+      details_->sum_wins += 1;
+    }
     if (level > details_->max_depth) details_->max_depth = level;
     return;
   } else {
@@ -181,6 +186,8 @@ void Breaker::Break(BreakDetails* details) {
   details_->num_reps = 0;
   details_->elapsed = 0.0;
   details_->failures.clear();
+  details_->sum_wins = 0;
+  details_->max_wins = 0;
 
   elim_ = 0;
   orig_reps_ = solver_->NumReps();

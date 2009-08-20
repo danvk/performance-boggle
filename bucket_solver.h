@@ -7,6 +7,7 @@
 #include <string>
 #include <sys/types.h>
 #include <stdint.h>
+class BreakingNode;
 class SimpleTrie;
 
 class BucketSolver {
@@ -49,6 +50,8 @@ class BucketSolver {
     int max_nomark;  // select the maximizing letter at each juncture.
     int sum_union;   // all words that can be found, counting each once.
   };
+
+  virtual BreakingNode* Tree() { return NULL; }
 
  protected:
   virtual void InternalUpperBound(int bailout_score) = 0;

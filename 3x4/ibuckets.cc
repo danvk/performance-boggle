@@ -19,21 +19,28 @@ BreakingNode* BucketSolver34::Tree() { return root_; }
 
 void BucketSolver34::InternalUpperBound(int bailout_score) {
   do_dfs_ = do_all_descents_ = 0;
-  root_ = new BreakingNode;
-  root_->letter = BreakingNode::ROOT_NODE;
-  root_->children.resize(12);
-  root_->points = 0;
+  if (build_tree_) {
+    root_ = new BreakingNode;
+    root_->letter = BreakingNode::ROOT_NODE;
+    root_->children.resize(12);
+    root_->points = 0;
+  }
   for (int i = 0; i < 12; i++) {
-    root_->children[i] = new BreakingNode;
-    root_->children[i]->letter = BreakingNode::CHOICE_NODE;
-    int max_score = DoAllDescents(i, 0, dict_, root_->children[i]);
+    int max_score;
+    if (build_tree_) {
+      root_->children[i] = new BreakingNode;
+      root_->children[i]->letter = BreakingNode::CHOICE_NODE;
+      max_score = DoAllDescents(i, 0, dict_, root_->children[i]);
+    } else {
+      max_score = DoAllDescents(i, 0, dict_, NULL);
+    }
     details_.max_nomark += max_score;
     if (details_.max_nomark > bailout_score &&
         details_.sum_union > bailout_score) {
       break;
     }
   }
-  root_->bound = details_.max_nomark;
+  if (build_tree_) root_->bound = details_.max_nomark;
 
   // std::cout << "DoDFS calls: " << do_dfs_ << endl;
   // std::cout << "DoAllDescents calls: " << do_all_descents_ << endl;
@@ -42,23 +49,32 @@ void BucketSolver34::InternalUpperBound(int bailout_score) {
 int BucketSolver34::DoAllDescents(int idx, int len, SimpleTrie* t, BreakingNode* node) {
   do_all_descents_ += 1;
   int max_score = 0;
-  int num_children = strlen(bd_[idx]);
-  node->children.resize(num_children);
-  // TODO(danvk): optimize this away
   int offset = 0;
-  for (int j = 0; j < idx; j++) offset += strlen(bd_[j]);
+  if (build_tree_) {
+    int num_children = strlen(bd_[idx]);
+    node->children.resize(num_children);
+    // TODO(danvk): optimize this away
+    for (int j = 0; j < idx; j++) offset += strlen(bd_[j]);
+  }
 
   for (int j = 0; bd_[idx][j]; j++) {
     int cc = bd_[idx][j] - 'a';
     if (t->StartsWord(cc)) {
-      node->children[j] = new BreakingNode;
-      node->children[j]->letter = offset + j;
-      int tscore = DoDFS(idx, len + (cc==kQ ? 2 : 1), t->Descend(cc), node->children[j]);
+      int tscore;
+      if (build_tree_) {
+        node->children[j] = new BreakingNode;
+        node->children[j]->letter = offset + j;
+        tscore = DoDFS(idx, len + (cc==kQ ? 2 : 1), t->Descend(cc), node->children[j]);
+      } else {
+        tscore = DoDFS(idx, len + (cc==kQ ? 2 : 1), t->Descend(cc), NULL);
+      }
       max_score = max(tscore, max_score);
     }
   }
-  node->bound = max_score;
-  node->points = 0;
+  if (build_tree_) {
+    node->bound = max_score;
+    node->points = 0;
+  }
   return max_score;
 }
 
@@ -77,21 +93,27 @@ int BucketSolver34::DoDFS(int i, int len, SimpleTrie* t, BreakingNode* node) {
       if (y + dy < 0 || y + dy > 2) continue;
       int idx = (y + dy) * 4 + x + dx;
       if ((used_ & (1 << idx)) == 0) {
-        BreakingNode* neighbor = new BreakingNode;
-        neighbor->letter = BreakingNode::CHOICE_NODE;
-        score += DoAllDescents(idx, len, t, neighbor);
-        neighbors[num_neighbors++] = neighbor;
+        if (build_tree_) {
+          BreakingNode* neighbor = new BreakingNode;
+          neighbor->letter = BreakingNode::CHOICE_NODE;
+          score += DoAllDescents(idx, len, t, neighbor);
+          neighbors[num_neighbors++] = neighbor;
+        } else {
+          score += DoAllDescents(idx, len, t, NULL);
+        }
       }
     }
   }
 
-  node->children.resize(num_neighbors);
-  for (int j = 0; j < num_neighbors; j++) node->children[j] = neighbors[j];
+  if (build_tree_) {
+    node->children.resize(num_neighbors);
+    for (int j = 0; j < num_neighbors; j++) node->children[j] = neighbors[j];
+    node->points = 0;
+  }
 
-  node->points = 0;
   if (t->IsWord()) {
     int word_score = kWordScores[len];
-    node->points = word_score;
+    if (build_tree_) node->points = word_score;
     score += word_score;
     if (PrintWords)
       printf(" +%2d (%d,%d) %s\n", word_score, i%4, i/4,
@@ -104,6 +126,6 @@ int BucketSolver34::DoDFS(int i, int len, SimpleTrie* t, BreakingNode* node) {
   }
 
   used_ ^= (1 << i);
-  node->bound = score;
+  if (build_tree_) node->bound = score;
   return score;
 }

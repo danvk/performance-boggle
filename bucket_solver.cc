@@ -7,7 +7,8 @@ const int BucketSolver::kWordScores[] =
       //0, 1, 2, 3, 4, 5, 6, 7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17
       { 0, 0, 0, 1, 1, 2, 3, 5, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11 };
 
-BucketSolver::BucketSolver(SimpleTrie* t) : dict_(t), runs_(0) {}
+BucketSolver::BucketSolver(SimpleTrie* t)
+    : dict_(t), runs_(0), build_tree_(false) {}
 BucketSolver::~BucketSolver() {}
 
 bool BucketSolver::ParseBoard(const char* bd) {

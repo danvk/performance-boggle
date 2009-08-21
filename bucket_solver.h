@@ -54,6 +54,7 @@ class BucketSolver {
   virtual BreakingNode* Tree() { return NULL; }
   char CharAtIndex(int idx);
   int NumPossibilities();
+  void SetBuildTree(bool t) { build_tree_ = t; }
 
  protected:
   virtual void InternalUpperBound(int bailout_score) = 0;
@@ -63,6 +64,8 @@ class BucketSolver {
   int used_;
   uintptr_t runs_;
   ScoreDetails details_;
+
+  bool build_tree_;
 
  private:
   char board_rep_[27*9];  // for as_string()

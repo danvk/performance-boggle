@@ -4,7 +4,7 @@
 #include <map>
 
 int BreakingNode::RecomputeScore() {
-  if (IsChoice()) {
+  if (letter == CHOICE_NODE) {
     // Choose the max amongst each possibility.
     int max_score = 0;
     for (int i = 0; i < children.size(); i++) {
@@ -49,9 +49,7 @@ BreakingNode* BreakingNode::Prune() {
 }
 
 void BreakingNode::ChoiceStats(std::map<int, int>* counts) {
-  if (!IsChoice() && letter != ROOT_NODE) {
-    (*counts)[letter] += 1;
-  }
+  (*counts)[letter] += 1;
   for (int i = 0; i < children.size(); i++) {
     if (children[i]) children[i]->ChoiceStats(counts);
   }
@@ -79,14 +77,14 @@ void BreakingNode::AttachPossibilities(int num_possibilities) {
   }
 }
 
-int BreakingNode::ScoreWithForce(int force) {
+int BreakingNode::ScoreWithForce(int force_cell, int force_letter) {
   // TODO(danvk): use child_possibilities for a big speedup
-  if (IsChoice()) {
+  if (letter == CHOICE_NODE) {
     // If the force is on this cell, we must take it.
-    if ((force >> 5) == -1 - letter) {
+    if (cell == force_cell) {
       for (int i = 0; i < children.size(); i++) {
-        if (children[i] && children[i]->letter == force) {
-          return children[i]->ScoreWithForce(force);
+        if (children[i] && children[i]->letter == force_letter) {
+          return children[i]->ScoreWithForce(force_cell, force_letter);
         }
       }
       return 0;
@@ -94,8 +92,10 @@ int BreakingNode::ScoreWithForce(int force) {
       // otherwise, just like normal scoring.
       int max_score = 0;
       for (int i = 0; i < children.size(); i++) {
-        if (children[i])
-          max_score = std::max(max_score, children[i]->ScoreWithForce(force));
+        if (children[i]) {
+          int score = children[i]->ScoreWithForce(force_cell, force_letter);
+          max_score = std::max(max_score, score);
+        }
       }
       return max_score;
     }
@@ -103,7 +103,7 @@ int BreakingNode::ScoreWithForce(int force) {
     int score = points;
     for (int i = 0; i < children.size(); i++) {
       if (children[i])
-        score += children[i]->ScoreWithForce(force);
+        score += children[i]->ScoreWithForce(force_cell, force_letter);
     }
     return score;
   }

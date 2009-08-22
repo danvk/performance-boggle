@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
   printf("Force (%s): %d (%f secs)\n", solver->as_string(), score, end - start);
 
   start = secs();
-  score = tree->ScoreWithForce(0);
+  score = tree->ScoreWithForce(0, 0);
   end = secs();
   printf("Force on tree: %d (%f secs)\n", score, end - start);
 }
@@ -106,10 +106,10 @@ void ParseBoard(BucketSolver* solver, int argc, char** argv) {
 void PrintTree(BucketSolver* solver, BreakingNode* root, int indentation) {
   if (root->letter == BreakingNode::ROOT_NODE) {
     cout << "ROOT (" << root->bound << ")" << endl;
-  } else if (root->IsChoice()) {
+  } else if (root->letter == BreakingNode::CHOICE_NODE) {
     cout << string(indentation, ' ') << "CHOICE " << root->bound << endl;
   } else {
-    cout << string(indentation, ' ') << solver->CharAtIndex(root->letter)
+    cout << string(indentation, ' ') << solver->Cell(root->cell)[root->letter]
          << " (" << root->letter << " "
          << root->points << "/" << root->bound << ")" << endl;
   }

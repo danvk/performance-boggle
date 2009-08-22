@@ -14,12 +14,10 @@ class BreakingNode {
     }
   }
 
-  // This may not be strictly necessary to keep around, weird as it seems.
-  int letter;
-  static const int ROOT_NODE = INT_MAX;
-  bool IsChoice() {
-    return (letter < 0);
-  }
+  char letter;
+  char cell;
+  static const char ROOT_NODE = -2;
+  static const char CHOICE_NODE = -1;
 
   // These might be the various options on a cell or the various directions.
   std::vector<BreakingNode*> children;
@@ -39,7 +37,7 @@ class BreakingNode {
   void ChoiceStats(std::map<int, int>* counts);
 
   int NodeCount();
-  int ScoreWithForce(int force);
+  int ScoreWithForce(int force_cell, int force_letter);
 
   void AttachPossibilities(int num_possibilities);
 };

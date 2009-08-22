@@ -29,7 +29,8 @@ void BucketSolver34::InternalUpperBound(int bailout_score) {
     int max_score;
     if (build_tree_) {
       root_->children[i] = new BreakingNode;
-      root_->children[i]->letter = -1 - i;
+      root_->children[i]->letter = BreakingNode::CHOICE_NODE;
+      root_->children[i]->cell = i;
       max_score = DoAllDescents(i, 0, dict_, root_->children[i]);
     } else {
       max_score = DoAllDescents(i, 0, dict_, NULL);
@@ -60,7 +61,8 @@ int BucketSolver34::DoAllDescents(int idx, int len, SimpleTrie* t, BreakingNode*
       int tscore;
       if (build_tree_) {
         node->children[j] = new BreakingNode;
-        node->children[j]->letter = (idx << 5) + j;
+        node->children[j]->cell = idx;
+        node->children[j]->letter = j;
         tscore = DoDFS(idx, len + (cc==kQ ? 2 : 1), t->Descend(cc), node->children[j]);
       } else {
         tscore = DoDFS(idx, len + (cc==kQ ? 2 : 1), t->Descend(cc), NULL);
@@ -92,7 +94,8 @@ int BucketSolver34::DoDFS(int i, int len, SimpleTrie* t, BreakingNode* node) {
       if ((used_ & (1 << idx)) == 0) {
         if (build_tree_) {
           BreakingNode* neighbor = new BreakingNode;
-          neighbor->letter = -1 - idx;
+          neighbor->letter = BreakingNode::CHOICE_NODE;
+          neighbor->cell = idx;
           score += DoAllDescents(idx, len, t, neighbor);
           neighbors[num_neighbors++] = neighbor;
         } else {

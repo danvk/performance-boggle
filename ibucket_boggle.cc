@@ -102,19 +102,3 @@ int main(int argc, char** argv) {
     }
   }
 }
-
-void PrintTree(BucketSolver* solver, BreakingNode* root, int indentation) {
-  if (root->letter == BreakingNode::ROOT_NODE) {
-    cout << "ROOT (" << root->bound << ")" << endl;
-  } else if (root->letter == BreakingNode::CHOICE_NODE) {
-    cout << string(indentation, ' ') << "CHOICE " << root->bound << endl;
-  } else {
-    cout << string(indentation, ' ') << solver->CharAtIndex(root->letter)
-         << " (" << root->points << "/" << root->bound << ")" << endl;
-  }
-
-  for (int i = 0; i < root->children.size(); i++) {
-    if (root->children[i])
-      PrintTree(solver, root->children[i], indentation + 1);
-  }
-}

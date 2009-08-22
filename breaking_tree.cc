@@ -4,7 +4,7 @@
 #include <map>
 
 int BreakingNode::RecomputeScore() {
-  if (letter == CHOICE_NODE) {
+  if (IsChoice()) {
     // Choose the max amongst each possibility.
     int max_score = 0;
     for (int i = 0; i < children.size(); i++) {
@@ -49,7 +49,7 @@ BreakingNode* BreakingNode::Prune() {
 }
 
 void BreakingNode::ChoiceStats(std::map<int, int>* counts) {
-  if (letter != CHOICE_NODE && letter != ROOT_NODE) {
+  if (!IsChoice() && letter != ROOT_NODE) {
     (*counts)[letter] += 1;
   }
   for (int i = 0; i < children.size(); i++) {
@@ -81,21 +81,24 @@ void BreakingNode::AttachPossibilities(int num_possibilities) {
 
 int BreakingNode::ScoreWithForce(int force) {
   // TODO(danvk): use child_possibilities for a big speedup
-  if (letter == CHOICE_NODE) {
-    // If the force is one of the options, we must take it.
-    for (int i = 0; i < children.size(); i++) {
-      if (children[i] && children[i]->letter == force) {
-        return children[i]->ScoreWithForce(force);
+  if (IsChoice()) {
+    // If the force is on this cell, we must take it.
+    if ((force >> 5) == -1 - letter) {
+      for (int i = 0; i < children.size(); i++) {
+        if (children[i] && children[i]->letter == force) {
+          return children[i]->ScoreWithForce(force);
+        }
       }
+      return 0;
+    } else {
+      // otherwise, just like normal scoring.
+      int max_score = 0;
+      for (int i = 0; i < children.size(); i++) {
+        if (children[i])
+          max_score = std::max(max_score, children[i]->ScoreWithForce(force));
+      }
+      return max_score;
     }
-
-    // otherwise, just like normal scoring.
-    int max_score = 0;
-    for (int i = 0; i < children.size(); i++) {
-      if (children[i])
-        max_score = std::max(max_score, children[i]->ScoreWithForce(force));
-    }
-    return max_score;
   } else {
     int score = points;
     for (int i = 0; i < children.size(); i++) {

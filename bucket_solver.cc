@@ -70,16 +70,8 @@ int BucketSolver::UpperBound(int bailout_score) {
 }
 
 char BucketSolver::CharAtIndex(int idx) {
-  int offset = 0;
-  for (int i = 0; i < Width() * Height(); i++) {
-    int len = strlen(Cell(i));
-    if (offset + len > idx) {
-      return Cell(i)[idx - offset];
-    } else {
-      offset += len;
-    }
-  }
-  return '?';
+  int cell = idx >> 5;
+  return Cell(cell)[idx % 32];
 }
 
 int BucketSolver::NumPossibilities() {

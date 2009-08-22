@@ -29,7 +29,7 @@ void BucketSolver34::InternalUpperBound(int bailout_score) {
     int max_score;
     if (build_tree_) {
       root_->children[i] = new BreakingNode;
-      root_->children[i]->letter = BreakingNode::CHOICE_NODE;
+      root_->children[i]->letter = -1 - i;
       max_score = DoAllDescents(i, 0, dict_, root_->children[i]);
     } else {
       max_score = DoAllDescents(i, 0, dict_, NULL);
@@ -49,12 +49,9 @@ void BucketSolver34::InternalUpperBound(int bailout_score) {
 int BucketSolver34::DoAllDescents(int idx, int len, SimpleTrie* t, BreakingNode* node) {
   do_all_descents_ += 1;
   int max_score = 0;
-  int offset = 0;
   if (build_tree_) {
     int num_children = strlen(bd_[idx]);
     node->children.resize(num_children);
-    // TODO(danvk): optimize this away
-    for (int j = 0; j < idx; j++) offset += strlen(bd_[j]);
   }
 
   for (int j = 0; bd_[idx][j]; j++) {
@@ -63,7 +60,7 @@ int BucketSolver34::DoAllDescents(int idx, int len, SimpleTrie* t, BreakingNode*
       int tscore;
       if (build_tree_) {
         node->children[j] = new BreakingNode;
-        node->children[j]->letter = offset + j;
+        node->children[j]->letter = (idx << 5) + j;
         tscore = DoDFS(idx, len + (cc==kQ ? 2 : 1), t->Descend(cc), node->children[j]);
       } else {
         tscore = DoDFS(idx, len + (cc==kQ ? 2 : 1), t->Descend(cc), NULL);
@@ -95,7 +92,7 @@ int BucketSolver34::DoDFS(int i, int len, SimpleTrie* t, BreakingNode* node) {
       if ((used_ & (1 << idx)) == 0) {
         if (build_tree_) {
           BreakingNode* neighbor = new BreakingNode;
-          neighbor->letter = BreakingNode::CHOICE_NODE;
+          neighbor->letter = -1 - idx;
           score += DoAllDescents(idx, len, t, neighbor);
           neighbors[num_neighbors++] = neighbor;
         } else {

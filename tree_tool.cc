@@ -49,6 +49,7 @@ int main(int argc, char** argv) {
   BreakingNode* tree = solver->Tree()->Prune();
   end = secs();
   printf("Prune tree: %f secs\n", end - start);
+  // PrintTree(solver, solver->Tree());
 
   start = secs();
   score = tree->RecomputeScore();
@@ -56,6 +57,17 @@ int main(int argc, char** argv) {
   printf("Recomputed score: %d (%f secs elapsed)\n", score, end - start);
 
   solver->SetBuildTree(false);
+  solver->MutableCell(0)[1] = '\0';
+  start = secs();
+  solver->UpperBound();
+  score = solver->Details().max_nomark;
+  end = secs();
+  printf("Force (%s): %d (%f secs)\n", solver->as_string(), score, end - start);
+
+  start = secs();
+  score = tree->ScoreWithForce(0);
+  end = secs();
+  printf("Force on tree: %d (%f secs)\n", score, end - start);
 }
 
 
@@ -89,4 +101,21 @@ void ParseBoard(BucketSolver* solver, int argc, char** argv) {
     exit(1);
   }
   printf("Board: %s\n", solver->as_string());
+}
+
+void PrintTree(BucketSolver* solver, BreakingNode* root, int indentation) {
+  if (root->letter == BreakingNode::ROOT_NODE) {
+    cout << "ROOT (" << root->bound << ")" << endl;
+  } else if (root->IsChoice()) {
+    cout << string(indentation, ' ') << "CHOICE " << root->bound << endl;
+  } else {
+    cout << string(indentation, ' ') << solver->CharAtIndex(root->letter)
+         << " (" << root->letter << " "
+         << root->points << "/" << root->bound << ")" << endl;
+  }
+
+  for (int i = 0; i < root->children.size(); i++) {
+    if (root->children[i])
+      PrintTree(solver, root->children[i], indentation + 1);
+  }
 }

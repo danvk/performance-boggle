@@ -1,6 +1,7 @@
 #ifndef BREAKING_TREE_H
 #define BREAKING_TREE_H
 
+#include <limits.h>
 #include <map>
 #include <vector>
 
@@ -15,8 +16,10 @@ class BreakingNode {
 
   // This may not be strictly necessary to keep around, weird as it seems.
   int letter;
-  static const int CHOICE_NODE = -1;
-  static const int ROOT_NODE = -2;
+  static const int ROOT_NODE = INT_MAX;
+  bool IsChoice() {
+    return (letter < 0);
+  }
 
   // These might be the various options on a cell or the various directions.
   std::vector<BreakingNode*> children;

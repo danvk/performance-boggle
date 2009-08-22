@@ -57,17 +57,44 @@ int main(int argc, char** argv) {
   printf("Recomputed score: %d (%f secs elapsed)\n", score, end - start);
 
   solver->SetBuildTree(false);
-  solver->MutableCell(0)[1] = '\0';
-  start = secs();
-  solver->UpperBound();
-  score = solver->Details().max_nomark;
-  end = secs();
-  printf("Force (%s): %d (%f secs)\n", solver->as_string(), score, end - start);
+  int sum_score = 0;
 
   start = secs();
-  score = tree->ScoreWithForce(0, 0);
+  for (int i = 0; i < solver->Width() * solver->Height(); i++) {
+    string s = solver->Cell(i);
+    for (int j = 0; j < s.size(); j++) {
+      sprintf(solver->MutableCell(i), "%c", s[j]);
+      solver->UpperBound();
+      score = solver->Details().max_nomark;
+      sum_score += score;
+      std::cout << solver->as_string() << ": " << score << std::endl;
+    }
+    strcpy(solver->MutableCell(i), s.c_str());
+  }
   end = secs();
-  printf("Force on tree: %d (%f secs)\n", score, end - start);
+  std::cout << "Sum score: " << sum_score
+            << " (" << (end - start) << " secs)" << std::endl;
+
+  start = secs();
+  tree->AttachPossibilities(solver);
+  end = secs();
+  std::cout << "Attach possibilities: " << (end - start) << std::endl;
+
+  sum_score = 0;
+  start = secs();
+  for (int i = 0; i < solver->Width() * solver->Height(); i++) {
+    string s = solver->Cell(i);
+    for (int j = 0; j < s.size(); j++) {
+      score = tree->ScoreWithForce(i, j);
+      sum_score += score;
+      sprintf(solver->MutableCell(i), "%c", s[j]);
+      std::cout << solver->as_string() << ": " << score << std::endl;
+    }
+    strcpy(solver->MutableCell(i), s.c_str());
+  }
+  end = secs();
+  std::cout << "Sum score: " << sum_score
+            << " (" << (end - start) << " secs)" << std::endl;
 }
 
 

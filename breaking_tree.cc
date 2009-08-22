@@ -1,4 +1,5 @@
 #include "breaking_tree.h"
+#include "bucket_solver.h"
 #include <algorithm>
 #include <iostream>
 #include <map>
@@ -63,14 +64,15 @@ int BreakingNode::NodeCount() {
   return count;
 }
 
-void BreakingNode::AttachPossibilities(int num_possibilities) {
-  child_possibilities.resize(num_possibilities);
-  if (letter >= 0) child_possibilities[letter] = true;
+void BreakingNode::AttachPossibilities(BucketSolver* solver) {
+  child_possibilities.resize(solver->Width() * solver->Height());
+  if (letter >= 0)
+    child_possibilities[cell] = true;
 
   for (int i = 0; i < children.size(); i++) {
     if (children[i]) {
-      children[i]->AttachPossibilities(num_possibilities);
-      for (int j = 0; j < num_possibilities; j++)
+      children[i]->AttachPossibilities(solver);
+      for (int j = 0; j < child_possibilities.size(); j++)
         if (children[i]->child_possibilities[j])
           child_possibilities[j] = true;
     }
@@ -78,7 +80,8 @@ void BreakingNode::AttachPossibilities(int num_possibilities) {
 }
 
 int BreakingNode::ScoreWithForce(int force_cell, int force_letter) {
-  // TODO(danvk): use child_possibilities for a big speedup
+  if (!child_possibilities[force_cell]) return bound;
+
   if (letter == CHOICE_NODE) {
     // If the force is on this cell, we must take it.
     if (cell == force_cell) {

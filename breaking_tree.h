@@ -4,6 +4,7 @@
 #include <limits.h>
 #include <map>
 #include <vector>
+class BucketSolver;
 
 class BreakingNode {
  public:
@@ -39,7 +40,7 @@ class BreakingNode {
   int NodeCount();
   int ScoreWithForce(int force_cell, int force_letter);
 
-  void AttachPossibilities(int num_possibilities);
+  void AttachPossibilities(BucketSolver* solver);
 };
 
 #endif

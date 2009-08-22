@@ -4,9 +4,11 @@
 #ifndef BUCKET_SOLVER
 #define BUCKET_SOLVER
 
+#include <iostream>
 #include <string>
 #include <sys/types.h>
 #include <stdint.h>
+#include <vector>
 class BreakingNode;
 class SimpleTrie;
 
@@ -55,6 +57,14 @@ class BucketSolver {
   char CharAtIndex(int idx);
   int NumPossibilities();
   void SetBuildTree(bool t) { build_tree_ = t; }
+
+  int PossibilityIndex(int cell, int letter) {
+    // std::cout << "PossibilityIndex(" << cell << ", " << letter << "):" << std::endl;
+    // std::cout << " = " << indices_[(cell<<5) + letter] << std::endl;
+    return indices_[(cell<<5)+letter];
+  }
+  std::vector<int> indices_;
+  int max_index_;
 
  protected:
   virtual void InternalUpperBound(int bailout_score) = 0;

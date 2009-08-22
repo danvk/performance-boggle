@@ -14,7 +14,10 @@ BucketSolver::~BucketSolver() {}
 bool BucketSolver::ParseBoard(const char* bd) {
   int cell = 0;
   int cell_pos = 0;
+  int idx = 0;
   int num_cells = Width() * Height();
+  indices_.resize((Width() * Height()) << 5);
+  for (int i = 0; i < indices_.size(); i++) indices_[i] = -1;
   while (char c = *bd++) {
     if (c == ' ') {
       if (cell_pos == 0) return false;  // empty cell
@@ -29,10 +32,14 @@ bool BucketSolver::ParseBoard(const char* bd) {
     } else {
       if (c < 'a' || c > 'z') return false;  // invalid letter
       MutableCell(cell)[cell_pos++] = c;
+      // std::cout << " Set " << ((cell<<5)+cell_pos) << " to " << idx << std::endl;
+      indices_[(cell << 5) + cell_pos] = idx;
+      idx += 1;
       if (cell_pos >= 27) return false;  // too many letters on a cell
     }
   }
   MutableCell(cell)[cell_pos] = '\0';
+  max_index_ = idx;
   return (cell_pos > 0 && cell == (num_cells - 1));
 }
 

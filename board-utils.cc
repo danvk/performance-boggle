@@ -56,10 +56,6 @@ bool BoardUtils::GenerateAnalogues(const std::string& board,
     bd = FlipLeftRight(bd);  if (board != bd) analogues->push_back(bd);
   }
 
-  for (int i = 0; i < analogues->size(); i++) {
-    std::cout << " " << i << ". '" << analogues->at(i) << "'" << std::endl;
-  }
-
   analogues->erase(std::unique(analogues->begin(), analogues->end()),
                    analogues->end());
   return true;

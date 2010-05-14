@@ -29,7 +29,6 @@ int main(int argc, char** argv) {
         }
       }
     } else {
-      std::cout << " -> " << s << std::endl;
       std::cout << bu.Canonicalize(s) << std::endl;
     }
   }

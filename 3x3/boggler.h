@@ -28,14 +28,14 @@ class Boggler3 : public BoggleSolver {
   // These constraints are NOT checked.
   void SetCell(int x, int y, int c);
   int Cell(int x, int y) const;
-  
+
   int Width() const { return 3; }
   int Height() const { return 3; }
 
   // Load a dictionary file, removing all non-Boggle words and converting "qu"
   // to 'q'.
   static TrieT* DictionaryFromFile(const char* dict_filename);
-  
+
  protected:
   int InternalScore();
 

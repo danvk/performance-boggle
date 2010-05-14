@@ -5,16 +5,18 @@
 #define BUCKET_SOLVER
 
 #include <iostream>
+#include <limits.h>
 #include <string>
 #include <sys/types.h>
 #include <stdint.h>
 #include <vector>
+
 class BreakingNode;
 class SimpleTrie;
 
 class BucketSolver {
  public:
-  BucketSolver(SimpleTrie* t);
+  explicit BucketSolver(SimpleTrie* t);
   virtual ~BucketSolver();
 
   virtual int Width() const = 0;

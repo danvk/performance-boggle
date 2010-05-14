@@ -1,5 +1,10 @@
 #include "board-utils.h"
 
+#include <limits.h>
+#include <string.h>
+#include <algorithm>
+#include <string>
+
 BoardUtils::BoardUtils(int w, int h, int num_classes)
     : w_(w), h_(h), num_classes_(num_classes) {
 }

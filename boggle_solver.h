@@ -6,7 +6,7 @@
 
 #include <limits.h>
 #include <string>
-  
+
 // Interface for a boggle solver. Very specifically does not refer to the Trie
 // type, so that it does not need to be templated. Subclasses may be templated,
 // may solve boggle on varying board sizes, etc.

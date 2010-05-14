@@ -1,5 +1,7 @@
 #include "4x4/boggler.h"
 
+#include <stdio.h>
+
 Boggler::Boggler(TrieT* t) : dict_(t) {}
 Boggler::~Boggler() {}
 

@@ -1,4 +1,4 @@
-// Rotate and reflect baords into a "normalized" position.
+// Rotate and reflect boards into a "normalized" position.
 //
 // Designed as a filter: replaces each the first 16 letter sequence on each
 // line with a normalized version.
@@ -29,6 +29,7 @@ int main(int argc, char** argv) {
         }
       }
     } else {
+      std::cout << " -> " << s << std::endl;
       std::cout << bu.Canonicalize(s) << std::endl;
     }
   }

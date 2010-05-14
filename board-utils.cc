@@ -1,5 +1,6 @@
 #include "board-utils.h"
 
+#include <iostream>
 #include <limits.h>
 #include <string.h>
 #include <algorithm>
@@ -55,6 +56,10 @@ bool BoardUtils::GenerateAnalogues(const std::string& board,
     bd = FlipLeftRight(bd);  if (board != bd) analogues->push_back(bd);
   }
 
+  for (int i = 0; i < analogues->size(); i++) {
+    std::cout << " " << i << ". '" << analogues->at(i) << "'" << std::endl;
+  }
+
   analogues->erase(std::unique(analogues->begin(), analogues->end()),
                    analogues->end());
   return true;
@@ -75,9 +80,8 @@ std::string BoardUtils::FlipLeftRight(const std::string& bd) {
   if (bd.size() != w_ * h_) return "";
   std::string out(w_ * h_, ' ');
   for (int x = 0; x < w_; x++) {
-    if (w_ - 1 - x == x) continue;
     for (int y = 0; y < h_; y++) {
-    out[Id(x, y)] = bd[Id(w_ - 1 - x, y)];
+      out[Id(x, y)] = bd[Id(w_ - 1 - x, y)];
     }
   }
   return out;

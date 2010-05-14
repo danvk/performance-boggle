@@ -66,7 +66,7 @@ void Annealer::Run() {
       stats_.transitions += 1;
       last_accept = n;
       best_score_ = score;
-      memcpy(last_, bd_, sizeof(bd_));
+      memcpy(last_, bd_, num_squares_);
       if (opts_.print_transitions) {
         printf("%5d T=%3.8lf accepting '%s' (%d)\n", n, T, last_, best_score_);
       }

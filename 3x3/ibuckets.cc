@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <stdio.h>
 #include <string.h>
 using std::min;
 using std::max;

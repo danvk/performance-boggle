@@ -5,6 +5,7 @@
 #define BOGGLER_33
 
 #include <limits.h>
+#include <stdio.h>
 #include <set>
 #include <string>
 #include "trie.h"

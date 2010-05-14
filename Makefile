@@ -26,7 +26,7 @@ BREAK=ibucket_breaker.o $(IBUCKETS_ALL) $(UTILS)
 RAND=mtrandom/mersenne.o
 
 solve: solve.o $(BOGGLE_ALL) $(GFLAGS)
-anneal: anneal.o $(BOGGLE_ALL) $(RAND) $(GFLAGS)
+anneal: anneal.o optimizer.o $(BOGGLE_ALL) $(RAND) $(GFLAGS)
 
 neighbors: neighbors.o $(GFLAGS)
 random_boards: random_boards.o $(RAND) $(GFLAGS)

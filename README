@@ -1,20 +1,35 @@
-Basic checks:
+This repository provides some libraries and binaries for scoring boggle boards.
+The emphasis is on performance, both in terms of implementation details and
+algorithmic advances.
 
+The most notable achievement of this code to date is finding the highest
+scoring 3x3 boggle board and proving that it is optimal in a few hours on a
+single machine.
+
+Open problems are 3x4 and 4x4 boggle.
+
+To get started:
+$ git clone git://github.com/danvk/performance-boggle.git
+$ cd performance-boggle
+
+Basic checks:
 $ make clean
 $ make test
 ./trie_test: All tests passed!
-./boggler_test: All tests passed!
-./buckets_test: all tests passed
-Loaded/compacted 172203 words
-All test boards matched!
-All test boards matched!
-All test boards matched!
-$ make perf 
-Loaded 172203 words into 385272-node Trie (3770984 bytes)
+./4x4/boggler_test: All tests passed!
+./3x3/boggler_test: All tests passed!
+./3x3/ibuckets_test: All tests passed!
+./board-utils_test: All tests passed!
+./4x4/ibuckets_test: All tests passed!
+
+$ make perf
+./4x4/perf_test
+Loaded 172203 words into 385272-node Trie
+Trie contains 273917 childless nodes, 60848 words w/ children
 Total score: 22925120 = 105.977811 pts/bd
 Score hash: 0x000C1D3D
-Evaluated 216320 boards in 2.914387 seconds = 74224.871616 bds/sec
-
+Evaluated 216320 boards in 2.433583 seconds = 88889.509057 bds/sec
+./4x4/perf_test: All tests passed!
 
 What the binaries do:
 

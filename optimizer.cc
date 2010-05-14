@@ -45,8 +45,10 @@ void Annealer::Run() {
   bd_[0] = bd_[num_squares_] = '\0';
   last_[num_squares_] = '\0';
   InitialBoard(last_);
+  printf("start board: %s\n", last_);
 
   int last_accept = 0;
+  best_score_ = 0;
   stats_.transitions = 0;
 
   for (int n = 0; n < last_accept + opts_.max_stall; n++) {
@@ -59,7 +61,7 @@ void Annealer::Run() {
       exit(1);
     }
 
-    if (opts_.print_scores) printf("%d\t%d\n", n, score);
+    if (opts_.print_scores) printf("%d\t%s\t%d\n", n, bd_, score);
 
     double T = Temperature(n);
     if (AcceptTransition(best_score_, score, T)) {

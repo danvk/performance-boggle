@@ -1,0 +1,11 @@
+- Remove any mention of Trie types other than SimpleTrie.
+
+- Make BoggleSolvers assume ownership of their Tries.
+
+- Make this method:
+static BoggleSolver* BoggleSolver::Instantiate(int size, const char* dict);
+
+This would return either a Boggler, Boggler3 or Boggler34 depending on size. It
+could even produce a restricted Trie for the boggler based on the board size.
+
+- Add a HillClimber class to optimizer.{h,cc} and compare to Annealer.

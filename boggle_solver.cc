@@ -1,7 +1,12 @@
 #include "boggle_solver.h"
+
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+#include "3x3/boggler.h"
+#include "3x4/boggler.h"
+#include "4x4/boggler.h"
+#include "trie.h"
 
 const int BoggleSolver::kWordScores[] =
       //0, 1, 2, 3, 4, 5, 6, 7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17
@@ -9,6 +14,22 @@ const int BoggleSolver::kWordScores[] =
 
 BoggleSolver::BoggleSolver() : runs_(0), num_boards_(0) {}
 BoggleSolver::~BoggleSolver() {}
+
+BoggleSolver* BoggleSolver::Create(int size, const char* dictionary_file) {
+  SimpleTrie* t = Boggler::DictionaryFromFile(dictionary_file);
+  if (!t) return NULL;
+
+  BoggleSolver* solver = NULL;
+  switch (size) {
+    case 33: solver = new Boggler3(t); break;
+    case 34: solver = new Boggler34(t); break;
+    case 44: solver = new Boggler(t); break;
+    default:
+      fprintf(stderr, "Unknown board size: %d\n", size);
+      return NULL;
+  }
+  return solver;
+}
 
 /* static */ bool BoggleSolver::IsBoggleWord(const char* wd) {
   int size = strlen(wd);

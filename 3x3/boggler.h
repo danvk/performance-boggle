@@ -14,9 +14,8 @@
 class Boggler3 : public BoggleSolver {
  public:
   typedef SimpleTrie TrieT;
-  // Does not assume ownership of the TrieT, though it must remain live for the
-  // lifetime of the GenericBoggler. The trie will be modified by board scoring, and
-  // must not be modified by any other GenericBoggler.
+  // Assumes ownership of the Trie. No other Boggler may modify the Trie after
+  // this Boggler has been constructed using it.
   Boggler3(TrieT* t);
   virtual ~Boggler3();
 

@@ -14,6 +14,10 @@ class BoggleSolver {
  public:
   BoggleSolver();
   virtual ~BoggleSolver();
+  
+  // Construct a BoggleSolver for the given size board using the dictionary.
+  // Possible sizes are: 33, 34, 44
+  static BoggleSolver* Create(int size, const char* dictionary_file);
 
   // Parses a board string like "abcdefghijklmnop"
   virtual bool ParseBoard(const char* lets);

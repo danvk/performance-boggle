@@ -6,17 +6,17 @@
 #include "boggler.h"
 
 int main(int argc, char** argv) {
-  SimpleTrie t;
-  t.AddWord("ate");
-  t.AddWord("tea");
-  t.AddWord("eta");
-  t.AddWord("eat");
-  t.AddWord("teak");
-  t.AddWord("fiver");
-  t.AddWord("sixers");
+  SimpleTrie* t = new SimpleTrie;
+  t->AddWord("ate");
+  t->AddWord("tea");
+  t->AddWord("eta");
+  t->AddWord("eat");
+  t->AddWord("teak");
+  t->AddWord("fiver");
+  t->AddWord("sixers");
 
   // try out the various interfaces
-  Boggler b(&t);
+  Boggler b(t);
   CHECK_EQ(0, b.NumBoards());
   CHECK_EQ(4, b.Score("texxaxxxyyyyzzzz"));
   CHECK_EQ(5, b.Score("texxakxxyyyyzzzz"));

@@ -10,6 +10,8 @@
 class Boggler : public BoggleSolver {
  public:
   typedef SimpleTrie TrieT;
+  // Assumes ownership of the Trie. No other Boggler may modify the Trie after
+  // this Boggler has been constructed using it.
   Boggler(TrieT* t);
   virtual ~Boggler();
 

@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 Boggler::Boggler(TrieT* t) : dict_(t) {}
-Boggler::~Boggler() {}
+Boggler::~Boggler() { delete dict_; }
 
 void Boggler::SetCell(int x, int y, int c) { bd_[(x << 2) + y] = c; }
 int Boggler::Cell(int x, int y) const { return bd_[(x << 2) + y]; }

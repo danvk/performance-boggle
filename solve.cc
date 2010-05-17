@@ -32,16 +32,8 @@ int main(int argc, char** argv) {
   }
   fclose(f);
 
-  SimpleTrie* t = Boggler::DictionaryFromFile(FLAGS_dictionary.c_str());
-  BoggleSolver* solver = NULL;
-  switch (FLAGS_size) {
-    case 33: solver = new Boggler3(t); break;
-    case 34: solver = new Boggler34(t); break;
-    case 44: solver = new Boggler(t); break;
-    default:
-      fprintf(stderr, "Unknown board size: %d\n", FLAGS_size);
-      exit(1);
-  }
+  BoggleSolver* solver =
+    BoggleSolver::Create(FLAGS_size, FLAGS_dictionary.c_str());
 
   if (argc > 1) {
     for (int i = 1; i < argc; i++) {

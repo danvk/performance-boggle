@@ -4,7 +4,7 @@
 #include <string.h>
 
 Boggler34::Boggler34(TrieT* t) : dict_(t) {}
-Boggler34::~Boggler34() {}
+Boggler34::~Boggler34() { delete dict_; }
 
 void Boggler34::SetCell(int x, int y, int c) { bd_[y*4 + x] = c; }
 int Boggler34::Cell(int x, int y) const { return bd_[y*4 + x]; }

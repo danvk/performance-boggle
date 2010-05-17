@@ -35,7 +35,7 @@ Annealer::~Annealer() {
 }
 
 const char* Annealer::FinalBoard() const {
-  return bd_;
+  return last_;
 }
 
 int Annealer::FinalScore() const {

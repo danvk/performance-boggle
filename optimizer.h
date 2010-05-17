@@ -5,7 +5,7 @@
 #define OPTIMIZER_H
 
 #include "boggle_solver.h"
-#include "mtrandom/randomc.h"
+class TRandomMersenne;
 
 // Generic random number generator.
 class BoggleRNG {
@@ -26,8 +26,8 @@ class BoggleMTRandom : public BoggleRNG {
  public:
   BoggleMTRandom(TRandomMersenne* mt) : mt_(mt) {}
 
-  int IRandom(int a, int b) { return mt_->IRandom(a, b); }
-  double Random() { return mt_->Random(); }
+  int IRandom(int a, int b);
+  double Random();
 
  private:
   TRandomMersenne* mt_;

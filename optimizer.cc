@@ -3,7 +3,12 @@
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "boggle_solver.h"
+#include "mtrandom/randomc.h"
+
+int BoggleMTRandom::IRandom(int a, int b) { return mt_->IRandom(a, b); }
+double BoggleMTRandom::Random() { return mt_->Random(); }
 
 /* static */ Annealer::Options Annealer::DefaultOptions() {
   Options ret;
@@ -22,7 +27,7 @@ Annealer::Annealer(BoggleSolver* solver, const Options& opts, BoggleRNG* rng) {
   num_squares_ = solver->Width() * solver->Height();
   bd_ = (char*)malloc(1 + num_squares_);
   last_ = (char*)malloc(1 + num_squares_);
-} 
+}
 
 Annealer::~Annealer() {
   free(bd_);

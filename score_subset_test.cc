@@ -69,7 +69,7 @@ bool TestBuckets() {
   splits.push_back("sy");
   splits.push_back("bdfgjkmpvwxzq");
   splits.push_back("chlnrt");
-  for (int n = 0; n < 10; n++) {
+  for (int n = 0; n < 100; n++) {
     for (int x = 0; x < 3; x++) {
       for (int y = 0; y < 3; y++) {
         int idx = r.IRandom(0, 3);
@@ -78,6 +78,11 @@ bool TestBuckets() {
         strcpy(solver_44->MutableCell(x, y), splits[idx].c_str());
       }
     }
+
+    // TODO(danvk): document this weirdness in bucket_solver and add an
+    // UpdateBoard() method.
+    solver_33->ParseBoard(solver_33->as_string());
+    solver_44->ParseBoard(solver_44->as_string());
 
     int score33 = solver_33->UpperBound();
     // int score34 = solver_34->UpperBound();

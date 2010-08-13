@@ -74,7 +74,7 @@ bool TestBuckets() {
       for (int y = 0; y < 3; y++) {
         int idx = r.IRandom(0, 3);
         strcpy(solver_33->MutableCell(x, y), splits[idx].c_str());
-        // strcpy(solver_34->MutableCell(x, y), splits[idx].c_str());
+        strcpy(solver_34->MutableCell(x, y), splits[idx].c_str());
         strcpy(solver_44->MutableCell(x, y), splits[idx].c_str());
       }
     }
@@ -82,16 +82,16 @@ bool TestBuckets() {
     // TODO(danvk): document this weirdness in bucket_solver and add an
     // UpdateBoard() method.
     solver_33->ParseBoard(solver_33->as_string());
+    solver_34->ParseBoard(solver_34->as_string());
     solver_44->ParseBoard(solver_44->as_string());
 
     int score33 = solver_33->UpperBound();
-    // int score34 = solver_34->UpperBound();
+    int score34 = solver_34->UpperBound();
     int score44 = solver_44->UpperBound();
-    // if (score33 != score34 || score34 != score44) {
-    if (score33 != score44) {
+    if (score33 != score34 || score34 != score44) {
       printf("Bucket Failure!\n");
       printf("3x3: %s (%d)\n", solver_33->as_string(), score33);
-      // printf("3x4: %s (%d)\n", solver_34->as_string(), score34);
+      printf("3x4: %s (%d)\n", solver_34->as_string(), score34);
       printf("4x4: %s (%d)\n", solver_44->as_string(), score44);
       return false;
     }

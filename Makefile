@@ -2,7 +2,7 @@ CC = g++
 CPPFLAGS = -g -Wall -O3 -I. -Wno-sign-compare
 #CPPFLAGS = -g -Wall -I. -Wno-sign-compare
 
-tests = trie_test 3x3/boggler_test 3x3/ibuckets_test 4x4/boggler_test board-utils_test 4x4/perf_test 4x4/ibuckets_test
+tests = trie_test 3x3/boggler_test 3x3/ibuckets_test 4x4/boggler_test board-utils_test 4x4/perf_test 4x4/ibuckets_test score_subset_test
 progs = $(tests) ibucket_breaker ibucket_boggle solve neighbors random_boards anneal normalize tree_tool
 all: $(progs)
 
@@ -39,6 +39,7 @@ tree_tool: tree_tool.o $(IBUCKETS_ALL) $(BOGGLE_ALL) $(GFLAGS) breaking_tree.o
 # Tests
 board-utils_test: board-utils_test.o $(UTILS)
 trie_test: trie.o trie_test.o
+score_subset_test: score_subset_test.o $(RAND) $(BOGGLE_ALL)
 3x3/boggler_test: 3x3/boggler_test.o $(BOGGLE_ALL)
 4x4/boggler_test: 4x4/boggler_test.o $(BOGGLE_ALL)
 3x3/ibuckets_test: 3x3/ibuckets_test.o $(IBUCKETS_ALL)

@@ -32,6 +32,8 @@ class BoggleSolver {
   virtual int Width() const = 0;
   virtual int Height() const = 0;
 
+  // c is an int, not a char.
+  // 0 <= c < 26
   virtual void SetCell(int x, int y, int c) = 0;
   virtual int Cell(int x, int y) const = 0;
 

@@ -45,16 +45,13 @@ uint64_t Rand64(uint64_t max, TRandomMersenne& rand);
 
 int main(int argc, char** argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
-  SimpleTrie* t = Boggler::DictionaryFromFile(FLAGS_dictionary.c_str());
 
-  BucketSolver* solver = NULL;
-  switch (FLAGS_size) {
-    case 33: solver = new BucketSolver3(t); break;
-    case 34: solver = new BucketSolver34(t); break;
-    case 44: solver = new BucketSolver4(t); break;
-    default:
-      fprintf(stderr, "Unknown board size: %d\n", FLAGS_size);
-      exit(1);
+  BucketSolver* solver = BucketSolver::Create(
+    FLAGS_size, FLAGS_dictionary.c_str());
+  if (!solver) {
+    fprintf(stderr, "Couldn't create bucket solver: %d %s\n",
+            FLAGS_size, FLAGS_dictionary.c_str());
+    exit(1);
   }
 
   Breaker breaker(solver, FLAGS_best_score);

@@ -38,6 +38,9 @@ class BucketSolver {
   virtual char* MutableCell(int idx) = 0;
   virtual const char* Cell(int idx) const = 0;
 
+  const char* Cell(int x, int y) const { return Cell(Height() * x + y); }
+  char* MutableCell(int x, int y) { return MutableCell(Height() * x + y); }
+
   // Returns the number of individual boards in the current board class. This
   // isn't guaranteed to fit in a uint64_t, but will for any class you care to
   // evaluate.

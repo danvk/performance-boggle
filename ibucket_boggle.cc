@@ -9,10 +9,6 @@
 #include "trie.h"
 #include "breaking_tree.h"
 #include "bucket_solver.h"
-#include "3x3/ibuckets.h"
-#include "3x4/ibuckets.h"
-#include "4x4/ibuckets.h"
-#include "4x4/boggler.h"  // gross
 #include "gflags/gflags.h"
 using namespace std;
 
@@ -34,21 +30,11 @@ void PrintTree(BucketSolver* solver, BreakingNode* node, int indentation = 0);
 int main(int argc, char** argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
 
-  printf("loading words from %s\n", FLAGS_dictionary.c_str());
-  SimpleTrie* t = Boggler::DictionaryFromFile(FLAGS_dictionary.c_str());
-  if (!t) {
+  BucketSolver* solver = BucketSolver::Create(
+    FLAGS_size, FLAGS_dictionary.c_str());
+  if (!solver) {
     fprintf(stderr, "Couldn't load dictionary\n");
     exit(1);
-  }
-
-  BucketSolver* solver = NULL;
-  switch (FLAGS_size) {
-    case 33: solver = new BucketSolver3(t); break;
-    case 34: solver = new BucketSolver34(t); break;
-    case 44: solver = new BucketSolver4(t); break;
-    default:
-      fprintf(stderr, "Unknown board size: %d\n", FLAGS_size);
-      exit(1);
   }
 
   char buf[400] = "";
@@ -94,11 +80,17 @@ int main(int argc, char** argv) {
     //      it != counts.end(); ++it) {
     //   cout << "  " << it->first << ": " << it->second << endl;
     // }
-    solver->Tree()->AttachPossibilities(solver->NumPossibilities());
+    solver->Tree()->AttachPossibilities(solver);
 
     for (int i = 0; i < solver->NumPossibilities(); i++) {
-      cout << "Force " << i << " (" << solver->CharAtIndex(i) << "): "
-           << solver->Tree()->ScoreWithForce(i) << endl;
+      int cell, letter;
+      if (!solver->Possibility(i, &cell, &letter)) {
+        fprintf(stderr, "Doh!\n");
+        exit(1);
+      }
+
+      cout << "Force " << i << " (" << cell << ", " << ('a' + letter) << "): "
+           << solver->Tree()->ScoreWithForce(cell, letter) << endl;
     }
   }
 }

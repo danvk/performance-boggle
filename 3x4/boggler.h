@@ -1,7 +1,7 @@
 // An interface for solving Boggle boards given a TrieT.
 // This is designed to be extremely efficient.
 //
-// Best known board: srepetaldnis (1651)
+// Best known board: sedrtneaipls (1651)
 
 #ifndef BOGGLER_34
 #define BOGGLER_34
@@ -25,13 +25,13 @@ class Boggler34 : public BoggleSolver {
   // void FindWords(bool annotate, std::set<std::string>* out);
 
   // Set a cell on the current board.
-  // Must have 0 <= x < 4, 0 <= y < 3 and 0 <= c < 26.
+  // Must have 0 <= x < 3, 0 <= y < 4 and 0 <= c < 26.
   // These constraints are NOT checked.
   void SetCell(int x, int y, int c);
   int Cell(int x, int y) const;
   
-  int Width() const { return 4; }
-  int Height() const { return 3; }
+  int Width() const { return 3; }
+  int Height() const { return 4; }
 
  protected:
   int InternalScore();

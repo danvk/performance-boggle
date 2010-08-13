@@ -1,4 +1,8 @@
 #include "bucket_solver.h"
+#include "4x4/boggler.h"
+#include "3x3/ibuckets.h"
+#include "3x4/ibuckets.h"
+#include "4x4/ibuckets.h"
 
 #include <string.h>
 
@@ -8,6 +12,22 @@ using std::max;
 const int BucketSolver::kWordScores[] =
       //0, 1, 2, 3, 4, 5, 6, 7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17
       { 0, 0, 0, 1, 1, 2, 3, 5, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11 };
+
+/* static */ BucketSolver* BucketSolver::Create(int size, const char* dictionary_file) {
+  SimpleTrie* t = Boggler::DictionaryFromFile(dictionary_file);
+  if (!t) return NULL;
+
+  BucketSolver* solver = NULL;
+  switch (size) {
+    case 33: solver = new BucketSolver3(t); break;
+    case 34: solver = new BucketSolver34(t); break;
+    case 44: solver = new BucketSolver4(t); break;
+    default:
+      fprintf(stderr, "Unknown board size: %d\n", size);
+      return NULL;
+  }
+  return solver;
+}
 
 BucketSolver::BucketSolver(SimpleTrie* t)
     : dict_(t), runs_(0), build_tree_(false) {}
@@ -89,4 +109,19 @@ int BucketSolver::NumPossibilities() {
     len += strlen(Cell(i));
   }
   return len;
+}
+
+// ab cd
+bool BucketSolver::Possibility(int idx, int* cell, int* letter) {
+  int len = 0;
+  for (int i = 0; i < Width() * Height(); i++) {
+    int prev_len = len;
+    len += strlen(Cell(i));
+    if (len > idx) {
+      *cell = i;
+      *letter = idx - prev_len;
+      return true;
+    }
+  }
+  return false;
 }

@@ -9,8 +9,8 @@ using std::max;
 static const bool PrintWords  = false;
 static const bool PrintDeltas = false;
 
-int BucketSolver34::Width() const { return 4; }
-int BucketSolver34::Height() const { return 3; }
+int BucketSolver34::Width() const { return 3; }
+int BucketSolver34::Height() const { return 4; }
 
 char* BucketSolver34::MutableCell(int idx) { return bd_[idx]; }
 const char* BucketSolver34::Cell(int idx) const { return bd_[idx]; }
@@ -85,12 +85,12 @@ int BucketSolver34::DoDFS(int i, int len, SimpleTrie* t, BreakingNode* node) {
   // TODO(danvk): unroll
   int num_neighbors = 0;
   BreakingNode* neighbors[12];
-  int x = i % 4, y = i / 4;
+  int y = i % 4, x = i / 4;
   for (int dx = -1; dx <= 1; dx++) {
-    if (x + dx < 0 || x + dx > 3) continue;
+    if (x + dx < 0 || x + dx > 2) continue;
     for (int dy = -1; dy <= 1; dy++) {
-      if (y + dy < 0 || y + dy > 2) continue;
-      int idx = (y + dy) * 4 + x + dx;
+      if (y + dy < 0 || y + dy > 3) continue;
+      int idx = (x + dx) * 4 + y + dy;
       if ((used_ & (1 << idx)) == 0) {
         if (build_tree_) {
           BreakingNode* neighbor = new BreakingNode;

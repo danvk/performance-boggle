@@ -19,6 +19,10 @@ class BucketSolver {
   explicit BucketSolver(SimpleTrie* t);
   virtual ~BucketSolver();
 
+  // Construct a BucketSolver for the given size board using the dictionary.
+  // Possible sizes are: 33, 34, 44
+  static BucketSolver* Create(int size, const char* dictionary_file);
+
   virtual int Width() const = 0;
   virtual int Height() const = 0;
 
@@ -58,6 +62,7 @@ class BucketSolver {
   virtual BreakingNode* Tree() { return NULL; }
   char CharAtIndex(int idx);
   int NumPossibilities();
+  bool Possibility(int idx, int* cell, int* letter);
   void SetBuildTree(bool t) { build_tree_ = t; }
 
   int PossibilityIndex(int cell, int letter) {

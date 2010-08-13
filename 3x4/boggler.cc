@@ -6,8 +6,8 @@
 Boggler34::Boggler34(TrieT* t) : dict_(t) {}
 Boggler34::~Boggler34() { delete dict_; }
 
-void Boggler34::SetCell(int x, int y, int c) { bd_[y*4 + x] = c; }
-int Boggler34::Cell(int x, int y) const { return bd_[y*4 + x]; }
+void Boggler34::SetCell(int x, int y, int c) { bd_[x*4 + y] = c; }
+int Boggler34::Cell(int x, int y) const { return bd_[x*4 + y]; }
 
 int Boggler34::InternalScore() {
   used_ = 0;
@@ -36,15 +36,15 @@ void Boggler34::DoDFS(int i, int len, TrieT* t) {
   int cc, idx;
 
   // TODO(danvk): unroll this
-  // i = 4*y + x
-  int x = i % 4, y = i / 4;
+  // i = 4*x + y
+  int y = i % 4, x = i / 4;
   std::string s(len, ' ');
   for (int dx = -1; dx <= 1; dx++) {
-    if (x + dx < 0 || x + dx > 3) continue;
+    if (x + dx < 0 || x + dx > 2) continue;
     for (int dy = -1; dy <= 1; dy++) {
       if (dx == 0 && dy == 0) continue;
-      if (y + dy < 0 || y + dy > 2) continue;
-      idx = (y + dy) * 4 + x + dx;
+      if (y + dy < 0 || y + dy > 3) continue;
+      idx = (x + dx) * 4 + y + dy;
       if ((used_ & (1 << idx)) == 0) {
         cc = bd_[idx];
         if (t->StartsWord(cc)) {

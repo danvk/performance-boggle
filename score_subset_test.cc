@@ -15,13 +15,13 @@ int main(int argc, char** argv) {
   for (int i = 0; i < 4; i++) {
     solver_44->SetCell(i, 3, 'e' - 'a');
     solver_44->SetCell(3, i, 'e' - 'a');
-    if (i < 3) solver_34->SetCell(3, i, 'e' - 'a');
+    if (i < 3) solver_34->SetCell(i, 3, 'e' - 'a');
   }
 
   // Start solving random boards.
   int32 seed = time(NULL) + getpid();
   TRandomMersenne r(seed);
-  for (int n = 0; n < 100; n++) {
+  for (int n = 0; n < 10000; n++) {
     for (int x = 0; x < 3; x++) {
       for (int y = 0; y < 3; y++) {
         char c = r.IRandom('a', 'z') - 'a';
@@ -35,7 +35,6 @@ int main(int argc, char** argv) {
     int score34 = solver_34->Score();
     int score44 = solver_44->Score();
     if (score33 != score34 || score34 != score44) {
-    // if (score33 != score44) {
       printf("Failure!\n");
       printf("3x3: %s (%d)\n", solver_33->ToString().c_str(), score33);
       printf("3x4: %s (%d)\n", solver_34->ToString().c_str(), score34);

@@ -11,6 +11,7 @@
 #include <iostream>
 #include <iomanip>
 #include <math.h>
+#include <set>
 #include <string>
 #include <string.h>
 #include <sys/time.h>
@@ -43,6 +44,15 @@ Breaker::Breaker(BucketSolver* solver, int best_score)
   for (int i = 0; i < distance.size(); i++) {
     order_.push_back(distance[i].second);
   }
+}
+
+void Breaker::SetPickOrder(std::vector<int>& order) {
+  std::set<int> counts(order.begin(), order.end());
+  if (counts.size() != solver_->Width() * solver_->Height()) {
+    fprintf(stderr, "Invalid cell pick order\n");
+    exit(1);
+  }
+  order_ = order;
 }
 
 // TODO(danvk): make these methods and stop passing around state.

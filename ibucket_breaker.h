@@ -28,6 +28,10 @@ class Breaker {
   // Should progress information be displayed? Default is true.
   void SetDisplayDebugOutput(bool display) { debug_ = display; }
 
+  // Set the order in which cells are picked. Must be a permutation of
+  // 0..(width*height - 1). Crashes if this is not the case.
+  void SetPickOrder(std::vector<int>& order);
+
  private:
   // TODO(danvk): document these
   int PickABucket(std::vector<std::string>* splits, int level);

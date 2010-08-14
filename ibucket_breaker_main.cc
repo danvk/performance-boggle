@@ -1,5 +1,8 @@
-#include <assert.h>
 #include <iostream>
+#include <string>
+#include <sstream>
+#include <algorithm>
+#include <iterator>
 #include <math.h>
 #include <sys/types.h>
 #include <string>
@@ -38,10 +41,31 @@ DEFINE_string(break_class, "", "Set to break a specific board class");
 
 DEFINE_bool(display_debug_output, true, "");
 
+DEFINE_string(pick_cell_order, "",
+              "Set to a comma-delimited permutation of cell indices to "
+              "split them in that order, e.g. '0,1,2,3,4,5,6,7,8'");
+
 
 using namespace std;
 void PrintDetails(BreakDetails& d);
 uint64_t Rand64(uint64_t max, TRandomMersenne& rand);
+
+void SplitString(std::string& s, vector<int>* nums) {
+  for (int i = 0; i < s.size(); i++) {
+    if (s[i] == ',') s[i] = '\n';
+  }
+
+  // From http://stackoverflow.com/questions/236129/how-to-split-a-string
+  std::vector<std::string> tokens;
+  std::istringstream iss(s);
+  copy(istream_iterator<string>(iss),
+       istream_iterator<string>(),
+       back_inserter<vector<string> >(tokens));
+
+  for (int i = 0; i < tokens.size(); i++) {
+    nums->push_back(atoi(tokens[i].c_str()));
+  }
+}
 
 int main(int argc, char** argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
@@ -56,6 +80,12 @@ int main(int argc, char** argv) {
 
   Breaker breaker(solver, FLAGS_best_score);
   breaker.SetDisplayDebugOutput(FLAGS_display_debug_output);
+
+  if (!FLAGS_pick_cell_order.empty()) {
+    std::vector<int> picks;
+    SplitString(FLAGS_pick_cell_order, &picks);
+    breaker.SetPickOrder(picks);
+  }
 
   vector<string> classes;
   int letter_count = 0;

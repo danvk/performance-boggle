@@ -39,7 +39,7 @@ tree_tool: tree_tool.o $(IBUCKETS_ALL) $(BOGGLE_ALL) $(GFLAGS) breaking_tree.o
 # Tests
 board-utils_test: board-utils_test.o $(UTILS)
 trie_test: trie.o trie_test.o
-score_subset_test: score_subset_test.o $(RAND) $(BOGGLE_ALL) $(IBUCKETS_ALL)
+score_subset_test: score_subset_test.o $(RAND) $(BOGGLE_ALL) $(IBUCKETS_ALL) $(BREAK)
 3x3/boggler_test: 3x3/boggler_test.o $(BOGGLE_ALL)
 4x4/boggler_test: 4x4/boggler_test.o $(BOGGLE_ALL)
 3x3/ibuckets_test: 3x3/ibuckets_test.o $(IBUCKETS_ALL)

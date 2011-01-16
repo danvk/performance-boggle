@@ -2,6 +2,7 @@
 // 4x4 board with two edges removed. We do this by using a dictionary with a
 // missing letter (an 'e').
 
+#include <string.h>
 #include <algorithm>
 #include <iostream>
 #include <iomanip>

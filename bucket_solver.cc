@@ -1,9 +1,11 @@
 #include "bucket_solver.h"
+
 #include "4x4/boggler.h"
 #include "3x3/ibuckets.h"
 #include "3x4/ibuckets.h"
 #include "4x4/ibuckets.h"
 
+#include <stdio.h>
 #include <string.h>
 
 using std::min;

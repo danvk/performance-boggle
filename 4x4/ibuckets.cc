@@ -1,5 +1,6 @@
 #include "4x4/ibuckets.h"
 
+#include <stdio.h>
 #include <algorithm>
 #include <iostream>
 using std::min;

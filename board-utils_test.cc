@@ -1,5 +1,6 @@
 #include "board-utils.h"
 #include "test.h"
+#include <stdio.h>
 #include <iostream>
 
 // Checks that BoardId o BoardFromId = Identity

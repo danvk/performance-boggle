@@ -3,6 +3,8 @@
 #ifndef PAPER_TEST_H__
 #define PAPER_TEST_H__
 
+#include <stdlib.h>
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <vector>

@@ -5,6 +5,7 @@ const int reps = 10;
 
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/time.h>
 #include <map>
 #include "test.h"
@@ -15,7 +16,7 @@ void TrieStats(const SimpleTrie& pt);
 double secs();
 
 int main(int argc, char** argv) {
-  char* dict_file;
+  const char* dict_file;
   if (argc == 2) dict_file = argv[1];
   else           dict_file = "words";
 
@@ -32,7 +33,7 @@ int main(int argc, char** argv) {
   unsigned int total_score = 0;
   unsigned int hash;
 
-  char* bases[] = { "abcdefghijklmnop", "catdlinemaropets" };
+  const char* bases[] = { "abcdefghijklmnop", "catdlinemaropets" };
   int bds = sizeof(bases) / sizeof(*bases);
   double start = secs();
   for (int rep = 0; rep < reps; rep++) {
@@ -40,18 +41,18 @@ int main(int argc, char** argv) {
     for (int i=0; i<bds; ++i) {
       b.ParseBoard(bases[i]);
       for (int y1 = 0; y1 < 4; y1++) {
-	for (int y2 = 0; y2 < 4; y2++) {
-	  for (int c1 = 0; c1 < 26; c1++) {
-	    b.SetCell(1, y1, c1);
-	    for (int c2 = 0; c2 < 26; c2++) {
-	      b.SetCell(2, y2, c2);
-	      int score = b.Score();
-	      hash *= (123 + score);
-	      hash = hash % prime;
-	      total_score += score;
-	    }
-	  }
-	}
+        for (int y2 = 0; y2 < 4; y2++) {
+          for (int c1 = 0; c1 < 26; c1++) {
+            b.SetCell(1, y1, c1);
+            for (int c2 = 0; c2 < 26; c2++) {
+              b.SetCell(2, y2, c2);
+              int score = b.Score();
+              hash *= (123 + score);
+              hash = hash % prime;
+              total_score += score;
+            }
+          }
+        }
       }
     }
     if (hash != 0x000C1D3D) {
@@ -112,9 +113,9 @@ size_t WordsWithChildren(const SimpleTrie& pt) {
 
 void TrieStats(const SimpleTrie& pt) {
   printf("Loaded %zd words into %zd-node Trie\n",
-	  TrieUtils<SimpleTrie>::Size(&pt),
+          TrieUtils<SimpleTrie>::Size(&pt),
           TrieUtils<SimpleTrie>::NumNodes(&pt));
 
-  printf("Trie contains %zd childless nodes, %zd words w/ children\n", 
-	 Childless(pt), WordsWithChildren(pt));
+  printf("Trie contains %zd childless nodes, %zd words w/ children\n",
+         Childless(pt), WordsWithChildren(pt));
 }

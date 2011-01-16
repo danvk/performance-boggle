@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string>
@@ -8,7 +9,11 @@
 
 int main(int argc, char** argv) {
   char tmp_file[] = "/tmp/trie-words.XXXXXX";
-  mkstemp(tmp_file);
+  int err = mkstemp(tmp_file);
+  if (err == -1) {
+    fprintf(stderr, "Could not create temp file\n");
+    exit(1);
+  }
 
   FILE* f = fopen(tmp_file, "w");
   assert(f);

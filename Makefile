@@ -8,11 +8,13 @@ all: $(progs)
 
 test: $(tests)
 	./trie_test && \
-        ./4x4/boggler_test && \
+        ./board-utils_test && \
         ./3x3/boggler_test && \
         ./3x3/ibuckets_test && \
-        ./board-utils_test && \
-        ./4x4/ibuckets_test
+        ./4x4/boggler_test && \
+        ./4x4/ibuckets_test && \
+        ./4x4/perf_test && \
+        ./score_subset_test
 
 perf: 4x4/perf_test
 	./4x4/perf_test
@@ -42,10 +44,10 @@ trie_test: trie.o trie_test.o
 score_subset_test: score_subset_test.o $(RAND) $(BOGGLE_ALL) $(IBUCKETS_ALL) $(BREAK)
 3x3/boggler_test: 3x3/boggler_test.o $(BOGGLE_ALL)
 4x4/boggler_test: 4x4/boggler_test.o $(BOGGLE_ALL)
-3x3/ibuckets_test: 3x3/ibuckets_test.o $(IBUCKETS_ALL)
+3x3/ibuckets_test: 3x3/ibuckets_test.o $(IBUCKETS_ALL) $(BOGGLE_ALL)
 
 4x4/perf_test: 4x4/perf_test.o $(BOGGLE_ALL)
-4x4/ibuckets_test: 4x4/ibuckets_test.o $(IBUCKETS_ALL)
+4x4/ibuckets_test: 4x4/ibuckets_test.o $(IBUCKETS_ALL) $(BOGGLE_ALL)
 
 trie.o: trie.h trie.cc
 

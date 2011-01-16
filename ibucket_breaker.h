@@ -12,6 +12,14 @@
 
 class BreakDetails;
 
+// A class to collect various options for the Breaker.
+struct BreakOptions {
+  BreakOptions() : print_progress(false), record_progress(false) {}
+
+  bool print_progress;  // should breaking progress be printed to stdout?
+  bool record_progress;  // should BreakDetails.boards_considered be filled?
+};
+
 class Breaker {
  public:
   // Does not take ownership of the BucketBuggler, though it must remain live
@@ -25,8 +33,8 @@ class Breaker {
   // "ab cd ef gh ij kl mn op qr"
   bool ParseBoard(const std::string& board);
 
-  // Should progress information be displayed? Default is true.
-  void SetDisplayDebugOutput(bool display) { debug_ = display; }
+  // Change the breaking options.
+  void SetOptions(BreakOptions options) { options_ = options; }
 
   // Set the order in which cells are picked. Must be a permutation of
   // 0..(width*height - 1). Crashes if this is not the case.
@@ -48,7 +56,7 @@ class Breaker {
   int cells_;
   std::vector<int> order_;
 
-  bool debug_;
+  BreakOptions options_;
 };
 
 struct BreakDetails {
@@ -61,6 +69,10 @@ struct BreakDetails {
   int max_wins;
 
   std::vector<std::string> failures;
+
+  // only filled out if options.record_progress is set.
+  // boards appear in this vector in the order in which they are considered.
+  std::vector<std::string> boards_considered;
 };
 
 #endif

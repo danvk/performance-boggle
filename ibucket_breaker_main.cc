@@ -79,7 +79,9 @@ int main(int argc, char** argv) {
   }
 
   Breaker breaker(solver, FLAGS_best_score);
-  breaker.SetDisplayDebugOutput(FLAGS_display_debug_output);
+  BreakOptions opts;
+  opts.print_progress = FLAGS_display_debug_output;
+  breaker.SetOptions(opts);
 
   if (!FLAGS_pick_cell_order.empty()) {
     std::vector<int> picks;

@@ -133,24 +133,27 @@ bool TestBreaker(BucketSolver* solver_33,
                  BucketSolver* solver_34,
                  BucketSolver* solver_44) {
   // Configure the breakers to pick cells in the same order.
+  BreakOptions opts;
+  opts.print_progress = false;
+
   vector<int> picks;
   Breaker breaker_33(solver_33, 625);
   BreakDetails details_33;
   SplitString("0,1,2,3,4,5,6,7,8", &picks);
   breaker_33.SetPickOrder(picks);
-  breaker_33.SetDisplayDebugOutput(false);
+  breaker_33.SetOptions(opts);
 
   Breaker breaker_34(solver_34, 625);
   BreakDetails details_34;
   SplitString("0,1,2,4,5,6,8,9,10,3,7,11", &picks);
   breaker_34.SetPickOrder(picks);
-  breaker_34.SetDisplayDebugOutput(false);
+  breaker_34.SetOptions(opts);
 
   Breaker breaker_44(solver_44, 625);
   BreakDetails details_44;
   SplitString("0,1,2,4,5,6,8,9,10,3,7,11,12,13,14,15", &picks);
   breaker_44.SetPickOrder(picks);
-  breaker_44.SetDisplayDebugOutput(false);
+  breaker_44.SetOptions(opts);
 
   // Pick random board classes to break.
   vector<string> classes;

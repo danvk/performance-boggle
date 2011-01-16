@@ -26,7 +26,6 @@ using std::setprecision;
 
 Breaker::Breaker(BucketSolver* solver, int best_score)
     : solver_(solver), best_score_(best_score) {
-  debug_ = true;
   cells_ = solver_->Width() * solver_->Height();
 
   // Construct a preferred order in which to break cells, starting with the
@@ -137,18 +136,18 @@ void Breaker::SplitBucket(int level) {
       if (*bd_class != ' ') bd.append(1, *bd_class);
     }
     details_->failures.push_back(bd);
-    if (debug_) {
+    if (options_.print_progress) {
       cout << "Unable to break board: " << bd << endl;
     }
     return;
   }
 
-  if (debug_) cout << "split cell " << cell << endl;
+  if (options_.print_progress) cout << "split cell " << cell << endl;
 
   strcpy(orig_bd, solver_->as_string());
   strcpy(orig_cell, solver_->Cell(cell));
 
-  if (debug_) {
+  if (options_.print_progress) {
     cout << std::string(level, ' ') << "Will evaluate "
          << splits.size() << " more boards..." << endl;
   }
@@ -166,13 +165,17 @@ void Breaker::SplitBucket(int level) {
 // Shed/Split until finished
 void Breaker::AttackBoard(int level, int num, int outof) {
   uint64_t reps = solver_->NumReps();
-  if (debug_) {
+  if (options_.print_progress) {
     float frac = 100.0 * elim_ / orig_reps_;
     float est = (secs() - details_->start_time) * orig_reps_ / elim_;
     cout << "(" << setprecision(5) << frac << "%)" << std::string(level, ' ')
          << " (" << level << ";" << num << "/" << outof << ") "
          << solver_->as_string() << " (" << reps << ") est. " << est << " s"
          << endl;
+  }
+
+  if (options_.record_progress) {
+    details_->boards_considered.push_back(solver_->as_string());
   }
 
   if (solver_->UpperBound(best_score_) <= best_score_) {
@@ -206,7 +209,7 @@ void Breaker::Break(BreakDetails* details) {
     AttackBoard();
   double b = secs();
   double a = details_->start_time;
-  if (debug_) {
+  if (options_.print_progress) {
     float pace = 1.0*elim_/(b-a);
     cout << elim_ << " reps in " << setprecision(3) << (b - a) << " s "
          << "@ depth " << details_->max_depth

@@ -3,6 +3,7 @@
 #include <sstream>
 #include <algorithm>
 #include <iterator>
+#include <limits>
 #include <math.h>
 #include <sys/types.h>
 #include <string>
@@ -192,7 +193,9 @@ int main(int argc, char** argv) {
 void PrintDetails(BreakDetails& d) {
   uint64_t unbroken = d.failures.size();
   printf("Broke %llu/%llu @ depth %d in %.4fs = %fbds/sec (%d/%d sum/max)\n",
-         (d.num_reps - unbroken), d.num_reps, d.max_depth,
+         static_cast<unsigned long long int>(d.num_reps - unbroken),
+         static_cast<unsigned long long int>(d.num_reps),
+         d.max_depth,
          d.elapsed, d.num_reps / d.elapsed,
          d.sum_wins, d.max_wins);
 

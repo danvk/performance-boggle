@@ -49,19 +49,16 @@
 
 
 #include "config.h"
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>   // for strlen
 
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "gflags/gflags.h"
-
-using std::set;
-using std::string;
-using std::vector;
+#include <gflags/gflags.h>
 
 #ifndef PATH_SEPARATOR
 #define PATH_SEPARATOR  '/'
@@ -77,6 +74,10 @@ DEFINE_int32(tab_completion_columns, 80,
 _START_GOOGLE_NAMESPACE_
 
 namespace {
+
+using std::set;
+using std::string;
+using std::vector;
 
 // Function prototypes and Type forward declarations.  Code may be
 // more easily understood if it is roughly ordered according to
@@ -464,6 +465,13 @@ static void CategorizeAllMatchingFlags(
   }
 }
 
+static void PushNameWithSuffix(vector<string>* suffixes, const char* suffix) {
+  string s("/");
+  s += ProgramInvocationShortName();
+  s += suffix;
+  suffixes->push_back(s);
+}
+
 static void TryFindModuleAndPackageDir(
     const vector<CommandLineFlagInfo> all_flags,
     string *module,
@@ -476,15 +484,14 @@ static void TryFindModuleAndPackageDir(
   // could share the same trailing folder and file structure (and even worse,
   // same file names), causing us to be unsure as to which of the two is the
   // actual package for this binary.  In this case, we'll arbitrarily choose.
-  string progname(ProgramInvocationShortName());
-  suffixes.push_back("/" + progname + ".");
-  suffixes.push_back("/" + progname + "-main.");
-  suffixes.push_back("/" + progname + "_main.");
+  PushNameWithSuffix(&suffixes, ".");
+  PushNameWithSuffix(&suffixes, "-main.");
+  PushNameWithSuffix(&suffixes, "_main.");
   // These four are new but probably merited?
-  suffixes.push_back("/" + progname + "_test.");
-  suffixes.push_back("/" + progname + "-test.");
-  suffixes.push_back("/" + progname + "_unittest.");
-  suffixes.push_back("/" + progname + "-unittest.");
+  PushNameWithSuffix(&suffixes, "-test.");
+  PushNameWithSuffix(&suffixes, "_test.");
+  PushNameWithSuffix(&suffixes, "-unittest.");
+  PushNameWithSuffix(&suffixes, "_unittest.");
 
   for (vector<CommandLineFlagInfo>::const_iterator it = all_flags.begin();
       it != all_flags.end();
@@ -505,16 +512,16 @@ static void TryFindModuleAndPackageDir(
 
 // Can't specialize template type on a locally defined type.  Silly C++...
 struct DisplayInfoGroup {
-  string header;
-  string footer;
+  const char* header;
+  const char* footer;
   set<const CommandLineFlagInfo *> *group;
 
   int SizeInLines() const {
     int size_in_lines = static_cast<int>(group->size()) + 1;
-    if (!header.empty()) {
+    if (strlen(header) > 0) {
       size_in_lines++;
     }
-    if (!footer.empty()) {
+    if (strlen(footer) > 0) {
       size_in_lines++;
     }
     return size_in_lines;
@@ -546,7 +553,7 @@ static void FinalizeCompletionOutput(
       !notable_flags->perfect_match_flag.empty()) {
     perfect_match_found = true;
     DisplayInfoGroup group =
-        { string(),
+        { "",
           "==========",
           &notable_flags->perfect_match_flag };
     lines_so_far += group.SizeInLines();
@@ -595,7 +602,7 @@ static void FinalizeCompletionOutput(
     if (!obscure_flags.empty()) {
       DisplayInfoGroup group = {
           "-* Other flags *-",
-          string(),
+          "",
           &obscure_flags };
       lines_so_far += group.SizeInLines();
       output_groups.push_back(group);
@@ -614,8 +621,8 @@ static void FinalizeCompletionOutput(
     OutputSingleGroupWithLimit(
         *it->group,  // group
         string(indent, ' '),  // line indentation
-        it->header,  // header
-        it->footer,  // footer
+        string(it->header),  // header
+        string(it->footer),  // footer
         perfect_match_found,  // long format
         &remaining_lines,  // line limit - reduces this by number printed
         &completions_output,  // completions (not lines) added
@@ -651,7 +658,7 @@ static void RetrieveUnusedFlags(
   }
 }
 
-// 5) Output matches (and helpfer methods)
+// 5) Output matches (and helper methods)
 
 static void OutputSingleGroupWithLimit(
     const set<const CommandLineFlagInfo *> &group,

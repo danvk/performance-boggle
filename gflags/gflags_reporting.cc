@@ -55,15 +55,12 @@
 #include <assert.h>
 #include <string>
 #include <vector>
-#include "gflags/gflags.h"
-#include "gflags/gflags_completions.h"
+#include <gflags/gflags.h>
+#include <gflags/gflags_completions.h>
 
 #ifndef PATH_SEPARATOR
 #define PATH_SEPARATOR  '/'
 #endif
-
-using std::string;
-using std::vector;
 
 // The 'reporting' flags.  They all call exit().
 DEFINE_bool(help, false,
@@ -84,6 +81,9 @@ DEFINE_bool(version, false,
             "show version and build info and exit");
 
 _START_GOOGLE_NAMESPACE_
+
+using std::string;
+using std::vector;
 
 // --------------------------------------------------------------------
 // DescribeOneFlag()
@@ -107,6 +107,17 @@ static void AddString(const string& s,
   }
   *final_string += s;
   *chars_in_line += slen;
+}
+
+static string PrintStringFlagsWithQuotes(const CommandLineFlagInfo& flag,
+                                         const string& text, bool current) {
+  const char* c_string = (current ? flag.current_value.c_str() :
+                          flag.default_value.c_str());
+  if (strcmp(flag.type.c_str(), "string") == 0) {  // add quotes for strings
+    return text + ": \"" + c_string + "\"";
+  } else {
+    return text + ": " + c_string;
+  }
 }
 
 // Create a descriptive string for a flag.
@@ -159,22 +170,14 @@ string DescribeOneFlag(const CommandLineFlagInfo& flag) {
 
   // Append data type
   AddString(string("type: ") + flag.type, &final_string, &chars_in_line);
-  // Append the effective default value (i.e., the value that the flag
-  // will have after the command line is parsed if the flag is not
-  // specified on the command line), which may be different from the
-  // stored default value. This would happen if the value of the flag
-  // was modified before the command line was parsed. (Unless the
-  // value was modified using SetCommandLineOptionWithMode() with mode
-  // SET_FLAGS_DEFAULT.)
-  // Note that we are assuming this code is being executed because a help
-  // request was just parsed from the command line, in which case the
-  // printed value is indeed the effective default, as long as no value
-  // for the flag was parsed from the command line before "--help".
-  if (strcmp(flag.type.c_str(), "string") == 0) {  // add quotes for strings
-    AddString(string("default: \"") + flag.current_value + string("\""),
-              &final_string, &chars_in_line);
-  } else {
-    AddString(string("default: ") + flag.current_value,
+  // The listed default value will be the actual default from the flag
+  // definition in the originating source file, unless the value has
+  // subsequently been modified using SetCommandLineOptionWithMode() with mode
+  // SET_FLAGS_DEFAULT, or by setting FLAGS_foo = bar before initializing.
+  AddString(PrintStringFlagsWithQuotes(flag, "default", false), &final_string,
+            &chars_in_line);
+  if (!flag.is_default) {
+    AddString(PrintStringFlagsWithQuotes(flag, "currently", true),
               &final_string, &chars_in_line);
   }
 
@@ -192,18 +195,29 @@ static string XMLText(const string& txt) {
   return ans;
 }
 
+static void AddXMLTag(string* r, const char* tag, const string& txt) {
+  *r += ('<');
+  *r += (tag);
+  *r += ('>');
+  *r += (XMLText(txt));
+  *r += ("</");
+  *r += (tag);
+  *r += ('>');
+}
+
 static string DescribeOneFlagInXML(const CommandLineFlagInfo& flag) {
   // The file and flagname could have been attributes, but default
   // and meaning need to avoid attribute normalization.  This way it
   // can be parsed by simple programs, in addition to xml parsers.
-  return (string("<flag>") +
-          "<file>" + XMLText(flag.filename) + "</file>" +
-          "<name>" + XMLText(flag.name) + "</name>" +
-          "<meaning>" + XMLText(flag.description) + "</meaning>" +
-          "<default>" + XMLText(flag.default_value) + "</default>" +
-          "<current>" + XMLText(flag.current_value) + "</current>" +
-          "<type>" + XMLText(flag.type) + "</type>" +
-          string("</flag>"));
+  string r("<flag>");
+  AddXMLTag(&r, "file", flag.filename);
+  AddXMLTag(&r, "name", flag.name);
+  AddXMLTag(&r, "meaning", flag.description);
+  AddXMLTag(&r, "default", flag.default_value);
+  AddXMLTag(&r, "current", flag.current_value);
+  AddXMLTag(&r, "type", flag.type);
+  r += "</flag>";
+  return r;
 }
 
 // --------------------------------------------------------------------
@@ -342,6 +356,15 @@ static void ShowVersion() {
 # endif
 }
 
+static void AppendPrognameStrings(vector<string>* substrings,
+                                  const char* progname) {
+  string r("/");
+  r += progname;
+  substrings->push_back(r + ".");
+  substrings->push_back(r + "-main.");
+  substrings->push_back(r + "_main.");
+}
+
 // --------------------------------------------------------------------
 // HandleCommandLineHelpFlags()
 //    Checks all the 'reporting' commandline flags to see if any
@@ -356,13 +379,12 @@ void HandleCommandLineHelpFlags() {
 
   HandleCommandLineCompletions();
 
+  vector<string> substrings;
+  AppendPrognameStrings(&substrings, progname);
+
   if (FLAGS_helpshort) {
     // show only flags related to this binary:
     // E.g. for fileutil.cc, want flags containing   ... "/fileutil." cc
-    vector<string> substrings;
-    substrings.push_back(string("/") + progname + ".");
-    substrings.push_back(string("/") + progname + "-main.");
-    substrings.push_back(string("/") + progname + "_main.");
     ShowUsageWithFlagsMatching(progname, substrings);
     commandlineflags_exitfunc(1);   // almost certainly exit()
 
@@ -388,10 +410,6 @@ void HandleCommandLineHelpFlags() {
     // filename like "/progname.cc", and take the dirname of that.
     vector<CommandLineFlagInfo> flags;
     GetAllFlags(&flags);
-    vector<string> substrings;
-    substrings.push_back(string("/") + progname + ".");
-    substrings.push_back(string("/") + progname + "-main.");
-    substrings.push_back(string("/") + progname + "_main.");
     string last_package;
     for (vector<CommandLineFlagInfo>::const_iterator flag = flags.begin();
          flag != flags.end();

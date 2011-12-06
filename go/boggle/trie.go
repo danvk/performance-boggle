@@ -4,95 +4,63 @@
 package trie
 
 import (
-//  "fmt"
+  "fmt"
+  "bufio"
+  "os"
 )
 
-type Trie interface {
-  IsWord() bool
-  StartsWord(byte) bool
-  Descend(byte) Trie
-}
-
-type MarkableTrie interface {
-  Trie
-  Mark(uint)
-  GetMark() uint
-  DescendMarkable(byte) MarkableTrie
-}
-
-type MutableTrie interface {
-  Trie
-  SetIsWord()
-  DescendOrAdd(byte) MutableTrie
-}
-
-// The simple definition ("MutableTrie; MarkableTrie") results in duplicate
-// name errors.
-type MutableMarkableTrie interface {
-  MarkableTrie
-  SetIsWord()
-  DescendOrAddMarkable(byte) MutableMarkableTrie
-}
-
-type simpleTrie struct {
+type Trie struct {
   is_word_ bool
   mark_ uint
-  children_ []*simpleTrie
+  children_ []*Trie
 }
 
-func (t *simpleTrie) IsWord() bool {
+func (t *Trie) IsWord() bool {
   return t.is_word_
 }
 
-func (t *simpleTrie) SetIsWord() {
+func (t *Trie) SetIsWord() {
   t.is_word_ = true
 }
 
-func (t *simpleTrie) StartsWord(c byte) bool {
+func (t *Trie) StartsWord(c byte) bool {
   return t.children_[c] != nil
 }
 
-func (t *simpleTrie) Descend(c byte) Trie {
+func (t *Trie) Descend(c byte) *Trie {
   return t.children_[c]
 }
-func (t *simpleTrie) DescendMarkable(c byte) MarkableTrie {
+func (t *Trie) DescendMarkable(c byte) *Trie {
   return t.children_[c]
 }
 
-func (t *simpleTrie) GetMark() uint {
+func (t *Trie) GetMark() uint {
   return t.mark_
 }
 
-func (t *simpleTrie) Mark(mark uint) {
+func (t *Trie) Mark(mark uint) {
   t.mark_ = mark;
 }
 
-func (t *simpleTrie) DescendOrAdd(c byte) MutableTrie {
+func (t *Trie) DescendOrAdd(c byte) *Trie {
   if t.children_[c] == nil {
-    t.children_[c] = newSimpleTrie()
-  }
-  return t.children_[c]
-}
-
-func (t *simpleTrie) DescendOrAddMarkable(c byte) MutableMarkableTrie {
-  if t.children_[c] == nil {
-    t.children_[c] = newSimpleTrie()
+    t.children_[c] = newTrie()
   }
   return t.children_[c]
 }
 
 
-func newSimpleTrie() *simpleTrie {
-  t := new(simpleTrie)
-  t.children_ = make([]*simpleTrie, 26)
+func newTrie() *Trie {
+  t := new(Trie)
+  t.children_ = make([]*Trie, 26)
   return t
 }
 
-func NewTrie() MutableMarkableTrie {
-  return newSimpleTrie()
+func NewTrie() *Trie {
+  return newTrie()
 }
 
-func AddWord(t MutableTrie, word string) MutableTrie {
+func AddWord(t *Trie, word string) *Trie {
   if word == "" {
     t.SetIsWord()
     return t
@@ -106,13 +74,13 @@ func AddWord(t MutableTrie, word string) MutableTrie {
   return AddWord(child, word[1:])
 }
 
-func IsWord(t Trie, word string) bool {
+func IsWord(t *Trie, word string) bool {
   child := DescendPath(t, word)
   if child == nil { return false }
   return child.IsWord()
 }
 
-func DescendPath(t Trie, word string) Trie {
+func DescendPath(t *Trie, word string) *Trie {
   if word == "" {
     return t
   }
@@ -126,4 +94,27 @@ func DescendPath(t Trie, word string) Trie {
   }
 
   return DescendPath(t.Descend(word[0] - 'a'), word[1:])
+}
+
+
+func CreateTrieFromFile(r *bufio.Reader) *Trie {
+  t := NewTrie()
+  for {
+    line, isPrefix, err := r.ReadLine()
+    if err == os.EOF {
+      break
+    }
+    if isPrefix {
+      fmt.Println("need more buffering!")
+      return nil
+    }
+    if err != nil {
+      fmt.Println("error! ", err)
+      return nil
+    }
+
+    AddWord(t, string(line[1:len(line) - 1]))
+  }
+
+  return t
 }

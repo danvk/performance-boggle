@@ -63,4 +63,5 @@ func TestMarks(tt *testing.T) {
 
   m := trie.DescendPath(t, "hello")
   m.Mark(10)
+  if m.GetMark() != 10 { tt.Fail() }
 }

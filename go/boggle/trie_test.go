@@ -49,7 +49,7 @@ func TestStartsWordDescend(tt *testing.T) {
   if t_hell.IsWord() { tt.Fail() }
 
   // this test fails, oddly, even though fmt.Println(t_hell.Descend('h' - 'a')) prints '<nil>'
-  // if t_hell.Descend('h' - 'a') != nil { tt.Fail() }
+  if t_hell.Descend('h' - 'a') != nil { tt.Fail() }
 
   t_hello := t_hell.Descend('o' - 'a')
   if !t_hello.IsWord() { tt.Fail() }
@@ -64,4 +64,15 @@ func TestMarks(tt *testing.T) {
   m := trie.DescendPath(t, "hello")
   m.Mark(10)
   if m.GetMark() != 10 { tt.Fail() }
+}
+
+func TestReverseLookup(tt *testing.T) {
+  t := trie.NewTrie()
+  trie.AddWord(t, "hello")
+  trie.AddWord(t, "goodbye")
+  trie.AddWord(t, "goodday")
+
+  m := trie.DescendPath(t, "hello")
+  rev := trie.ReverseLookup(t, m)
+  if rev != "hello" { tt.Fail() }
 }

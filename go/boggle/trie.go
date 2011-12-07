@@ -97,8 +97,61 @@ func DescendPath(t *Trie, word string) *Trie {
 }
 
 
+func CountWords(t *Trie) int {
+  count := 0
+  if t.IsWord() {
+    count += 1
+  }
+  var i uint8
+  for i = 0; i < 26; i++ {
+    if t.StartsWord(i) {
+      count += CountWords(t.Descend(i))
+    }
+  }
+  return count
+}
+
+func PrintTrie(t *Trie, prefix string) {
+  if t.IsWord() {
+    fmt.Printf("%s\n", prefix)
+  }
+
+  var i uint8;
+  for i = 0; i < 26; i++ {
+    if t.StartsWord(i) {
+      PrintTrie(t.Descend(i), prefix + string('a' + i))
+    }
+  }
+}
+
+
+func ReverseLookup(base, node *Trie) string {
+  found, str := reverseLookup(base, node, "")
+  if found {
+    return str
+  }
+  return "?"
+}
+
+func reverseLookup(base, node *Trie, prefix string) (bool, string) {
+  if base == node { return true, prefix }
+
+  var i uint8
+  for i = 0; i < 26; i++ {
+    if base.StartsWord(i) {
+      found, str := reverseLookup(base.Descend(i), node, prefix + string('a' + i))
+      if found {
+        return found, str
+      }
+    }
+  }
+  return false, ""
+}
+
+
 func CreateTrieFromFile(r *bufio.Reader) *Trie {
   t := NewTrie()
+  num := 0
   for {
     line, isPrefix, err := r.ReadLine()
     if err == os.EOF {
@@ -113,8 +166,31 @@ func CreateTrieFromFile(r *bufio.Reader) *Trie {
       return nil
     }
 
-    AddWord(t, string(line[1:len(line) - 1]))
+    word := string(line)
+    //fmt.Println("Adding ", word)
+    AddWord(t, word)
+    //PrintTrie(t, "")
+    num += 1
+    //if num > 10 {
+    //  break
+    //}
   }
 
   return t
+}
+
+func CreateTrieFromFilename(filename string) *Trie {
+  f, err := os.Open(filename)
+  if err != nil {
+      fmt.Println(err)
+      return nil
+  }
+  defer f.Close()
+
+  r, err := bufio.NewReaderSize(f, 4*1024)
+  if err != nil {
+      fmt.Println(err)
+      return nil
+  }
+  return CreateTrieFromFile(r)
 }

@@ -6,28 +6,32 @@ package main
 import (
   "trie"
   "fmt"
-  "os"
-  "bufio"
+  "boggler"
+  "time"
 )
 
 func main() {
-  filename := "../words"
-  f, err := os.Open(filename)
-  if err != nil {
-      fmt.Println(err)
-      return
-  }
-  defer f.Close()
-
-  r, err := bufio.NewReaderSize(f, 4*1024)
-  if err != nil {
-      fmt.Println(err)
-      return
-  }
-
-  t := trie.CreateTrieFromFile(r)
+  t := trie.CreateTrieFromFilename("../words")
   words := []string{ "hello", "goodbye", "what", "questioning" }
+  fmt.Println("Total words: ", trie.CountWords(t))
   for _, wd := range words {
     fmt.Println("IsWord('", wd, "') = ", trie.IsWord(t, wd))
   }
+
+  b := boggler.BogglerFromTrie(t)
+  boards := []string{
+      "abcdefghijklmnop",
+      "catdlinemaropets",
+      "plsteaiertnrsges" }
+  for _, bd := range boards {
+    fmt.Println(bd, b.Score(bd))
+  }
+
+  start := time.LocalTime().Nanoseconds()
+  for i := 0; i < 100; i++ {
+    b.Score("abcdefghijklmnop")
+  }
+  end := time.LocalTime().Nanoseconds()
+
+  fmt.Println(end - start, "ns")
 }

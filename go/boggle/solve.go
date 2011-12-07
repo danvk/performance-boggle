@@ -8,6 +8,9 @@ import (
   "fmt"
   "boggler"
   "time"
+  "os"
+  "runtime/pprof"
+  "log"
 )
 
 func main() {
@@ -41,6 +44,12 @@ func main() {
     }
   }
 
+  f, err := os.Create("cpu_profile")
+  if err != nil {
+      log.Fatal(err)
+  }
+
+  pprof.StartCPUProfile(f)
   reps := 10
   start := time.LocalTime().Nanoseconds()
   for rep := 0; rep < reps; rep++ {
@@ -74,6 +83,7 @@ func main() {
     }
   }
   end := time.LocalTime().Nanoseconds()
+  pprof.StopCPUProfile()
 
   var secs float64 = 1.0e-9 * float64(end - start)
   var num_bds float64 = float64(b.NumBoards())

@@ -1,7 +1,9 @@
 package boggler
 
 import (
-  // "fmt"
+  "fmt"
+  "os"
+  "bufio"
   "trie"
 )
 
@@ -11,6 +13,7 @@ type Boggler struct {
   used uint
   bd [16]int
   score int
+  num_boards int
 }
 
 const kQ = 'q' - 'a'
@@ -22,12 +25,55 @@ func BogglerFromTrie(t *trie.Trie) *Boggler {
   return b
 }
 
+func boggleTrieFromFilename(filename string) *trie.Trie {
+  f, err := os.Open(filename)
+  if err != nil {
+      fmt.Println(err)
+      return nil
+  }
+  defer f.Close()
+
+  r, err := bufio.NewReaderSize(f, 4*1024)
+  if err != nil {
+      fmt.Println(err)
+      return nil
+  }
+
+  t := trie.NewTrie()
+  for {
+    line, isPrefix, err := r.ReadLine()
+    if err == os.EOF {
+      break
+    }
+    if isPrefix {
+      fmt.Println("need more buffering!")
+      return nil
+    }
+    if err != nil {
+      fmt.Println("error! ", err)
+      return nil
+    }
+
+    word := string(line)
+    ok, boggleword := BogglifyWord(word)
+    if ok {
+      trie.AddWord(t, boggleword)
+    }
+  }
+
+  return t
+}
+
 func BogglerFromDictionary(filename string) *Boggler {
-  t := trie.CreateTrieFromFilename(filename)
+  t := boggleTrieFromFilename(filename)
   if t == nil {
     return nil
   }
   return BogglerFromTrie(t)
+}
+
+func (b *Boggler) NumBoards() int {
+  return b.num_boards
 }
 
 func (b *Boggler) Score(lets string) int {
@@ -41,6 +87,22 @@ func (b *Boggler) Score(lets string) int {
 
   b.counter += 1
   b.InternalScore()
+  b.num_boards += 1
+  return b.score
+}
+
+func (b *Boggler) ScoreBytes(lets []byte) int {
+  if len(lets) != 16 {
+    return -1
+  }
+
+  for i := 0; i < 16; i++ {
+    b.bd[i] = int(lets[i])
+  }
+
+  b.counter += 1
+  b.InternalScore()
+  b.num_boards += 1
   return b.score
 }
 
@@ -125,4 +187,20 @@ func (b *Boggler) DoDFS(i, length uint, t *trie.Trie) {
   }
 
   b.used ^= (1 << i)
+}
+
+// Changes "qu" -> "q".
+// Returns an (IsBoggleWord, BogglifiedWord) tuple.
+func BogglifyWord(wd string) (bool, string) {
+  if wd == "" { return true, wd }
+  if wd[0] == 'q' {
+    if len(wd) > 1 && wd[1] == 'u' {
+      ok, rest := BogglifyWord(wd[2:])
+      return ok, "q" + rest
+    } else {
+      return false, ""
+    }
+  }
+  ok, rest := BogglifyWord(wd[1:])
+  return ok, wd[0:1] + rest
 }

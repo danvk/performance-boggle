@@ -151,7 +151,6 @@ func reverseLookup(base, node *Trie, prefix string) (bool, string) {
 
 func CreateTrieFromFile(r *bufio.Reader) *Trie {
   t := NewTrie()
-  num := 0
   for {
     line, isPrefix, err := r.ReadLine()
     if err == os.EOF {
@@ -167,13 +166,7 @@ func CreateTrieFromFile(r *bufio.Reader) *Trie {
     }
 
     word := string(line)
-    //fmt.Println("Adding ", word)
     AddWord(t, word)
-    //PrintTrie(t, "")
-    num += 1
-    //if num > 10 {
-    //  break
-    //}
   }
 
   return t

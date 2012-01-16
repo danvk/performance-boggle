@@ -92,6 +92,8 @@
 
 // Define 32 bit signed and unsigned integers.
 // Change these definitions, if necessary, on 64 bit computers
+// typedef   signed long int32;     
+// typedef unsigned long uint32;     
 typedef   signed int int32;     
 typedef unsigned int uint32;     
 

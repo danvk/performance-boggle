@@ -20,7 +20,7 @@ perf: 4x4/perf_test
 	./4x4/perf_test
 
 GFLAGS=gflags/gflags.o gflags/gflags_reporting.o gflags/gflags_completions.o
-GLOG=glog-src/logging.o glog-src/utilities.o glog-src/symbolize.o glog-src/demangle.o glog-src/raw_logging.o glog-src/vlog_is_on.o
+GLOG=glog-src/logging.o glog-src/utilities.o glog-src/symbolize.o glog-src/demangle.o glog-src/raw_logging.o glog-src/vlog_is_on.o glog-src/signalhandler.o
 
 BOGGLE_ALL=trie.o boggle_solver.o 3x3/boggler.o 4x4/boggler.o 3x4/boggler.o
 IBUCKETS_ALL=trie.o bucket_solver.o 3x3/ibuckets.o 4x4/ibuckets.o 3x4/ibuckets.o

@@ -12,10 +12,10 @@
 #include <vector>
 #include "boggle_solver.h"
 #include "bucket_solver.h"
-#include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "ibucket_breaker.h"
 #include "mtrandom/randomc.h"
+#include "init.h"
 
 using namespace std;
 
@@ -55,6 +55,7 @@ bool TestRegular() {
   // Start solving random boards.
   int32 seed = time(NULL) + getpid();
   TRandomMersenne r(seed);
+
   for (int n = 0; n < 10000; n++) {
     for (int x = 0; x < 3; x++) {
       for (int y = 0; y < 3; y++) {
@@ -217,9 +218,7 @@ bool TestBreaker(BucketSolver* solver_33,
 }
 
 int main(int argc, char** argv) {
-  google::ParseCommandLineFlags(&argc, &argv, true);
-  google::InitGoogleLogging(argv[0]);
-  LOG(INFO) << "Here!";
+  Init(&argc, &argv);
 
   if (!TestRegular()) {
     fprintf(stderr, "%s: failed TestRegular\n", argv[0]);

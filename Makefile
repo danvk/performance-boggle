@@ -25,6 +25,7 @@ GLOG=glog-src/logging.o glog-src/utilities.o glog-src/symbolize.o glog-src/deman
 BOGGLE_ALL=trie.o boggle_solver.o 3x3/boggler.o 4x4/boggler.o 3x4/boggler.o
 IBUCKETS_ALL=trie.o bucket_solver.o 3x3/ibuckets.o 4x4/ibuckets.o 3x4/ibuckets.o
 UTILS=board-utils.o
+INIT=init.o
 BREAK=ibucket_breaker.o $(IBUCKETS_ALL) $(UTILS)
 RAND=mtrandom/mersenne.o
 
@@ -42,7 +43,7 @@ tree_tool: tree_tool.o $(IBUCKETS_ALL) $(BOGGLE_ALL) $(GFLAGS) breaking_tree.o
 # Tests
 board-utils_test: board-utils_test.o $(UTILS)
 trie_test: trie.o trie_test.o
-score_subset_test: score_subset_test.o $(RAND) $(BOGGLE_ALL) $(IBUCKETS_ALL) $(BREAK) $(GLOG) $(GFLAGS)
+score_subset_test: score_subset_test.o $(RAND) $(BOGGLE_ALL) $(IBUCKETS_ALL) $(BREAK) $(GLOG) $(GFLAGS) $(INIT)
 3x3/boggler_test: 3x3/boggler_test.o $(BOGGLE_ALL)
 4x4/boggler_test: 4x4/boggler_test.o $(BOGGLE_ALL)
 3x3/ibuckets_test: 3x3/ibuckets_test.o $(IBUCKETS_ALL) $(BOGGLE_ALL)

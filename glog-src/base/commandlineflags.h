@@ -58,6 +58,7 @@
 #include <gflags/gflags.h>
 
 #else
+
 #include "glog/logging.h"
 
 #define DECLARE_VARIABLE(type, name, tn)                                      \

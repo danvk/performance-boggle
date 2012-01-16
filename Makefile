@@ -1,5 +1,5 @@
 CC = g++
-CPPFLAGS = -g -Wall -O3 -I. -Wno-sign-compare
+CPPFLAGS = -g -Wall -O3 -I. -Iglog-src -Wno-sign-compare
 #CPPFLAGS = -g -Wall -I. -Wno-sign-compare
 
 tests = trie_test 3x3/boggler_test 3x3/ibuckets_test 4x4/boggler_test board-utils_test 4x4/perf_test 4x4/ibuckets_test score_subset_test
@@ -20,6 +20,7 @@ perf: 4x4/perf_test
 	./4x4/perf_test
 
 GFLAGS=gflags/gflags.o gflags/gflags_reporting.o gflags/gflags_completions.o
+GLOG=glog-src/logging.o glog-src/utilities.o glog-src/symbolize.o glog-src/demangle.o glog-src/raw_logging.o glog-src/vlog_is_on.o
 
 BOGGLE_ALL=trie.o boggle_solver.o 3x3/boggler.o 4x4/boggler.o 3x4/boggler.o
 IBUCKETS_ALL=trie.o bucket_solver.o 3x3/ibuckets.o 4x4/ibuckets.o 3x4/ibuckets.o
@@ -41,7 +42,7 @@ tree_tool: tree_tool.o $(IBUCKETS_ALL) $(BOGGLE_ALL) $(GFLAGS) breaking_tree.o
 # Tests
 board-utils_test: board-utils_test.o $(UTILS)
 trie_test: trie.o trie_test.o
-score_subset_test: score_subset_test.o $(RAND) $(BOGGLE_ALL) $(IBUCKETS_ALL) $(BREAK)
+score_subset_test: score_subset_test.o $(RAND) $(BOGGLE_ALL) $(IBUCKETS_ALL) $(BREAK) $(GLOG) $(GFLAGS)
 3x3/boggler_test: 3x3/boggler_test.o $(BOGGLE_ALL)
 4x4/boggler_test: 4x4/boggler_test.o $(BOGGLE_ALL)
 3x3/ibuckets_test: 3x3/ibuckets_test.o $(IBUCKETS_ALL) $(BOGGLE_ALL)
@@ -51,5 +52,6 @@ score_subset_test: score_subset_test.o $(RAND) $(BOGGLE_ALL) $(IBUCKETS_ALL) $(B
 
 trie.o: trie.h trie.cc
 
+# note: doesn't clean gflags/*.o or glog-src/*.o, since presumably those won't change.
 clean:
 	rm -f -r *.o $(progs) $(tests) *.dSYM mtrandom/*.o gflags/*.o 3x3/*.o 3x4/*.o 4x4/*.o

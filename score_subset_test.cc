@@ -12,6 +12,8 @@
 #include <vector>
 #include "boggle_solver.h"
 #include "bucket_solver.h"
+#include "gflags/gflags.h"
+#include "glog/logging.h"
 #include "ibucket_breaker.h"
 #include "mtrandom/randomc.h"
 
@@ -215,6 +217,10 @@ bool TestBreaker(BucketSolver* solver_33,
 }
 
 int main(int argc, char** argv) {
+  google::ParseCommandLineFlags(&argc, &argv, true);
+  google::InitGoogleLogging(argv[0]);
+  LOG(INFO) << "Here!";
+
   if (!TestRegular()) {
     fprintf(stderr, "%s: failed TestRegular\n", argv[0]);
   }

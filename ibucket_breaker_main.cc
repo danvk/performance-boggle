@@ -14,6 +14,7 @@
 #include "4x4/boggler.h"  // gross
 #include "board-utils.h"
 #include "ibucket_breaker.h"
+#include "init.h"
 #include "gflags/gflags.h"
 #include "mtrandom/randomc.h"
 #include "trie.h"
@@ -69,7 +70,7 @@ void SplitString(std::string& s, vector<int>* nums) {
 }
 
 int main(int argc, char** argv) {
-  google::ParseCommandLineFlags(&argc, &argv, true);
+  Init(&argc, &argv);
 
   BucketSolver* solver = BucketSolver::Create(
     FLAGS_size, FLAGS_dictionary.c_str());

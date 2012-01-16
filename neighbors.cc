@@ -15,6 +15,7 @@
 #include <string>
 #include <iostream>
 #include "gflags/gflags.h"
+#include "init.h"
 
 DEFINE_int32(d, 1, "Maximum edit distance for output");
 
@@ -51,7 +52,7 @@ void EditDistance(int d, char* c) {
 }
 
 int main(int argc, char** argv) {
-  google::ParseCommandLineFlags(&argc, &argv, true);
+  Init(&argc, &argv);
 
   if (argc > 1) {
     for (int i = 1; i < argc; i++)

@@ -21,24 +21,25 @@ perf: 4x4/perf_test
 
 GFLAGS=gflags/gflags.o gflags/gflags_reporting.o gflags/gflags_completions.o
 GLOG=glog-src/logging.o glog-src/utilities.o glog-src/symbolize.o glog-src/demangle.o glog-src/raw_logging.o glog-src/vlog_is_on.o glog-src/signalhandler.o
+INIT=init.o
+GOOGLE=$(GFLAGS) $(GLOG) $(INIT)
 
 BOGGLE_ALL=trie.o boggle_solver.o 3x3/boggler.o 4x4/boggler.o 3x4/boggler.o
 IBUCKETS_ALL=trie.o bucket_solver.o 3x3/ibuckets.o 4x4/ibuckets.o 3x4/ibuckets.o
 UTILS=board-utils.o
-INIT=init.o
 BREAK=ibucket_breaker.o $(IBUCKETS_ALL) $(UTILS)
 RAND=mtrandom/mersenne.o
 
-solve: solve.o $(BOGGLE_ALL) $(GFLAGS)
-anneal: anneal.o optimizer.o $(BOGGLE_ALL) $(RAND) $(GFLAGS)
+solve: solve.o $(BOGGLE_ALL) $(GOOGLE)
+anneal: anneal.o optimizer.o $(BOGGLE_ALL) $(RAND) $(GOOGLE)
 
-neighbors: neighbors.o $(GFLAGS)
-random_boards: random_boards.o $(RAND) $(GFLAGS)
-normalize: normalize.o $(GFLAGS) $(UTILS)
+neighbors: neighbors.o $(GOOGLE)
+random_boards: random_boards.o $(RAND) $(GOOGLE)
+normalize: normalize.o $(GOOGLE) $(UTILS)
 
-ibucket_boggle: ibucket_boggle.o $(IBUCKETS_ALL) $(BOGGLE_ALL) $(GFLAGS) breaking_tree.o
-ibucket_breaker: ibucket_breaker_main.o $(BREAK) $(GFLAGS) $(BOGGLE_ALL) $(UTILS) $(RAND)
-tree_tool: tree_tool.o $(IBUCKETS_ALL) $(BOGGLE_ALL) $(GFLAGS) breaking_tree.o
+ibucket_boggle: ibucket_boggle.o $(IBUCKETS_ALL) $(BOGGLE_ALL) $(GOOGLE) breaking_tree.o
+ibucket_breaker: ibucket_breaker_main.o $(BREAK) $(GOOGLE) $(BOGGLE_ALL) $(UTILS) $(RAND)
+tree_tool: tree_tool.o $(IBUCKETS_ALL) $(BOGGLE_ALL) $(GOOGLE) breaking_tree.o
 
 # Tests
 board-utils_test: board-utils_test.o $(UTILS)

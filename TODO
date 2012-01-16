@@ -9,3 +9,5 @@ This would return either a Boggler, Boggler3 or Boggler34 depending on size. It
 could even produce a restricted Trie for the boggler based on the board size.
 
 - Add a HillClimber class to optimizer.{h,cc} and compare to Annealer.
+
+- Move tests over to googletest (http://code.google.com/p/googletest/)

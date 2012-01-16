@@ -11,6 +11,8 @@
 #include "4x4/ibuckets.h"
 #include "4x4/boggler.h"  // gross
 #include "gflags/gflags.h"
+#include "init.h"
+
 using namespace std;
 
 DEFINE_string(dictionary, "words", "Dictionary file");
@@ -22,7 +24,8 @@ BucketSolver* GetSolver(SimpleTrie* t);
 void ParseBoard(BucketSolver* solver, int argc, char** argv);
 
 int main(int argc, char** argv) {
-  google::ParseCommandLineFlags(&argc, &argv, true);
+  Init(&argc, &argv);
+
   printf("loading words from %s\n", FLAGS_dictionary.c_str());
   SimpleTrie* t = Boggler::DictionaryFromFile(FLAGS_dictionary.c_str());
   if (!t) {

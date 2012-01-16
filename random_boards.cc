@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include "gflags/gflags.h"
+#include "init.h"
 #include "mtrandom/randomc.h"
 
 DEFINE_int32(n, 100, "Number of boards to produce");
@@ -11,7 +12,7 @@ DEFINE_int32(rand_seed, -1,
              "Random number seed (default is based on time and pid)");
 
 int main(int argc, char** argv) {
-  google::ParseCommandLineFlags(&argc, &argv, true);
+  Init(&argc, &argv);
   if (FLAGS_rand_seed == -1) {
     FLAGS_rand_seed = time(NULL) + getpid();
   }

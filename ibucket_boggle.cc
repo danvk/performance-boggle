@@ -10,6 +10,7 @@
 #include "breaking_tree.h"
 #include "bucket_solver.h"
 #include "gflags/gflags.h"
+#include "init.h"
 using namespace std;
 
 DEFINE_string(dictionary, "words", "Dictionary file");
@@ -28,7 +29,7 @@ void Usage(char* prog) {
 void PrintTree(BucketSolver* solver, BreakingNode* node, int indentation = 0);
 
 int main(int argc, char** argv) {
-  google::ParseCommandLineFlags(&argc, &argv, true);
+  Init(&argc, &argv);
 
   BucketSolver* solver = BucketSolver::Create(
     FLAGS_size, FLAGS_dictionary.c_str());

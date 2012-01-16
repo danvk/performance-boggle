@@ -10,6 +10,7 @@
 #include "3x4/boggler.h"
 #include "4x4/boggler.h"
 #include "gflags/gflags.h"
+#include "init.h"
 #include "trie.h"
 
 const char kUsage[] =
@@ -22,7 +23,7 @@ DEFINE_int32(size, 44, "Type of boggle board to use (MN = MxN)");
 void HandleBoard(BoggleSolver* b, const char* bd);
 
 int main(int argc, char** argv) {
-  google::ParseCommandLineFlags(&argc, &argv, true);
+  Init(&argc, &argv);
 
   FILE* f = fopen(FLAGS_dictionary.c_str(), "r");
   if (f == NULL) {

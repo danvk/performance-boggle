@@ -25,6 +25,7 @@
 #include <time.h>
 #include <unistd.h>
 #include "gflags/gflags.h"
+#include "glog/logging.h"
 #include "mtrandom/randomc.h"
 #include "trie.h"
 #include "boggle_solver.h"
@@ -32,6 +33,7 @@
 #include "3x3/boggler.h"
 #include "3x4/boggler.h"
 #include "4x4/boggler.h"
+#include "init.h"
 
 DEFINE_double(cool_t0, 100.0, "Initial temperature");
 DEFINE_double(cool_k, 0.05, "Cooling constant (controls pace of cooling)");
@@ -51,21 +53,19 @@ DEFINE_int32(size, 44, "Type of boggle board to use (MN = MxN)");
 typedef TRandomMersenne Random;
 
 int main(int argc, char** argv) {
-  google::ParseCommandLineFlags(&argc, &argv, true);
+  Init(&argc, &argv);
   if (FLAGS_rand_seed == -1) {
     FLAGS_rand_seed = time(NULL) + getpid();
   }
 
-  if (FLAGS_print_params) {
-    printf("Annealing parameters:\n");
-    printf(" cool_t0: %lf\n", FLAGS_cool_t0);
-    printf(" cool_k: %lf\n", FLAGS_cool_k);
-    printf(" swap_ratio: %lf\n", FLAGS_swap_ratio);
-    printf(" mutation_p: %lf\n", FLAGS_mutation_p);
-    printf(" max_stall: %d\n", FLAGS_max_stall);
-    printf(" rand_seed: %d\n", FLAGS_rand_seed);
-    printf(" dictionary: %s\n", FLAGS_dictionary.c_str());
-  }
+  LOG(INFO) << "Annealing parameters:";
+  LOG(INFO) << " cool_t0: " << FLAGS_cool_t0;
+  LOG(INFO) << " cool_k: " << FLAGS_cool_k;
+  LOG(INFO) << " swap_ratio: " << FLAGS_swap_ratio;
+  LOG(INFO) << " mutation_p: " << FLAGS_mutation_p;
+  LOG(INFO) << " max_stall: " << FLAGS_max_stall;
+  LOG(INFO) << " rand_seed: " << FLAGS_rand_seed;
+  LOG(INFO) << " dictionary: " << FLAGS_dictionary;
 
   Annealer::Options opts;
   opts.cool_t0 = FLAGS_cool_t0;

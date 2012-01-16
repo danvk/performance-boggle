@@ -42,15 +42,16 @@ DEFINE_double(mutation_p, 0.75, "Probability of just one change/mutation");
 DEFINE_int32(max_stall, 1000, "Number of generations before a change to exit");
 DEFINE_int32(rand_seed, -1, "Random seed (-1 means use time + pid)");
 
-DEFINE_bool(print_scores, false, "Print the score of each board considered");
 DEFINE_bool(print_stats, false, "Print statistics after the annealing run");
-DEFINE_bool(print_transitions, true, "Print each acceptedtransition");
-DEFINE_bool(print_params, true, "Print parameters before beginning run");
 
 DEFINE_string(dictionary, "words", "Path to dictionary of words");
 DEFINE_int32(size, 44, "Type of boggle board to use (MN = MxN)");
 
+DEFINE_int32(num_runs, 1, "Number of simulated annealing runs to do.");
+
 typedef TRandomMersenne Random;
+
+// w/ logging compiled in but not on: 0.14s w/ rand_seed=1 (brdoaects)
 
 int main(int argc, char** argv) {
   Init(&argc, &argv);
@@ -73,8 +74,6 @@ int main(int argc, char** argv) {
   opts.swap_ratio = FLAGS_swap_ratio;
   opts.mutation_p = FLAGS_mutation_p;
   opts.max_stall = FLAGS_max_stall;
-  opts.print_scores = FLAGS_print_scores;
-  opts.print_transitions = FLAGS_print_transitions;
 
   BoggleSolver* solver =
     BoggleSolver::Create(FLAGS_size, FLAGS_dictionary.c_str());
@@ -84,10 +83,10 @@ int main(int argc, char** argv) {
   BoggleMTRandom mt_wrap(&r);
   Annealer annealer(solver, opts, &mt_wrap);
 
-  annealer.Run();
-
-  printf(" final board: %s\n", annealer.FinalBoard());
-  printf(" final score: %d\n", annealer.FinalScore());
+  for (int run = 0; run < FLAGS_num_runs; run++) {
+    annealer.Run();
+    printf("%d\t%s\n", annealer.FinalScore(), annealer.FinalBoard());
+  }
 
   if (FLAGS_print_stats) {
     printf(" transitions: %d\n", annealer.FinalStats().transitions);

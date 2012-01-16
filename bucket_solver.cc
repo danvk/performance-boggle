@@ -4,6 +4,7 @@
 #include "3x3/ibuckets.h"
 #include "3x4/ibuckets.h"
 #include "4x4/ibuckets.h"
+#include "glog/logging.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -44,27 +45,43 @@ bool BucketSolver::ParseBoard(const char* bd) {
   for (int i = 0; i < indices_.size(); i++) indices_[i] = -1;
   while (char c = *bd++) {
     if (c == ' ') {
-      if (cell_pos == 0) return false;  // empty cell
+      if (cell_pos == 0) {
+        VLOG(1) << "Empty cell";
+        return false;
+      }
       MutableCell(cell)[cell_pos] = '\0';
       cell += 1;
       cell_pos = 0;
-      if (cell > num_cells - 1) return false;  // too many cells
+      if (cell > num_cells - 1) {
+        VLOG(1) << "Too many cells";
+        return false;
+      }
     } else if (c == '.') {
       // explicit "don't go here" cell, useful for tests
       MutableCell(cell)[0] = '\0';
       cell_pos = 1;
     } else {
-      if (c < 'a' || c > 'z') return false;  // invalid letter
+      if (c < 'a' || c > 'z') {
+        VLOG(1) << "Invalid letter: " << c;
+        return false;
+      }
       MutableCell(cell)[cell_pos++] = c;
       // std::cout << " Set " << ((cell<<5)+cell_pos) << " to " << idx << std::endl;
       indices_[(cell << 5) + cell_pos] = idx;
       idx += 1;
-      if (cell_pos >= 27) return false;  // too many letters on a cell
+      if (cell_pos >= 27) {
+        VLOG(1) << "Too many letters in a cell";
+        return false;
+      }
     }
   }
   MutableCell(cell)[cell_pos] = '\0';
   max_index_ = idx;
-  return (cell_pos > 0 && cell == (num_cells - 1));
+  if (cell_pos <= 0 || cell != (num_cells - 1)) {
+    VLOG(1) << "Bad state, cell_pos=" << cell_pos << ", cell=" << cell;
+    return false;
+  }
+  return true;
 }
 
 uint64_t BucketSolver::NumReps() const {

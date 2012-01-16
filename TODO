@@ -11,3 +11,8 @@ could even produce a restricted Trie for the boggler based on the board size.
 - Add a HillClimber class to optimizer.{h,cc} and compare to Annealer.
 
 - Move tests over to googletest (http://code.google.com/p/googletest/)
+
+- Make a utils library, w/ functions like:
+    double secs()
+    void SplitString(const string& str, vector<int>* nums);
+    util for optional rand seed initialization

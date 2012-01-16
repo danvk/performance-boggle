@@ -10,11 +10,14 @@
 #include "breaking_tree.h"
 #include "bucket_solver.h"
 #include "gflags/gflags.h"
+#include "glog/logging.h"
 #include "init.h"
+
 using namespace std;
 
 DEFINE_string(dictionary, "words", "Dictionary file");
 DEFINE_int32(size, 44, "Type of boggle board to use (MN = MxN)");
+DEFINE_bool(build_tree, false, "Build possibility trees?");
 
 double secs() {
   struct timeval t;
@@ -33,20 +36,16 @@ int main(int argc, char** argv) {
 
   BucketSolver* solver = BucketSolver::Create(
     FLAGS_size, FLAGS_dictionary.c_str());
-  if (!solver) {
-    fprintf(stderr, "Couldn't load dictionary\n");
-    exit(1);
-  }
+  CHECK(solver != NULL) << "Couldn't load dictionary";
+  solver->SetBuildTree(FLAGS_build_tree);
 
   char buf[400] = "";
   for (int i=1; i<argc; i++) {
     strcat(buf, argv[i]);
     if (i < argc-1) strcat(buf, " ");
   }
-  if (!solver->ParseBoard(buf)) {
-    fprintf(stderr, "Couldn't parse '%s'\n", buf);
-    exit(1);
-  }
+  CHECK(solver->ParseBoard(buf)) << "Couldn't parse '" << buf << "'";
+
   printf("Board: %s\n", solver->as_string());
 
   double start = secs();

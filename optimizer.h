@@ -42,9 +42,6 @@ class Annealer {
     double swap_ratio;
     double mutation_p;
     double max_stall;
-
-    bool print_scores;
-    bool print_transitions;
   };
 
   static Options DefaultOptions();

@@ -4,8 +4,14 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <iomanip>
 #include "boggle_solver.h"
+#include "glog/logging.h"
 #include "mtrandom/randomc.h"
+
+using std::setw;
+using std::setfill;
+using std::setprecision;
 
 int BoggleMTRandom::IRandom(int a, int b) { return mt_->IRandom(a, b); }
 double BoggleMTRandom::Random() { return mt_->Random(); }
@@ -50,7 +56,7 @@ void Annealer::Run() {
   bd_[0] = bd_[num_squares_] = '\0';
   last_[num_squares_] = '\0';
   InitialBoard(last_);
-  printf("start board: %s\n", last_);
+  VLOG(1) << "start board: " << last_;
 
   int last_accept = 0;
   best_score_ = 0;
@@ -66,7 +72,7 @@ void Annealer::Run() {
       exit(1);
     }
 
-    if (opts_.print_scores) printf("%d\t%s\t%d\n", n, bd_, score);
+    VLOG(2) << n << "\t" << bd_ << "\t" << score;
 
     double T = Temperature(n);
     if (AcceptTransition(best_score_, score, T)) {
@@ -74,9 +80,7 @@ void Annealer::Run() {
       last_accept = n;
       best_score_ = score;
       memcpy(last_, bd_, num_squares_);
-      if (opts_.print_transitions) {
-        printf("%5d T=%3.8lf accepting '%s' (%d)\n", n, T, last_, best_score_);
-      }
+      VLOG(1) << setw(5) << setfill(' ') << n << " T=" << setw(12) << T << " accepting '" << last_ << "' (" << best_score_ << ")";
     }
   }
 }

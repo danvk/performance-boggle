@@ -41,8 +41,6 @@ DEFINE_int32(random_boards, 0,
 
 DEFINE_string(break_class, "", "Set to break a specific board class");
 
-DEFINE_bool(display_debug_output, true, "");
-
 DEFINE_string(pick_cell_order, "",
               "Set to a comma-delimited permutation of cell indices to "
               "split them in that order, e.g. '0,1,2,3,4,5,6,7,8'");
@@ -81,9 +79,9 @@ int main(int argc, char** argv) {
   }
 
   Breaker breaker(solver, FLAGS_best_score);
-  BreakOptions opts;
-  opts.print_progress = FLAGS_display_debug_output;
-  breaker.SetOptions(opts);
+  // BreakOptions opts;
+  // opts.print_progress = FLAGS_display_debug_output;
+  // breaker.SetOptions(opts);
 
   if (!FLAGS_pick_cell_order.empty()) {
     std::vector<int> picks;

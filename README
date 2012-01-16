@@ -6,6 +6,12 @@ The most notable achievement of this code to date is finding the highest
 scoring 3x3 boggle board and proving that it is optimal in a few hours on a
 single machine.
 
+Best boards:
+3x3:  545 streaedlp (exhaustive search -- proven)
+3x4: 1651 slpiaentrdes (simulated annealing)
+4x4: 3625 perslatgsineters (simulated annealing)
+
+
 Open problems are 3x4 and 4x4 boggle.
 
 To get started:
@@ -97,7 +103,7 @@ ibucket_boggle:
   e.g. the example below eliminates ~50 billion boards/sec.
 
   $ all=abcdefghijklmnopqrstuvwxyz
-  $ ./ibucket_boggle words $all b $all j $all jkx g $all h i $all jkx jkx jkx jkx $all
+  $ ./ibucket_boggle $all b $all j $all jkx g $all h i $all jkx jkx jkx jkx $all
   Score: 3111
   1.481485 secs elapsed
   Details:
@@ -110,7 +116,7 @@ ibucket_boggle:
 ibucket_breaker:
   Start with a random bucketed board (ala ibucket_boggle) created by setting
   each cell to one of a few letter patterns (usually 4). Compute an upper
-  bound in the same way as ibucket_boggle. If it's > 3625, we're done. Entire
+  bound in the same way as ibucket_boggle. If it's < 3625, we're done. Entire
   class eliminated. If not, break one of the cells into its constituent
   letters and calculate upper bounds for each of those boards. Repeat until
   the entire board class has been "broken".

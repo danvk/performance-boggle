@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <string>
+#include <unistd.h>
+
 #include "gflags/gflags.h"
 #include "init.h"
 #include "mtrandom/randomc.h"

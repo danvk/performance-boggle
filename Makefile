@@ -45,12 +45,12 @@ tree_tool: tree_tool.o $(IBUCKETS_ALL) $(BOGGLE_ALL) $(GOOGLE) breaking_tree.o
 board-utils_test: board-utils_test.o $(UTILS)
 trie_test: trie.o trie_test.o
 score_subset_test: score_subset_test.o $(RAND) $(BOGGLE_ALL) $(IBUCKETS_ALL) $(BREAK) $(GLOG) $(GFLAGS) $(INIT)
-3x3/boggler_test: 3x3/boggler_test.o $(BOGGLE_ALL)
-4x4/boggler_test: 4x4/boggler_test.o $(BOGGLE_ALL)
-3x3/ibuckets_test: 3x3/ibuckets_test.o $(IBUCKETS_ALL) $(BOGGLE_ALL)
+3x3/boggler_test: 3x3/boggler_test.o $(BOGGLE_ALL) $(GOOGLE)
+4x4/boggler_test: 4x4/boggler_test.o $(BOGGLE_ALL) $(GOOGLE)
+3x3/ibuckets_test: 3x3/ibuckets_test.o $(IBUCKETS_ALL) $(BOGGLE_ALL) $(GOOGLE)
 
-4x4/perf_test: 4x4/perf_test.o $(BOGGLE_ALL)
-4x4/ibuckets_test: 4x4/ibuckets_test.o $(IBUCKETS_ALL) $(BOGGLE_ALL)
+4x4/perf_test: 4x4/perf_test.o $(BOGGLE_ALL) $(GOOGLE)
+4x4/ibuckets_test: 4x4/ibuckets_test.o $(IBUCKETS_ALL) $(BOGGLE_ALL) $(GOOGLE)
 
 trie.o: trie.h trie.cc
 

@@ -7,6 +7,7 @@
 #include <math.h>
 #include <sys/types.h>
 #include <string>
+#include <unistd.h>
 #include <vector>
 #include "3x3/ibuckets.h"
 #include "3x4/ibuckets.h"

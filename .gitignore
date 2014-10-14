@@ -1,0 +1,10 @@
+*.o
+*test
+anneal
+ibucket_boggle
+ibucket_breaker
+neighbors
+normalize
+random_boards
+solve
+tree_tool

@@ -12,6 +12,7 @@
 // boards within 3 units of the seed. Use with care!
 
 #include <stdio.h>
+#include <string.h>
 #include <string>
 #include <iostream>
 #include "gflags/gflags.h"

@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <sys/time.h>
+#include <cstring>
 #include "trie.h"
 #include "breaking_tree.h"
 #include "bucket_solver.h"
@@ -12,7 +13,6 @@
 #include "4x4/boggler.h"  // gross
 #include "gflags/gflags.h"
 #include "init.h"
-#include <cstring>
 
 using namespace std;
 

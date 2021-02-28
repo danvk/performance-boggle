@@ -1,5 +1,6 @@
 CC = g++
 CPPFLAGS = -g -Wall -O3 -I. -Iglog-src -Wno-sign-compare
+LDFLAGS =  -pthread
 #CPPFLAGS = -g -Wall -I. -Wno-sign-compare
 
 tests = trie_test 3x3/boggler_test 3x3/ibuckets_test 4x4/boggler_test board-utils_test 4x4/perf_test 4x4/ibuckets_test score_subset_test

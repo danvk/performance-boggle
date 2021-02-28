@@ -16,6 +16,7 @@
 #include <iostream>
 #include "gflags/gflags.h"
 #include "init.h"
+#include <cstring>
 
 DEFINE_int32(d, 1, "Maximum edit distance for output");
 

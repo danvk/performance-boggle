@@ -19,6 +19,7 @@
 #include "ibuckets.h"
 #include "test.h"
 #include "trie.h"
+#include "cstring"
 
 using namespace paper;
 using namespace std;

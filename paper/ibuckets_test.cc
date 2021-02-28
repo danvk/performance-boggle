@@ -2,6 +2,7 @@
 #include "test.h"
 #include "trie.h"
 #include "ibuckets.h"
+#include <cstring>
 
 using paper::BucketBoggler;
 using paper::Trie;

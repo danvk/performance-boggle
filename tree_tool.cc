@@ -12,6 +12,7 @@
 #include "4x4/boggler.h"  // gross
 #include "gflags/gflags.h"
 #include "init.h"
+#include <cstring>
 
 using namespace std;
 

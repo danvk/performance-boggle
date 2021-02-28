@@ -1,5 +1,5 @@
 CC = g++
-CPPFLAGS = -g -Wall -O3 -I. -Iglog-src -Wno-sign-compare -fpermissive
+CPPFLAGS = -g -Wall -O3 -I. -Iglog-src -Wno-sign-compare
 LDFLAGS =  -pthread
 #CPPFLAGS = -g -Wall -I. -Wno-sign-compare
 

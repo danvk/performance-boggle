@@ -167,7 +167,7 @@ static size_t StrLen(const char *str) {
 // Returns true if "str" has at least "n" characters remaining.
 static bool AtLeastNumCharsRemaining(const char *str, int n) {
   for (int i = 0; i < n; ++i) {
-    if (str == '\0') {
+    if (str[i] == '\0') {
       return false;
     }
   }
@@ -222,7 +222,18 @@ static bool ParseTwoCharToken(State *state, const char *two_char_token) {
 
 // Returns true and advances "mangled_cur" if we find any character in
 // "char_class" at "mangled_cur" position.
+
 static bool ParseCharClass(State *state, const char *char_class) {
+  const char *p = char_class;
+  for (; *p != '\0'; ++p) {
+    if (state->mangled_cur[0] == *p) {
+      ++state->mangled_cur;
+      return true;
+    }
+  }
+  return false;
+}
+/*static bool ParseCharClass(State *state, const char *char_class) {
   if (state->mangled_cur == '\0') {
     return false;
   }
@@ -234,7 +245,7 @@ static bool ParseCharClass(State *state, const char *char_class) {
     }
   }
   return false;
-}
+  }*/
 
 // This function is used for handling an optional non-terminal.
 static bool Optional(bool) {

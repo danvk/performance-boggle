@@ -15,6 +15,7 @@
 #include <set>
 #include <string>
 #include <sys/time.h>
+#include <cstring>
 #include "breaker.h"
 #include "ibuckets.h"
 #include "test.h"

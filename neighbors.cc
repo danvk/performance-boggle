@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <string>
 #include <iostream>
+#include <cstring>
 #include "gflags/gflags.h"
 #include "init.h"
 

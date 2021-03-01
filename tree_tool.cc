@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <sys/time.h>
+#include <cstring>
 #include "trie.h"
 #include "breaking_tree.h"
 #include "bucket_solver.h"

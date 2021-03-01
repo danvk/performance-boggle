@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstring>
 #include "test.h"
 #include "trie.h"
 #include "ibuckets.h"

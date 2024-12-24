@@ -167,7 +167,7 @@ int main(int argc, char** argv) {
     vector<string> good_boards;
     for (uint64_t idx = 0; idx < max_index; idx++) {
       if (idx % 100 == 0) {
-        cout << idx << endl;
+        cout << idx << "/" << max_index << endl;
       }
       string encoded_board = bu.BoardFromId(idx);
       if (bu.IsCanonical(encoded_board)) {

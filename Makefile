@@ -50,6 +50,8 @@ score_subset_test: score_subset_test.o $(RAND) $(BOGGLE_ALL) $(IBUCKETS_ALL) $(B
 4x4/boggler_test: 4x4/boggler_test.o $(BOGGLE_ALL) $(GOOGLE)
 3x3/ibuckets_test: 3x3/ibuckets_test.o $(IBUCKETS_ALL) $(BOGGLE_ALL) $(GOOGLE)
 
+3x3/perf_test: 3x3/perf_test.o $(BOGGLE_ALL) $(RAND)
+
 4x4/perf_test: 4x4/perf_test.o $(BOGGLE_ALL) $(GOOGLE)
 4x4/ibuckets_test: 4x4/ibuckets_test.o $(IBUCKETS_ALL) $(BOGGLE_ALL) $(GOOGLE)
 

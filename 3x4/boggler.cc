@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+static const bool PrintWords  = false;
+
 Boggler34::Boggler34(TrieT* t) : dict_(t) {}
 Boggler34::~Boggler34() { delete dict_; }
 
@@ -29,6 +31,10 @@ void Boggler34::DoDFS(int i, int len, TrieT* t) {
     if (t->Mark() != runs_) {
       t->Mark(runs_);
       score_ += kWordScores[len];
+      if (PrintWords) {
+        printf(" +%2d (%d,%d) %s\n", kWordScores[len], i/4, i%4,
+              TrieUtils<SimpleTrie>::ReverseLookup(dict_, t).c_str());
+      }
     }
   }
 

@@ -50,7 +50,7 @@ class BucketSolver {
   // current possibilities for each cell. For more detailed statistics, call
   // BoundDetails(). Note that setting a bailout_score invalidates the
   // max_delta information in BoundDetails.
-  class ScoreDetails;
+  struct ScoreDetails;
   const ScoreDetails& Details() const { return details_; };  // See below.
 
   // Compute an upper bound without any of the costly statistics.

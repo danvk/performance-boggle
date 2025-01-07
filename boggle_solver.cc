@@ -70,7 +70,8 @@ bool BoggleSolver::ParseBoard(const char* bd) {
       fprintf(stderr, "Found unexpected letter: '%c'\n", bd[i]);
       return false;
     }
-    SetCell(i%Width(), i/Width(), bd[i] - 'a');
+    // i = height() * x + y
+    SetCell(i/Height(), i%Height(), bd[i] - 'a');
   }
   return true;
 }

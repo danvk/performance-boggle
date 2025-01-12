@@ -95,8 +95,8 @@ std::string BoggleSolver::ToString() const {
   std::string out;
   int w = Width();
   int h = Height();
-  for (int y=0; y<h; y++)
-    for (int x=0; x<w; x++)
+  for (int x=0; x<w; x++)
+    for (int y=0; y<h; y++)
       out += std::string(1, 'a' + Cell(x, y));
   return out;
 }

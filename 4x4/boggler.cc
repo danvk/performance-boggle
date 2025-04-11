@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-static const bool PrintWords  = true;
+static const bool PrintWords  = false;
 
 Boggler::Boggler(TrieT* t) : dict_(t) {}
 Boggler::~Boggler() { delete dict_; }

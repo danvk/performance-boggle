@@ -60,6 +60,7 @@ class Annealer {
     int changes;
     int mutations;
     int mutate_calls;
+    int num_iterations;
   };
 
   const Stats& FinalStats() const;

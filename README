@@ -88,7 +88,7 @@ bucket_boggle:
   ab cd ef gh ij kl mn op rs tu vw xy z : 0.99793
 
   That means that 99.793% of boards (in normal board space) can be eliminated
-  by using this bucketing.
+  by using this bucketing. The 100,000 is the number of boards to test.
 
 
 ibucket_boggle:

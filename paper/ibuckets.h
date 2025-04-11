@@ -44,6 +44,12 @@ class BucketBoggler {
     int sum_union;   // all words that can be found, counting each once.
   };
 
+ protected:
+  // Add a protected getter method for details_
+  const ScoreDetails& GetDetails() const {
+    return details_;
+  }
+
  private:
   int DoAllDescents(int idx, int len, Trie* t);
   int DoDFS(int i, int len, Trie* t);

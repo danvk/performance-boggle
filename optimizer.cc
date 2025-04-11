@@ -62,7 +62,8 @@ void Annealer::Run() {
   best_score_ = 0;
   stats_.transitions = 0;
 
-  for (int n = 0; n < last_accept + opts_.max_stall; n++) {
+  int n;
+  for (n = 0; n < last_accept + opts_.max_stall; n++) {
     memcpy(bd_, last_, num_squares_);
     Mutate(bd_);
     int score = solver_->Score(bd_);
@@ -83,6 +84,7 @@ void Annealer::Run() {
       VLOG(1) << setw(5) << setfill(' ') << n << " T=" << setw(12) << T << " accepting '" << last_ << "' (" << best_score_ << ")";
     }
   }
+  stats_.num_iterations = n;
 }
 
 // A random initial board. Does not set a trailing null char!

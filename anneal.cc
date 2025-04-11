@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
 
   for (int run = 0; run < FLAGS_num_runs; run++) {
     annealer.Run();
-    printf("%d\t%s\n", annealer.FinalScore(), annealer.FinalBoard());
+    printf("%d\t%s (%d iterations)\n", annealer.FinalScore(), annealer.FinalBoard(), annealer.FinalStats().num_iterations);
   }
 
   if (FLAGS_print_stats) {
